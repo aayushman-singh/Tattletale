@@ -1,0 +1,14 @@
+node_modules
+*.session
+/.aws
+.DS_Store
+/.vscode
+/venv
+package-lock.json
+/frontend/maigret/reports
+/mobileApp/linux
+token.json
+server.log
+drive_token.json
+Flowchart 1.jpg
+Flowchart 2.jpg

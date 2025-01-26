@@ -1,0 +1,29 @@
+{
+    "root": true,
+    "env": {
+        "browser": true,
+        "es2020": true,
+        "node": true
+        
+        
+    },
+    "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"] // Ensures you're using ES6+ features
+  }
+      
+,      
+    "extends": [
+        "@apify/eslint-config-ts"
+    ],
+    "parserOptions": {
+        "project": "./tsconfig.json",
+        "ecmaVersion": 2020
+    },
+    "ignorePatterns": [
+        "node_modules",
+        "dist",
+        "**/*.d.ts"
+    ]
+    
+}

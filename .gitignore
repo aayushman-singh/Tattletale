@@ -12,3 +12,8 @@ server.log
 drive_token.json
 Flowchart 1.jpg
 Flowchart 2.jpg
+*.png
+/scraper/__pycache__
+/scraper/.vercel
+/scraper/.actor
+/scraper/storage

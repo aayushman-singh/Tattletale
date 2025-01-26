@@ -1,0 +1,15 @@
+{
+    "extends": "@apify/tsconfig",
+    "compilerOptions": {
+        "module": "esNext",
+        "moduleResolution": "node",
+        "target": "ES2020",
+        "outDir": "dist",
+        "esModuleInterop": true, // Interop for CommonJS and ES modules
+        "skipLibCheck": true,
+        "noUnusedLocals": false,
+        "strict": true,
+        "lib": ["DOM"] 
+    },
+    "include": ["./src/**/*", "src/Meta/MetaTimeline.ts"]
+}

@@ -171,7 +171,7 @@ export default function DataAnalysisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white pt-20 py-12 px-4">
       <div className="container mx-auto max-w-6xl">
         <div className="bg-gradient-to-br from-gray-800 to-slate-900 rounded-2xl shadow-2xl p-8 mb-8">
           <div className="flex items-center justify-center mb-6">

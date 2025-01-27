@@ -1,37 +1,38 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Link as ScrollLink } from "react-scroll";
+import React, { useState, useEffect, useCallback } from "react";
+import { animateScroll, scroller } from "react-scroll";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Search, Database, Clock, UserCheck, Menu, X } from 'lucide-react';
+import { Search, Database, Clock, UserCheck, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const dropdownRef = useRef(null);
 
-  const checkUserAuth = () => {
+  const checkUserAuth = useCallback(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
       setUser(JSON.parse(storedUserInfo));
     } else {
       setUser(null);
     }
-  };
-
-  useEffect(() => {
-    checkUserAuth();
-    window.addEventListener("storage", checkUserAuth);
-
-    return () => {
-      window.removeEventListener("storage", checkUserAuth);
-    };
   }, []);
 
   useEffect(() => {
     checkUserAuth();
-  }, [location]);
+    window.addEventListener("storage", checkUserAuth);
+    return () => {
+      window.removeEventListener("storage", checkUserAuth);
+    };
+  }, [checkUserAuth]);
 
   const handleLogout = () => {
     localStorage.removeItem("userInfo");
@@ -39,247 +40,174 @@ const Header = () => {
     navigate("/");
   };
 
-  const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
+  const handleNavigation = (target) => {
+    if (location.pathname === "/home") {
+      scroller.scrollTo(target, {
+        duration: 500,
+        delay: 0,
+        smooth: "easeInOutQuart",
+        offset: -80,
+      });
+    } else {
+      navigate("/home");
+      setTimeout(() => {
+        scroller.scrollTo(target, {
+          duration: 500,
+          delay: 0,
+          smooth: "easeInOutQuart",
+          offset: -80,
+        });
+      }, 200);
+    }
   };
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-
-    if (dropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownOpen]);
-
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-black/10 backdrop-blur-md shadow-lg">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-gray-900 bg-opacity-90 backdrop-blur-md border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo and Title */}
           <div className="flex items-center space-x-2">
-            <Link to="/home" className="flex items-center space-x-2">
-              <img src="/images/logo/logo.png" alt="Logo" className="h-10 w-10 object-contain" />
-              <span className="text-xl font-bold text-white font-montserrat hover:text-blue-400 transition-colors duration-300">
+            <Link to="/" className="flex items-center space-x-2">
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600 hover:opacity-80 transition-opacity">
                 tattletale
               </span>
             </Link>
           </div>
 
-          {/* Menu for Large Screens */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {user ? (
               <>
                 <Link
                   to="profilePage"
-                  className="text-white text-sm font-semibold cursor-pointer hover:text-blue-400 transition-colors duration-300 relative group"
+                  className="text-sm font-medium text-gray-100 hover:text-white transition-colors relative group cursor-pointer"
                 >
                   {user.name}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 group-hover:w-full"></span>
                 </Link>
-                <ScrollLink
-                  to="about"
-                  smooth={true}
-                  duration={500}
-                  className="text-white text-sm font-semibold cursor-pointer hover:text-blue-400 transition-colors duration-300 relative group"
+
+                <span
+                  onClick={() => handleNavigation("features")}
+                  className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group cursor-pointer"
+                >
+                  Features
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                </span>
+                <span
+                  onClick={() => handleNavigation("about")}
+                  className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group cursor-pointer"
                 >
                   About
-                </ScrollLink>
-
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={toggleDropdown}
-                    className="text-white text-sm font-semibold cursor-pointer hover:text-blue-400 transition-colors duration-300 flex items-center"
-                  >
-                    Services
-                    <svg
-                      className={`ml-2 h-5 w-5 text-white transition-transform duration-300 ${
-                        dropdownOpen ? 'rotate-180' : ''
-                      }`}
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                </span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <span className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group cursor-pointer">
+                      Services
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                    </span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-gray-800 border border-gray-700">
+                    <DropdownMenuItem
+                      className="text-gray-300 hover:text-white focus:text-white focus:bg-gray-700"
+                      onClick={() => navigate("/services")}
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.23 7.21a.75.75 0 011.06 0L10 10.91l3.71-3.7a.75.75 0 111.06 1.06l-4.25 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 010-1.06z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                  {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-lg z-50 overflow-hidden">
-                      <Link
-                        to="/services"
-                        className="flex items-center px-4 py-3 text-sm text-white hover:bg-gray-700 transition-colors duration-300"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <Search className="mr-3 h-5 w-5 text-blue-400" />
-                        <span>Social Media Investigation Tools</span>
-                      </Link>
-                      <Link
-                        to="/osint"
-                        className="flex items-center px-4 py-3 text-sm text-white hover:bg-gray-700 transition-colors duration-300"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <Database className="mr-3 h-5 w-5 text-blue-400" />
-                        <span>OSINT Tools</span>
-                      </Link>
-                      <Link
-                        to="/pastData"
-                        className="flex items-center px-4 py-3 text-sm text-white hover:bg-gray-700 transition-colors duration-300"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <Clock className="mr-3 h-5 w-5 text-blue-400" />
-                        <span>Past Data</span>
-                      </Link>
-                      <Link
-                        to="/profileAnalysis"
-                        className="flex items-center px-4 py-3 text-sm text-white hover:bg-gray-700 transition-colors duration-300"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <UserCheck className="mr-3 h-5 w-5 text-blue-400" />
-                        <span>Profile Analysis</span>
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                      <Search className="mr-2 h-4 w-4" />
+                      <span>Social Media Investigation</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-gray-300 hover:text-white focus:text-white focus:bg-gray-700"
+                      onClick={() => navigate("/osint")}
+                    >
+                      <Database className="mr-2 h-4 w-4" />
+                      <span>OSINT Tools</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-gray-700" />
+                    <DropdownMenuItem
+                      className="text-gray-300 hover:text-white focus:text-white focus:bg-gray-700"
+                      onClick={() => navigate("/pastData")}
+                    >
+                      <Clock className="mr-2 h-4 w-4" />
+                      <span>Past Data</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-gray-300 hover:text-white focus:text-white focus:bg-gray-700"
+                      onClick={() => navigate("/profileAnalysis")}
+                    >
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      <span>Profile Analysis</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-                <ScrollLink
-                  to="team"
-                  smooth={true}
-                  duration={500}
-                  className="text-white text-sm font-semibold cursor-pointer hover:text-blue-400 transition-colors duration-300 relative group"
-                >
-                  Team
-                </ScrollLink>
-
-                <button
+                <Button
+                  variant="ghost"
                   onClick={handleLogout}
-                  className="bg-blue-600 text-white text-sm font-semibold px-5 py-1.5 rounded-full hover:bg-blue-700 transition-colors duration-300"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
                 >
                   Logout
-                </button>
+                </Button>
               </>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="bg-blue-600 text-white text-sm font-semibold px-5 py-1.5 rounded-full hover:bg-blue-700 transition-colors duration-300"
+                <Button
+                  variant="ghost"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                  asChild
                 >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-green-600 text-white text-sm font-semibold px-5 py-1.5 rounded-full hover:bg-green-700 transition-colors duration-300"
-                >
-                  Register
-                </Link>
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-800" asChild>
+                  <Link to="/register">Register</Link>
+                </Button>
               </>
             )}
           </div>
 
-          {/* Hamburger Menu for Small Screens */}
-          <div className="md:hidden flex items-center">
+          {/* Mobile Menu */}
+          <div className="md:hidden">
             <button
               onClick={toggleMenu}
-              className="text-white focus:outline-none"
+              className="text-gray-300 hover:text-white focus:outline-none"
             >
               {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Dropdown Menu */}
         {menuOpen && (
-          <div className="md:hidden mt-2 space-y-3 pb-3">
-            {user ? (
-              <>
-                <Link
-                  to="profilePage"
-                  className="block text-white text-sm font-semibold cursor-pointer hover:text-blue-400 transition-colors duration-300"
-                >
-                  {user.name}
-                </Link>
-                <ScrollLink
-                  to="about"
-                  smooth={true}
-                  duration={500}
-                  className="block text-white text-sm font-semibold cursor-pointer hover:text-blue-400 transition-colors duration-300 relative group"
-                >
-                  About
-                </ScrollLink>
-                <Link
-                  to="/services"
-                  className="block text-white text-sm font-semibold cursor-pointer hover:text-blue-400 transition-colors duration-300 relative group"
-                >
-                  Services
-                </Link>
-                <ScrollLink
-                  to="team"
-                  smooth={true}
-                  duration={500}
-                  className="block text-white text-sm font-semibold cursor-pointer hover:text-blue-400 transition-colors duration-300 relative group"
-                >
-                  Team
-                </ScrollLink>
-                <button
-                  onClick={handleLogout}
-                  className="block w-full bg-blue-600 text-white text-sm font-semibold px-5 py-1.5 rounded-full hover:bg-blue-700 transition-colors duration-300"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="block w-full bg-blue-600 text-white text-sm font-semibold px-5 py-1.5 rounded-full hover:bg-blue-700 transition-colors duration-300"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="block w-full bg-green-600 text-white text-sm font-semibold px-5 py-1.5 rounded-full hover:bg-green-700 transition-colors duration-300"
-                >
-                  Register
-                </Link>
-              </>
-            )}
+          <div className="md:hidden mt-2 space-y-2 bg-gray-800 rounded-lg p-4">
+            <Link
+              to="/services"
+              className="block text-sm text-gray-300 hover:text-white"
+            >
+              Social Media Investigation
+            </Link>
+            <Link to="/osint" className="block text-sm text-gray-300 hover:text-white">
+              OSINT Tools
+            </Link>
+            <Link
+              to="/pastData"
+              className="block text-sm text-gray-300 hover:text-white"
+            >
+              Past Data
+            </Link>
+            <Link
+              to="/profileAnalysis"
+              className="block text-sm text-gray-300 hover:text-white"
+            >
+              Profile Analysis
+            </Link>
           </div>
         )}
-        <style jsx>{`
-          .group::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            bottom: -4px;
-            left: 0;
-            background-color: #60a5fa; /* Tailwind's blue-400 */
-            transform: scaleX(0);
-            transform-origin: bottom right;
-            transition: transform 0.3s ease-out;
-          }
-          .group:hover::after {
-            transform: scaleX(1);
-            transform-origin: bottom left;
-          }
-        `}</style>
       </div>
     </nav>
   );
 };
 
 export default Header;
-

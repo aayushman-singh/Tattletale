@@ -1,395 +1,311 @@
-import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import React, { useEffect } from "react"
+import { Link } from "react-router-dom"
+import { gsap } from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { useLocation } from "react-router-dom"
+import { scroller } from "react-scroll"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  BarChart3,
+  Users,
+  Target,
+  PieChart,
+  LineChart,
+  Database,
+  Shield,
+  Globe,
+  Zap,
+  Lock,
+  Search,
+  FileText,
+  Check,
+  CheckCircle,
+} from "lucide-react"
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger)
 
-const Card = ({ icon, title, children }) => (
-  <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg border border-white border-opacity-20 rounded-xl p-6 flex flex-col items-center">
-    {icon}
-    <h3 className="text-2xl font-semibold mb-4 text-white">{title}</h3>
-    <p className="text-gray-300 text-center">{children}</p>
-  </div>
-);
+const FeatureCard = ({ icon: Icon, title, description }) => (
+  <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-sm border-gray-700 hover:border-gray-600 transition-all duration-300 group">
+    <CardContent className="p-6">
+      <div className="mb-4 p-3 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/10 w-fit group-hover:scale-110 transition-transform duration-300">
+        <Icon className="w-6 h-6 text-blue-400" />
+      </div>
+      <h3 className="text-lg font-semibold mb-2 text-white">{title}</h3>
+      <p className="text-gray-400">{description}</p>
+    </CardContent>
+  </Card>
+)
 
-// const GlassButton = ({ to, children }) => (
-//   <Link
-//     to={to}
-//     smooth={true}
-//     duration={500}
-//     className="mt-8 inline-block px-8 py-4 text-lg font-semibold bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg border border-white border-opacity-20 rounded-full text-white hover:bg-opacity-20 transition-all"
-//   >
-//     {children}
-//   </Link>
-// );
-
-const ShieldIcon = () => (
-  <svg
-    className="w-16 h-16 mb-4 text-blue-400"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01"
-    />
-  </svg>
-);
-
-const SearchIcon = () => (
-  <svg
-    className="w-16 h-16 mb-4 text-blue-400"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-    />
-  </svg>
-);
-
-const FileTextIcon = () => (
-  <svg
-    className="w-16 h-16 mb-4 text-blue-400"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-    />
-  </svg>
-);
-const InstagramIcon = () => (
-  <svg
-    className="w-16 h-16 mb-4 text-blue-400"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-  </svg>
-);
-
-const MessageIcon = () => (
-  <svg
-    className="w-16 h-16 mb-4 text-blue-400"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-  </svg>
-);
-
-const CrossPlatformIcon = () => (
-  <svg
-    className="w-16 h-16 mb-4 text-blue-400"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    {/* Desktop */}
-    <rect x="2" y="5" width="8" height="6" rx="1" />
-    <line x1="2" y1="11" x2="10" y2="11" strokeWidth="2" />
-    <path d="M2 13h8v1H2z" />
-
-    {/* Tablet */}
-    <rect x="14" y="3" width="6" height="9" rx="1" />
-    <path d="M16 10h2" strokeWidth="2" />
-
-    {/* Mobile */}
-    <rect x="18" y="12" width="4" height="8" rx="1" />
-    <path d="M19 17h2" strokeWidth="2" />
-
-    {/* Connecting Lines */}
-    <line x1="10" y1="8" x2="14" y2="6" strokeWidth="2" />
-    <line x1="10" y1="8" x2="18" y2="15" strokeWidth="2" />
-  </svg>
-);
-
-// const GlassCard = ({ title, children }) => (
-//   <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-xl p-6 border border-white border-opacity-20">
-//     {icon}
-//     <h3 className="text-2xl font-semibold text-white mb-3">{title}</h3>
-//     <p className="text-lg text-gray-300">{children}</p>
-//   </div>
-// );
-
-const TeamMember = ({ name, role, description, image }) => (
-  <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-xl p-4 border border-white border-opacity-20 text-center w-64">
-    <div className="relative w-[102.04px] h-[160px] mx-auto mb-4">
-      <img
-        src={image}
-        alt={`${name}'s profile`}
-        className="absolute top-0 left-0 w-full h-full object-cover rounded-sm"
-      />
-    </div>
-    <h3 className="text-lg font-semibold text-white mb-1">{name}</h3>
-    <p className="text-sm text-blue-600 mb-2">{role}</p>
-    <p className="text-sm text-blue-600">{description}</p>
-  </div>
-);
-
-const typewriterEffect = (element, delay = 0.5, speed = 0.05) => {
-  const text = element.innerHTML;
-  element.innerHTML = "";
-  let idx = 0;
-
-  const type = () => {
-    if (idx < text.length) {
-      element.innerHTML += text.charAt(idx);
-      idx++;
-      setTimeout(type, speed * 1000);
-    }
-  };
-  setTimeout(type, delay * 1000);
-};
+const StatCard = ({ number, label }) => (
+  <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-sm border-gray-700">
+    <CardContent className="p-6 text-center">
+      <div className="text-3xl font-bold text-white mb-2">{number}</div>
+      <div className="text-gray-400 text-sm">{label}</div>
+    </CardContent>
+  </Card>
+)
 
 const Home = () => {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (location.state?.scrollTo) {
+      scroller.scrollTo(location.state.scrollTo, {
+        smooth: true,
+        duration: 500,
+      })
+    }
+  }, [location])
   useEffect(() => {
     gsap.from(".hero-title", {
       opacity: 0,
       y: -50,
       duration: 1.5,
       ease: "power4.out",
-    });
+    })
 
-    document.querySelectorAll(".typewriter").forEach((heading) => {
-      typewriterEffect(heading, 1, 0.05);
-    });
-
-    gsap.utils.toArray(".section").forEach((section) => {
-      gsap.from(section, {
+    gsap.utils.toArray(".fade-in").forEach((element) => {
+      gsap.from(element, {
         opacity: 0,
-        y: 100,
-        duration: 1.2,
-        ease: "power4.out",
+        y: 50,
+        duration: 1,
         scrollTrigger: {
-          trigger: section,
+          trigger: element,
           start: "top 80%",
           end: "bottom 20%",
-          scrub: true,
+          toggleActions: "play none none reverse",
         },
-      });
-    });
-
-    gsap.utils.toArray(".card").forEach((card) => {
-      gsap.from(card, {
-        opacity: 0,
-        scale: 0.8,
-        duration: 1.2,
-        ease: "power4.out",
-        scrollTrigger: {
-          trigger: card,
-          start: "top 90%",
-          end: "bottom 50%",
-          scrub: true,
-        },
-      });
-    });
-  }, []);
+      })
+    })
+  }, [])
 
   return (
-    <div className="relative text-white">
-      <video
-        className="fixed top-0 left-0 w-auto h-auto min-w-full min-h-full object-cover z-0"
-        autoPlay
-        loop
-        muted
-      >
-        <source
-          src="/videos/vecteezy_digital-spinning-hologram-globe-of-planet-earth_26687898.mp4"
-          type="video/mp4"
-        />
-      </video>
+    <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
+      {/* Gradient Backgrounds */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-blue-800/20 via-transparent to-transparent" />
 
-      <div className="relative z-10">
-        <section className="min-h-screen flex items-center justify-center px-4 relative">
-          <div className="text-center hero-title">
-            <h1 className="text-5xl sm:text-7xl font-bold bg-clip-text text-transparent text-white py-4">
-              Welcome to tattletale
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-200 mt-4 max-w-3xl mx-auto">
-              Streamline your social media investigations with tattletale.
-            </p>
-            <div className="text-center mt-8 flex justify-center items-center space-x-4">
-      <Link
-        to="/servicesMain"
-        className="group relative inline-flex items-center 
-        px-10 py-4 text-lg font-semibold 
-        bg-blue-600 text-white 
-        rounded-full 
-        hover:bg-blue-500 
-        transition-all duration-300 
-        transform hover:-translate-y-1 
-        hover:scale-105 
-        shadow-2xl hover:shadow-blue-500/50"
-      >
-        Explore Services
-        <svg 
-          className="ml-3 w-6 h-6 transition-transform group-hover:translate-x-2"
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24" 
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M13 5l7 7-7 7M5 5l7 7-7 7" 
-          />
-        </svg>
-      </Link>
-    </div>
+      <div className="relative pt-16">
+        {/* Hero Section */}
+        <section className="min-h-[90vh] flex items-center justify-center px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-center lg:text-left hero-title">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-white">
+                Advanced analytics for{" "}
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
+                  digital investigations
+                </span>
+              </h1>
+              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto lg:mx-0">
+                Streamline your social media investigations with powerful analytics and automated documentation.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                >
+                  <Link to="/services">Start Investigation</Link>
+                </Button>
+                <Button size="lg" variant="outline" className="border-gray-600 text-white bg-gray-800">
+                  <Link to="/servicesMain">Explore Other Services</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="hidden lg:block relative">
+              <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-gray-700 bg-gray-800 bg-opacity-50 backdrop-blur-sm">
+                <img
+                  src="/images/post/lp1.jpeg"
+                  alt="Analytics Dashboard"
+                  className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity duration-300"
+                />
+              </div>
+
+            </div>
           </div>
         </section>
 
+        {/* Stats Section
+        <section className="py-20 px-4 sm:px-6 lg:px-8 fade-in">
+          <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+            <StatCard number="10M+" label="Data Points Analyzed" />
+            <StatCard number="50k+" label="Active Users" />
+            <StatCard number="99.9%" label="Uptime" />
+            <StatCard number="24/7" label="Support" />
+          </div>
+        </section> */}
+
+        {/* Features Section */}
+        <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 fade-in">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white">Cutting-edge features</h2>
+              <p className="text-xl text-gray-300">Powerful tools for advanced analytics and investigation</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <FeatureCard
+                icon={Shield}
+                title="Advanced Security"
+                description="Enterprise-grade security with end-to-end encryption"
+              />
+              <FeatureCard
+                icon={Globe}
+                title="Global Coverage"
+                description="Monitor and analyze data from multiple regions"
+              />
+              <FeatureCard
+                icon={Zap}
+                title="Real-time Analytics"
+                description="Get instant insights with real-time data processing"
+              />
+              <FeatureCard
+                icon={Lock}
+                title="Access Control"
+                description="Granular permissions and role-based access"
+              />
+              <FeatureCard
+                icon={Search}
+                title="Smart Search"
+                description="Advanced search with natural language processing"
+              />
+              <FeatureCard
+                icon={FileText}
+                title="Custom Reports"
+                description="Generate detailed reports with custom templates"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* About Section */}
         <section
           id="about"
-          className="min-h-screen flex flex-col justify-center items-center px-4 py-16 text-white"
+          className="py-20 px-4 sm:px-6 lg:px-8 fade-in bg-gradient-to-b from-transparent to-gray-800"
         >
-          <div className="container mx-auto">
-            <h2 className="text-7xl font-bold mb-12 text-center">Who We Are</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <Card
-                icon={<ShieldIcon />}
-                title="Secure Investigation"
-                className="card"
-              >
-                Our Social Media Investigator Tool is designed to enhance
-                digital forensics in law enforcement investigations.
-              </Card>
-              <Card
-                icon={<SearchIcon />}
-                title="Comprehensive Analysis"
-                className="card"
-              >
-                We offer seamless integration with major social media platforms,
-                allowing investigators to automatically parse and analyze data.
-              </Card>
-              <Card
-                icon={<FileTextIcon />}
-                title="Automated Documentation"
-                className="card"
-              >
-                Our mission is to streamline the documentation process in social
-                media investigations.
-              </Card>
-            </div>
-            <p className="text-lg text-gray-300 max-w-4xl mt-12 text-center mx-auto">
-              Available in both Android and Windows versions, our tool ensures
-              compatibility with various examination scenarios.
-            </p>
-          </div>
-        </section>
-
-        <section
-          id="services"
-          className="min-h-screen w-full flex items-center justify-center py-20"
-        >
-          <div className="container mx-auto px-4">
-            <h2 className="text-7xl font-bold text-center bg-clip-text text-transparent text-white mb-8">
-              Our Services
-            </h2>
-            <p className="text-xl sm:text-2xl text-gray-300 mt-4 max-w-3xl mx-auto text-center mb-12">
-              Our comprehensive services cover data scraping, tracking, and
-              investigative reporting on major social media platforms.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <Card title="Instagram Investigation" icon={<InstagramIcon />}>
-                Track hashtags, users, posts, and messages to uncover
-                drug-related activities.
-              </Card>
-              <Card title="Application Monitoring" icon={<MessageIcon />}>
-                Monitor messages, user profiles and media for any signs of
-                illegal activity.
-              </Card>
-              <Card title="Cross-Platform Reports" icon={<CrossPlatformIcon />}>
-                Generate detailed reports that combine evidence from multiple
-                platforms.
-              </Card>
-            </div>
-            <div className="text-center mt-12">
-              <Link
-                to="/servicesMain"
-                className="inline-block px-7 py-3 text-lg font-semibold bg-blue-600 bg-opacity-70 rounded-full hover:bg-opacity-75 transition-all"
-              >
-                Explore Services
-              </Link>
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-white">Why choose our platform?</h2>
+                <p className="text-gray-300 mb-8">
+                  Our platform combines advanced analytics with intuitive design to provide investigators with powerful
+                  tools for digital forensics and social media analysis.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/10">
+                      <Shield className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2 text-white">Enterprise Security</h3>
+                      <p className="text-gray-400">
+                        Bank-grade security with advanced encryption and compliance features.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/10">
+                      <Zap className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2 text-white">Lightning Fast</h3>
+                      <p className="text-gray-400">
+                        Process millions of data points in seconds with our optimized engine.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-lg transform rotate-3"></div>
+                <div className="relative rounded-lg overflow-hidden border border-gray-700">
+                  <img src="/images/post/lp.jpeg" alt="Platform Features" className="w-full aspect-video object-cover" />
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        <section
-          id="team"
-          className="min-h-screen flex flex-col justify-center items-center py-20"
-        >
-          <div className="container mx-auto px-4">
-            <h2 className="text-7xl font-bold text-center bg-clip-text text-transparent text-white mb-8">
-              Meet Our Team
+        {/* Pricing Section
+        <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 fade-in">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white">Simple, transparent pricing</h2>
+              <p className="text-xl text-gray-300">Choose the perfect plan for your needs</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  name: "Starter",
+                  price: "$49",
+                  description: "Perfect for small teams",
+                  features: ["Up to 5 users", "Basic analytics", "24/7 support", "API access"],
+                },
+                {
+                  name: "Professional",
+                  price: "$99",
+                  description: "For growing businesses",
+                  features: ["Up to 20 users", "Advanced analytics", "Priority support", "Custom reports"],
+                },
+                {
+                  name: "Enterprise",
+                  price: "Custom",
+                  description: "For large organizations",
+                  features: ["Unlimited users", "Custom solutions", "Dedicated support", "On-premise option"],
+                },
+              ].map((plan) => (
+                <Card
+                  key={plan.name}
+                  className="bg-gray-800 bg-opacity-50 backdrop-blur-sm border-gray-700 hover:border-gray-600 transition-all duration-300"
+                >
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-bold mb-2 text-white">{plan.name}</h3>
+                    <div className="text-3xl font-bold mb-2 text-white">{plan.price}</div>
+                    <p className="text-gray-400 mb-6">{plan.description}</p>
+                    <ul className="space-y-3 mb-6">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-center text-gray-300">
+                          <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white">
+                      Get Started
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section> */}
+
+        {/* CTA Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 fade-in">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-white">
+              Ready to start your investigation?
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
+                Use our powerful investigation tool
+              </span>
             </h2>
-            <p className="text-lg text-gray-300 max-w-4xl text-center mx-auto mb-12">
-              Our team consists of cybersecurity experts, data scientists, and
-              investigators with years of experience in digital forensics.
-            </p>
-            <div className="flex gap-8">
-              <TeamMember
-                name="Aayushman "
-                role="Developer (Backend)"
-                image="/images/teamMembers/aayushman.jpeg"
-              />
-              <TeamMember
-                name="Arpit "
-                role="Developer (Frontend)"
-                image="/images/teamMembers/arpit.jpeg"
-              />
-              <TeamMember
-                name="Kartik"
-                role="Developer (Frontend)"
-                image="/images/teamMembers/kartik.jpeg"
-              />
-              <TeamMember
-                name="Abdul "
-                role="Developer (ML)"
-                image="/images/teamMembers/abdul.jpeg"
-              />
-              <TeamMember
-                name="Arpita"
-                role="Designer and Content Manager"
-                image="/images/teamMembers/arpita.jpeg"
-              />
-              <TeamMember
-                name="Rishabh"
-                role="Designer and Video Editor"
-                image="/images/teamMembers/rishab.jpeg"
-              />
+            <p className="text-xl text-gray-300 mb-8">Begin your digital investigation with our advanced platform.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+              >
+                <Link to="/services">Start Investigation</Link>
+              </Button>
+              <Button size="lg" variant="outline" className="border-gray-600 text-white bg-gray-800">
+                <Link to="/servicesMain">Explore Other Services</Link>
+              </Button>
             </div>
           </div>
         </section>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Home;
+export default Home
+

@@ -51,10 +51,10 @@ const SearchPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white p-8">
+    <div className="min-h-screen pt-20 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-6xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600 ">
-          Maigret Search
+          Osint Search
         </h1>
         
         <div className="mb-12 text-center">
@@ -141,7 +141,7 @@ const SearchPage = () => {
         )}
 
         <div className="text-center text-gray-400 text-sm">
-          <p>Maigret Search respects privacy and adheres to ethical OSINT practices.</p>
+          <p>Osint Search respects privacy and adheres to ethical OSINT practices.</p>
           <p>Use responsibly and in compliance with applicable laws and regulations.</p>
         </div>
       </div>

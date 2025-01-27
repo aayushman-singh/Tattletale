@@ -76,7 +76,7 @@ function App() {
       <GoogleOAuthProvider clientId="218022995131-pkv99vvugfmhr73ua600lg44q362bbsj.apps.googleusercontent.com">
       <Header />
       {/* Full screen height minus header with flex column */}
-      <div className="w-full flex-grow flex flex-col pt-16 bg-gray-700">
+      <div className="w-full flex-grow flex flex-col  bg-gray-700">
         {routesElement}
       </div>
       <ChatbotAvatar />

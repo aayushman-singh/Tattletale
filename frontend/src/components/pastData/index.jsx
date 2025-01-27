@@ -141,7 +141,7 @@ const PastData = () => {
   // );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8 relative">
+    <div className="min-h-screen bg-gray-900 text-white p-8 pt-20 relative">
       {alert.visible && (
         <div
           className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform ${

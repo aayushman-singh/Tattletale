@@ -12,30 +12,13 @@ import { updateUserHistory } from "../Helpers/mongoUtils.js";
 const app = express();
 
 const PORT = Number(process.env.PORT) || 3001; // Instagram Scraper Port
-const connectDB = async () => {
-    try {
-        await mongoose.connect(
-            "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/instagramDB?retryWrites=true&w=majority",
-            {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-            } as mongoose.ConnectOptions,
-        );
-        console.log("MongoDB connected successfully");
-    } catch (error) {
-        console.error("MongoDB connection error:", error);
-        process.exit(1);
-    }
-};
 
-connectDB();
 app.use(express.json());
 app.use(cors());
 
 app.post("/instagram", async (req, res) => {
     const { userId, startUrls, password, limit } = req.body;
 
-    // Check if startUrls is undefined or not an array
     if (!startUrls || !Array.isArray(startUrls)) {
         console.error("Invalid or missing startUrls:", req.body);
         return res
@@ -46,11 +29,10 @@ app.post("/instagram", async (req, res) => {
     try {
         console.log(`Received request to scrape ${startUrls.length} profiles`);
 
-        // Scraping profiles with retry logic
         await retry(
             async () => {
                 console.log("Starting profile scraping...");
-                await scrapeInstagramProfiles(startUrls);
+           //     await scrapeInstagramProfiles(startUrls);
                 console.log("Profile scraping completed");
             },
             {
@@ -67,7 +49,7 @@ app.post("/instagram", async (req, res) => {
         await retry(
             async () => {
                 console.log("Starting post scraping...");
-                await scrapeInstagramPosts(startUrls, limit);
+            //    await scrapeInstagramPosts(startUrls, limit);
                 console.log("Post scraping completed");
             },
             {
@@ -87,13 +69,13 @@ app.post("/instagram", async (req, res) => {
                     console.log(
                         `Starting data scraping for username: ${username}`,
                     );
-                    const resultId = await InstaScraper(username, password);
-                    await updateUserHistory(
-                        userId,
-                        startUrls,
-                        resultId,
-                        "instagram",
-                    );
+                     const resultId = await InstaScraper(username, password);
+                    // await updateUserHistory(
+                    //     userId,
+                    //     startUrls,
+                    //     resultId,
+                    //     "instagram",
+                    // );
                     console.log(`Data scraping for ${username} completed`);
                 },
                 {

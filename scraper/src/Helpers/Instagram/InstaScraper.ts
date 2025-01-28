@@ -33,6 +33,158 @@ const loadSession = async (
     }
 };
 
+interface InstagramResponse {
+    url: string;
+    method: string;
+    timestamp: string;
+    data: any;
+}
+
+interface NetworkCaptureOptions {
+    outputFile?: string;
+    urlFilter?: (url: string) => boolean;
+    onCapture?: (data: InstagramResponse, filename: string) => void;
+}
+
+export class InstagramNetworkCapture {
+    private collectedData: InstagramResponse[] = [];
+    private isCapturing: boolean = false;
+    private page: Page;
+
+    constructor(page: Page) {
+        this.page = page;
+    }
+
+    async startCapturing(options: NetworkCaptureOptions = {}) {
+        const {
+            outputFile = "instagram_data.json",
+            urlFilter = (url: string) => url.includes("instagram.com/api/"),
+            onCapture,
+        } = options;
+
+        this.isCapturing = true;
+
+        // Set up response listener
+        this.page.on("response", async (response: Response) => {
+            if (!this.isCapturing) return;
+
+            const url = response.url();
+            if (!urlFilter(url)) return;
+
+            try {
+                const responseData = await response.json().catch(() => null);
+                if (!responseData) return;
+
+                const capturedData: InstagramResponse = {
+                    url,
+                    method: response.request().method(),
+                    timestamp: new Date().toISOString(),
+                    data: responseData,
+                };
+
+                this.collectedData.push(capturedData);
+
+                // Call optional callback
+                if (onCapture) {
+                    await onCapture(capturedData, outputFile);
+                }
+
+                // Save to file if specified
+                if (outputFile) {
+                    await this.saveToFile(outputFile);
+                }
+            } catch (error) {
+                console.error(`Error processing response from ${url}:`, error);
+            }
+        });
+    }
+
+    async stopCapturing() {
+        this.isCapturing = false;
+    }
+
+    getAllCapturedData(): InstagramResponse[] {
+        return this.collectedData;
+    }
+
+    private async saveToFile(filename: string) {
+        try {
+            const existingData = await this.readFileAsJson(filename);
+            const updatedData = [...existingData, ...this.collectedData];
+            await fs.writeFile(filename, JSON.stringify(updatedData, null, 2));
+            console.log(`Data saved to file: ${filename}`);
+        } catch (error) {
+            console.error(`Error saving data to file ${filename}:`, error);
+        }
+    }
+
+    public async readFileAsJson(
+        filename: string
+    ): Promise<InstagramResponse[]> {
+        try {
+            const content = await fs.readFile(filename, "utf-8");
+            return content.trim() ? JSON.parse(content) : [];
+        } catch {
+            return []; // Return an empty array if file doesn't exist or is invalid
+        }
+    }
+}
+
+export async function captureProfileNetworkData(
+    page: Page,
+    username: string,
+    filename: string = "instagram_data.json"
+) {
+    const networkCapture = new InstagramNetworkCapture(page);
+
+    // Ensure directory exists
+    const dir = path.dirname(filename);
+    await fs.mkdir(dir, { recursive: true });
+
+    // Initialize file if it doesn't exist
+    try {
+        await fs.access(filename);
+    } catch {
+        await fs.writeFile(filename, "[]");
+    }
+
+    // Start capturing before navigation
+    await networkCapture.startCapturing({
+        outputFile: filename,
+        urlFilter: (url) =>
+            url.includes("instagram.com/api/") ||
+            url.includes("instagram.com/graphql/") ||
+            url.includes("instagram.com/web/") ||
+            url.includes("/logging_client_events") ||
+            url.includes("/ajax/"),
+        onCapture: async (data, filename) => {
+            try {
+                const existingData = await networkCapture.readFileAsJson(
+                    filename
+                );
+                existingData.push(data);
+
+                await fs.writeFile(
+                    filename,
+                    JSON.stringify(existingData, null, 2)
+                );
+                console.log(`Captured and saved request to: ${data.url}`);
+            } catch (error) {
+                console.error("Error saving captured data:", error);
+            }
+        },
+    });
+
+    // Navigate to the Instagram profile
+    await page.goto(`https://www.instagram.com/${username}/`);
+    await page.waitForLoadState("networkidle", { timeout: 30000 });
+    await page.waitForTimeout(5000);
+    await networkCapture.stopCapturing();
+
+    // Return all captured data
+    return JSON.parse(await fs.readFile(filename, "utf-8"));
+}
+
 const openAllInstagramMessagesAndLog = async (
     page: Page,
     log: Log,
@@ -421,6 +573,12 @@ export const InstaScraper = async (username: string, password: string) => {
                 // Navigate to the profile page
                 await page.goto(`https://www.instagram.com/${username}/`);
                 log.info("Navigated to profile page.");
+                await captureProfileNetworkData(
+                     page,
+                    username,
+                );
+              
+                
 
                 // Scrape follower and following counts
                 const followerCount = await page.$eval(

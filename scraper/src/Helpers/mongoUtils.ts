@@ -680,11 +680,11 @@ export async function insertMeta(
 
 export async function insertInstagramProfile(
     username: string,
-    profile: InstagramProfile,
+    profile: any,
 ) {
     await client.connect();
     const db = client.db("instagramDB"); // Your database name
-    const collection = db.collection<InstagramUserDocument>("instagram_users"); // Collection for all users
+    const collection = db.collection("instagram_users"); // Collection for all users
 
     // Update or insert the user's profile and posts
     await collection.updateOne(

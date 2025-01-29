@@ -495,7 +495,7 @@ export const InstaScraper = async (username: string, password: string) => {
                     const profileData = await fetchAndStoreProfile(username);
 
                     // Determine max items based on list type
-                    const userId = profileData['instagramId'];
+                    const userId = profileData['instagram_id'];
                     const maxItems = profileData[`${listType}_count`];
                     log.info(
                         `Starting to scrape ${maxItems} ${listType} for @${username}`
@@ -597,6 +597,10 @@ export const InstaScraper = async (username: string, password: string) => {
                         }
                     }
 
+                    await fs.writeFile(
+                        outputFile,
+                        JSON.stringify({ users: dataSet }, null, 2)
+                    );
 
                  
                 };
@@ -629,7 +633,7 @@ export const InstaScraper = async (username: string, password: string) => {
                         `Error while scraping following: ${error.message}. Moving on`
                     );
                 }
-                // Scrape following
+                
                 try {
                     await page.goto(
                         "https://www.instagram.com/session/login_activity/"

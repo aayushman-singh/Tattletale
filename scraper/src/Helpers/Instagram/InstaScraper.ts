@@ -6,11 +6,14 @@ import {
     insertMessages,
     uploadChats,
     uploadToS3,
+    insertInstagramProfile,
 } from "../mongoUtils.js"; // Use ESM import
 import { BrowserContext, Page } from "playwright";
 import { promises as fs, PathLike } from "fs";
 import path from "path"; // To handle file paths
 import { scrapeInstagramLogin } from "./InstagramLogin";
+import { InstagramProfileExtractor } from "./ScrapeProfile.js";
+import { extractInstagramList } from "./ScrapeLists";
 
 const saveSession = async (page: Page, filePath: string) => {
     const storageState = await page.context().storageState();
@@ -33,157 +36,6 @@ const loadSession = async (
     }
 };
 
-interface InstagramResponse {
-    url: string;
-    method: string;
-    timestamp: string;
-    data: any;
-}
-
-interface NetworkCaptureOptions {
-    outputFile?: string;
-    urlFilter?: (url: string) => boolean;
-    onCapture?: (data: InstagramResponse, filename: string) => void;
-}
-
-export class InstagramNetworkCapture {
-    private collectedData: InstagramResponse[] = [];
-    private isCapturing: boolean = false;
-    private page: Page;
-
-    constructor(page: Page) {
-        this.page = page;
-    }
-
-    async startCapturing(options: NetworkCaptureOptions = {}) {
-        const {
-            outputFile = "instagram_data.json",
-            urlFilter = (url: string) => url.includes("instagram.com/api/"),
-            onCapture,
-        } = options;
-
-        this.isCapturing = true;
-
-        // Set up response listener
-        this.page.on("response", async (response: Response) => {
-            if (!this.isCapturing) return;
-
-            const url = response.url();
-            if (!urlFilter(url)) return;
-
-            try {
-                const responseData = await response.json().catch(() => null);
-                if (!responseData) return;
-
-                const capturedData: InstagramResponse = {
-                    url,
-                    method: response.request().method(),
-                    timestamp: new Date().toISOString(),
-                    data: responseData,
-                };
-
-                this.collectedData.push(capturedData);
-
-                // Call optional callback
-                if (onCapture) {
-                    await onCapture(capturedData, outputFile);
-                }
-
-                // Save to file if specified
-                if (outputFile) {
-                    await this.saveToFile(outputFile);
-                }
-            } catch (error) {
-                console.error(`Error processing response from ${url}:`, error);
-            }
-        });
-    }
-
-    async stopCapturing() {
-        this.isCapturing = false;
-    }
-
-    getAllCapturedData(): InstagramResponse[] {
-        return this.collectedData;
-    }
-
-    private async saveToFile(filename: string) {
-        try {
-            const existingData = await this.readFileAsJson(filename);
-            const updatedData = [...existingData, ...this.collectedData];
-            await fs.writeFile(filename, JSON.stringify(updatedData, null, 2));
-            console.log(`Data saved to file: ${filename}`);
-        } catch (error) {
-            console.error(`Error saving data to file ${filename}:`, error);
-        }
-    }
-
-    public async readFileAsJson(
-        filename: string
-    ): Promise<InstagramResponse[]> {
-        try {
-            const content = await fs.readFile(filename, "utf-8");
-            return content.trim() ? JSON.parse(content) : [];
-        } catch {
-            return []; // Return an empty array if file doesn't exist or is invalid
-        }
-    }
-}
-
-export async function captureProfileNetworkData(
-    page: Page,
-    username: string,
-    filename: string = "instagram_data.json"
-) {
-    const networkCapture = new InstagramNetworkCapture(page);
-
-    // Ensure directory exists
-    const dir = path.dirname(filename);
-    await fs.mkdir(dir, { recursive: true });
-
-    // Initialize file if it doesn't exist
-    try {
-        await fs.access(filename);
-    } catch {
-        await fs.writeFile(filename, "[]");
-    }
-
-    // Start capturing before navigation
-    await networkCapture.startCapturing({
-        outputFile: filename,
-        urlFilter: (url) =>
-            url.includes("instagram.com/api/") ||
-            url.includes("instagram.com/graphql/") ||
-            url.includes("instagram.com/web/") ||
-            url.includes("/logging_client_events") ||
-            url.includes("/ajax/"),
-        onCapture: async (data, filename) => {
-            try {
-                const existingData = await networkCapture.readFileAsJson(
-                    filename
-                );
-                existingData.push(data);
-
-                await fs.writeFile(
-                    filename,
-                    JSON.stringify(existingData, null, 2)
-                );
-                console.log(`Captured and saved request to: ${data.url}`);
-            } catch (error) {
-                console.error("Error saving captured data:", error);
-            }
-        },
-    });
-
-    // Navigate to the Instagram profile
-    await page.goto(`https://www.instagram.com/${username}/`);
-    await page.waitForLoadState("networkidle", { timeout: 30000 });
-    await page.waitForTimeout(5000);
-    await networkCapture.stopCapturing();
-
-    // Return all captured data
-    return JSON.parse(await fs.readFile(filename, "utf-8"));
-}
 
 const openAllInstagramMessagesAndLog = async (
     page: Page,
@@ -555,7 +407,9 @@ export const InstaScraper = async (username: string, password: string) => {
                         isLoggedIn = true; // Mark as logged in
                         await saveSession(page, sessionFilePath);
                         // Capture screenshots of the timeline before starting scraping
-                        await captureTimelineScreenshots(page, log, username);
+
+                        //await captureTimelineScreenshots(page, log, username);
+                        
                     } catch (error: any) {
                         log.error(
                             "Login failed or not required: " + error.message,
@@ -570,35 +424,38 @@ export const InstaScraper = async (username: string, password: string) => {
             log.info(`Processing ${request.url}`);
             let resultId;
             try {
-                // Navigate to the profile page
-                await page.goto(`https://www.instagram.com/${username}/`);
+                const extractor = new InstagramProfileExtractor(page);
+
+                await page.goto(`https://www.instagram.com/${username}/`, {
+                    waitUntil: "networkidle",
+                    timeout: 15000,
+                });
                 log.info("Navigated to profile page.");
-                await captureProfileNetworkData(
-                     page,
+
+                // Wait a bit and trigger API requests
+                await page.waitForTimeout(3000);
+                await page.evaluate(() => window.scrollBy(0, 200));
+
+                // Extract profile data
+                const profileData = await extractor.captureProfileData(
                     username,
+                    20000
                 );
-              
-                
+                if (!profileData) {
+                    throw new Error("❌ Profile data not found.");
+                }
 
-                // Scrape follower and following counts
-                const followerCount = await page.$eval(
-                    'a[href$="/followers/"] span',
-                    (el) => parseInt(el.textContent!.replace(/,/g, "")),
-                );
-                const followingCount = await page.$eval(
-                    'a[href$="/following/"] span',
-                    (el) => parseInt(el.textContent!.replace(/,/g, "")),
-                );
+                await insertInstagramProfile(username, profileData);
 
-                log.info(
-                    `Follower count: ${followerCount}, Following count: ${followingCount}`,
-                );
+                const followerCount = profileData.follower_count;
+                const followingCount = profileData.following_count;
 
-                const screenshotPath = `profile_${username}.png`; // Generate path to save the screenshot
+                const screenshotPath = `profile_${username}.png`; 
+
                 await page.screenshot({
                     path: screenshotPath,
                     fullPage: false,
-                }); // Capture screenshot
+                }); 
                
                 resultId = await uploadScreenshotToMongo(
                     username,
@@ -606,156 +463,45 @@ export const InstaScraper = async (username: string, password: string) => {
                     "profilePage",
                     "instagram",
                 );
+                const instagram_id = profileData.instagram_id;
+                
+                
 
-                 await page.goto(
-                     "https://www.instagram.com/session/login_activity/"
-                 );
-                 await page.waitForTimeout(4000);
-                 await scrapeInstagramLogin(username, page);
-                // Function to scrape followers or following
-                const scrapeList = async (
-                    listType: string,
-                    selector: string,
-                    logFilePath: PathLike | fs.FileHandle,
-                    maxItems: number,
-                ) => {
-                    log.info(`Starting to scrape ${listType}...`);
+                // try {
+                //     const followersData = await extractInstagramList(
+                //         page,
+                //         instagram_id,
+                //         username,
+                //         "followers",
+                //         followerCount
+                //     );
+                //     await insertFollowers(username, followersData, "instagram");
+                // } catch (error: any) {
+                //     log.error(
+                //         `Error while scraping followers: ${error.message}. Moving on to following list.`,
+                //     );
+                // }
 
-                    await page.goto(`https://www.instagram.com/${username}/`);
-
-                    await page.waitForSelector(selector, { timeout: 100000 });
-                    await page.click(selector);
-                    log.info(`Clicked on ${listType} link.`);
-
-                    await page.waitForSelector('div[role="dialog"]', {
-                        timeout: 70000,
-                    });
-                    log.info(`${listType} modal loaded.`);
-
-                    let scrollAttempts = 0;
-                    const maxScrollAttempts = 15;
-                    const dataSet: {
-                        username: string | null;
-                        profilePicUrl: any;
-                    }[] = []; // Store both username and profile pic URL as objects
-
-                    while (
-                        scrollAttempts < maxScrollAttempts &&
-                        dataSet.length < maxItems
-                    ) {
-                        const tiles = await page.$$(
-                            "div.x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.x1pi30zi.x1swvt13.xwib8y2.x1y1aw1k.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1",
-                        );
-                        log.info(`Found ${tiles.length} ${listType} tiles.`);
-
-                        let newItemsAdded = false;
-                        for (const tile of tiles) {
-                            const profilePicUrl = await tile
-                                .$eval(
-                                    "a > img",
-                                    (img) => (img as HTMLImageElement).src,
-                                )
-                                .catch(() => "No profile pic");
-                            const username = await tile
-                                .$eval(
-                                    "a > div > div > span",
-                                    (span) => span.textContent,
-                                )
-                                .catch(() => "No username");
-
-                            // Add unique entries and stop if max limit is reached
-                            if (
-                                !dataSet.some(
-                                    (item) => item.username === username,
-                                ) &&
-                                dataSet.length < maxItems
-                            ) {
-                                dataSet.push({ username, profilePicUrl });
-                                log.info(
-                                    `${listType}: Username: ${username}, Profile Pic: ${profilePicUrl}`,
-                                );
-                                newItemsAdded = true;
-                            }
-
-                            if (dataSet.length >= maxItems) {
-                                log.info(
-                                    `Reached max ${listType} count: ${maxItems}`,
-                                );
-                                break;
-                            }
-                        }
-
-                        // Scroll to the last tile if there are any
-                        if (tiles.length > 0) {
-                            await tiles[
-                                tiles.length - 1
-                            ].scrollIntoViewIfNeeded();
-                        }
-
-                        // Wait for new content to load
-                        await page.waitForTimeout(3000);
-
-                        if (!newItemsAdded) {
-                            scrollAttempts++;
-                            log.info(
-                                `No new ${listType} loaded. Scroll attempt: ${scrollAttempts}`,
-                            );
-                        } else {
-                            scrollAttempts = 0; // Reset scroll attempts if new tiles were added
-                        }
-
-                        // Break if no new content was loaded after several attempts
-                        if (scrollAttempts >= 3) {
-                            log.info(
-                                `No new ${listType} after several attempts. Stopping scroll.`,
-                            );
-                            break;
-                        }
-                    }
-
-                    // Log the data to a text file
-                    const logData = dataSet
-                        .map(
-                            (item) =>
-                                `Username: ${item.username}, Profile Pic: ${item.profilePicUrl}`,
-                        )
-                        .join("\n");
-                    await fs.writeFile(logFilePath, logData, { flag: "a" });
-
-                    log.info(`Total ${listType} extracted and logged.`);
-                    return dataSet; // Return the dataset for MongoDB insertion
-                };
-
-                // Scrape followers
-                try {
-                    const followersData = await scrapeList(
-                        "followers",
-                        `a[href="/${username}/followers/"]`,
-                        "./followers_log.txt",
-                        followerCount,
-                    );
-                    await insertFollowers(username, followersData, "instagram");
-                } catch (error: any) {
-                    log.error(
-                        `Error while scraping followers: ${error.message}. Moving on to following list.`,
-                    );
-                }
-
-                // Scrape following
-                try {
-                    const followingData = await scrapeList(
-                        "following",
-                        `a[href="/${username}/following/"]`,
-                        "./following_log.txt",
-                        followingCount,
-                    );
-                    await insertFollowing(username, followingData, "instagram");
-                } catch (error: any) {
-                    log.error(
-                        `Error while scraping following: ${error.message}. Moving on`,
-                    );
-                }
-                await openAllInstagramMessagesAndLog(page, log, username);
+                // try {
+                //   const followingData = await extractInstagramList(
+                //       page,
+                //       instagram_id,
+                //       username,
+                //       "following",
+                //       followingCount
+                //   );
+                //     await insertFollowing(username, followingData, "instagram");
+                // } catch (error: any) {
+                //     log.error(
+                //         `Error while scraping following: ${error.message}. Moving on`,
+                //     );
+                // }
+                // await page.goto(
+                //      "https://www.instagram.com/session/login_activity/"
+                // );
+                // await page.waitForTimeout(4000);
+                // await scrapeInstagramLogin(username, page);
+                // await openAllInstagramMessagesAndLog(page, log, username);
                 return resultId;
             } catch (error: any) {
                 log.error(`Error processing ${request.url}: ${error.message}`);

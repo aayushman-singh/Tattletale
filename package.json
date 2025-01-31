@@ -50,6 +50,7 @@
     "start:gmail": "npx tsx scraper/src/routes/gmail.ts",
     "start:drive": "npx tsx scraper/src/routes/gdrive.ts",
     "start:telegram": "python scraper/src/routes/telegram.py",
+    "start:chatbot": "python scraper/src/routes/chatbot.py",
     "start:auth": "npx tsx backend/server",
     "start:maigret": "python frontend/maigret/server.py",
     "start:instagram": "cd scraper/src/routes/ && npx tsx src/routes/instagram.ts",

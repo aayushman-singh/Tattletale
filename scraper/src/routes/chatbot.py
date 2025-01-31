@@ -11,11 +11,17 @@ from langchain_core.documents import Document
 import tempfile
 import os
 import io
+from dotenv import load_dotenv  
 
+
+load_dotenv()
+
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"])
 
-GOOGLE_API_KEY = "AIzaSyDETyZ9Aqb5YZF7fAHDJRpjKfVpo3bMwho"
+
 
 def process_pdf_and_query(pdf_bytes, query):
     # Initialize components

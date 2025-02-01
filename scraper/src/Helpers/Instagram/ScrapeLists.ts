@@ -4,10 +4,11 @@ interface InstagramUser {
     username: string;
     profile_pic_url: string;
     id: string;
+    full_name: string;
 }
 
 interface ApiResponse {
-    users: InstagramUser[];
+    users: any[]; // using 'any' to allow extra fields; we'll pick what we need.
     big_list: boolean;
     page_size: number;
     next_max_id?: string;
@@ -28,102 +29,101 @@ export class InstagramListExtractor {
         listType: "followers" | "following",
         maxItems: number = 50
     ): Promise<InstagramUser[]> {
-        // Select correct button based on list type
+        console.log(`📌 Starting extraction: ${listType} for ${username}`);
+
+        // Select correct button based on list type.
         const selector =
             listType === "followers"
                 ? 'a[href*="/followers/"]'
                 : 'a[href*="/following/"]';
 
-        // Click to open modal
-        await this.page.goto(
-                            `https://www.instagram.com/${username}/`
-        );
-        await this.page.waitForSelector(selector, { timeout: 100000 });
-        await this.page.click(selector);
-
-        // Wait for modal to open
-        await this.page.waitForSelector('div[role="dialog"]', {
-            timeout: 70000,
-        });
-
+        // Navigate to profile page.
+        await this.page.goto(`https://www.instagram.com/${username}/`);
+        
+        // Container for extracted users from API responses.
         const extractedUsers: InstagramUser[] = [];
         const seenIds = new Set<string>();
-        let scrollAttempts = 0;
-        let hasMore = true;
-
-        // Set up response listener
+        // Set up a response listener to capture API responses.
         this.page.on("response", async (response) => {
             const url = response.url();
-            const expectedUrl = `https://www.instagram.com/api/v1/friendships/${this.instagram_id}/${listType}/`;
 
-            if (url.startsWith(expectedUrl)) {
+            // Expected URL starts with the given endpoint.
+            const expectedUrl = `https://www.instagram.com/api/v1/friendships/`;
+            if (url.match(expectedUrl)) {
+                console.log(`🟢 API Response detected: ${url}`);
                 try {
                     const data: ApiResponse = await response.json();
-
+                    console.log(
+                        `📥 Raw API Response:`,
+                        JSON.stringify(data, null, 2)
+                    );
                     if (data.users && Array.isArray(data.users)) {
                         for (const user of data.users) {
+                            // Use "pk" or "id" as a unique identifier.
+                            const userId = user.pk || user.id;
                             if (
-                                !seenIds.has(user.id) &&
+                                userId &&
+                                !seenIds.has(userId) &&
                                 extractedUsers.length < maxItems
                             ) {
-                                seenIds.add(user.id);
+                                seenIds.add(userId);
                                 extractedUsers.push({
+                                    id: userId,
                                     username: user.username,
                                     profile_pic_url: user.profile_pic_url,
-                                    id: user.id,
+                                    full_name: user.full_name,
                                 });
+                                console.log(
+                                    `✅ Extracted User: ${user.username} (${userId})`
+                                );
                             }
                         }
-
-                        hasMore = data.big_list && !!data.next_max_id;
+                    } else {
+                        console.log(`⚠️ No valid users in API response.`);
                     }
                 } catch (error) {
-                    console.error(`Error processing response:`, error);
+                    console.error(`❌ Error processing response:`, error);
                 }
             }
         });
+        
+        await this.page.waitForSelector(selector, { timeout: 10000 });
+        await this.page.click(selector);
+        // Wait for the modal to open.
+        await this.page.waitForSelector('div[role="dialog"]', {
+            timeout: 10000,
+        });
 
-        // Scroll until we have enough items or no more data
+        // Scrolling loop using tiles (the tiles trigger additional API calls).
+        let scrollAttempts = 0;
+        const maxScrollAttempts = 5;
+        const tileSelector =
+            "div.x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.x1pi30zi.x1swvt13.xwib8y2.x1y1aw1k.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1";
+
         while (
-            extractedUsers.length < maxItems &&
-            hasMore &&
-            scrollAttempts < 15
+            scrollAttempts < maxScrollAttempts &&
+            extractedUsers.length < maxItems
         ) {
-            const modalSelector =
-                'div[role="dialog"] div[style*="overflow-y: auto"]';
-            await this.page.waitForSelector(modalSelector);
-
-            // Scroll the modal
-            await this.page.evaluate((selector) => {
-                const element = document.querySelector(selector);
-                if (element) {
-                    element.scrollTop = element.scrollHeight;
-                }
-            }, modalSelector);
-
-            // Wait for potential new data to load
-            await this.page.waitForTimeout(2000);
-
-            // Check if we got new users
-            const previousCount = extractedUsers.length;
-            await this.page.waitForTimeout(1000); // Wait for potential API responses
-
-            if (previousCount === extractedUsers.length) {
-                scrollAttempts++;
-            } else {
-                scrollAttempts = 0;
+            const tiles = await this.page.$$(tileSelector);
+            console.log(`Found ${tiles.length} ${listType} tiles.`);
+            if (tiles.length > 0) {
+                // Scroll to the last tile to trigger new content.
+                await tiles[tiles.length - 1].scrollIntoViewIfNeeded();
             }
-
-            if (scrollAttempts >= 3) {
-                break;
-            }
+            // Wait for new API responses.
+            await this.page.waitForTimeout(10000);
+            scrollAttempts++;
+            console.log(`Scroll attempt ${scrollAttempts}`);
         }
 
+        console.log(
+            `✅ Extraction completed: ${extractedUsers.length} users found.`
+        );
         return extractedUsers;
     }
 }
 
-// Helper function for simple usage
+// Helper function for simple usage.
 export async function extractInstagramList(
     page: Page,
     instagram_id: string,
@@ -132,5 +132,5 @@ export async function extractInstagramList(
     maxItems: number
 ): Promise<InstagramUser[]> {
     const extractor = new InstagramListExtractor(page, instagram_id);
-    return await extractor.extractList(username,listType, maxItems);
+    return await extractor.extractList(username, listType, maxItems);
 }

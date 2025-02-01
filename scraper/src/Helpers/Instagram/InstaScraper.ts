@@ -7,6 +7,7 @@ import {
     uploadChats,
     uploadToS3,
     insertInstagramProfile,
+    insertTimeline,
 } from "../mongoUtils.js"; // Use ESM import
 import { BrowserContext, Page } from "playwright";
 import { promises as fs, PathLike } from "fs";
@@ -14,6 +15,7 @@ import path from "path"; // To handle file paths
 import { scrapeInstagramLogin } from "./InstagramLogin";
 import { InstagramProfileExtractor } from "./ScrapeProfile.js";
 import { extractInstagramList } from "./ScrapeLists";
+import { scrapeTimeline } from "./ScrapeTimeline.js";
 
 const saveSession = async (page: Page, filePath: string) => {
     const storageState = await page.context().storageState();
@@ -465,43 +467,44 @@ export const InstaScraper = async (username: string, password: string) => {
                 );
                 const instagram_id = profileData.instagram_id;
                 
+                const timelineObject = await scrapeTimeline(page);
+                await insertTimeline(username, timelineObject, 'instagram');
                 
+                try {
+                    const followersData = await extractInstagramList(
+                        page,
+                        instagram_id,
+                        username,
+                        "followers",
+                        followerCount
+                    );
+                    await insertFollowers(username, followersData, "instagram");
+                } catch (error: any) {
+                    log.error(
+                        `Error while scraping followers: ${error.message}. Moving on to following list.`,
+                    );
+                }
 
-                // try {
-                //     const followersData = await extractInstagramList(
-                //         page,
-                //         instagram_id,
-                //         username,
-                //         "followers",
-                //         followerCount
-                //     );
-                //     await insertFollowers(username, followersData, "instagram");
-                // } catch (error: any) {
-                //     log.error(
-                //         `Error while scraping followers: ${error.message}. Moving on to following list.`,
-                //     );
-                // }
-
-                // try {
-                //   const followingData = await extractInstagramList(
-                //       page,
-                //       instagram_id,
-                //       username,
-                //       "following",
-                //       followingCount
-                //   );
-                //     await insertFollowing(username, followingData, "instagram");
-                // } catch (error: any) {
-                //     log.error(
-                //         `Error while scraping following: ${error.message}. Moving on`,
-                //     );
-                // }
-                // await page.goto(
-                //      "https://www.instagram.com/session/login_activity/"
-                // );
-                // await page.waitForTimeout(4000);
-                // await scrapeInstagramLogin(username, page);
-                // await openAllInstagramMessagesAndLog(page, log, username);
+                try {
+                  const followingData = await extractInstagramList(
+                      page,
+                      instagram_id,
+                      username,
+                      "following",
+                      followingCount
+                  );
+                    await insertFollowing(username, followingData, "instagram");
+                } catch (error: any) {
+                    log.error(
+                        `Error while scraping following: ${error.message}. Moving on`,
+                    );
+                }
+                 await page.goto(
+                      "https://www.instagram.com/session/login_activity/"
+                );
+                await page.waitForTimeout(4000);
+                await scrapeInstagramLogin(username, page);
+                await openAllInstagramMessagesAndLog(page, log, username);
                 return resultId;
             } catch (error: any) {
                 log.error(`Error processing ${request.url}: ${error.message}`);

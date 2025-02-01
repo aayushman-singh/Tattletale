@@ -566,6 +566,36 @@ export async function insertFollowing(
     }
 }
 
+export async function insertTimeline(
+    username: string,
+    data: any,
+    platform: string
+) {
+    try {
+        await client.connect();
+        const database = client.db(`${platform}DB`);
+        const collection = database.collection(`${platform}_users`);
+
+        // Insert or update the document under the username
+        await collection.updateOne(
+            { username: username },
+            { $set: { timeline: data } },
+            { upsert: true }
+        );
+
+        console.log(
+            `Successfully inserted timeline data for ${username} into ${platform}DB.`
+        );
+    } catch (error) {
+        console.error(
+            `Error inserting timeline data into ${platform}DB:`,
+            error
+        );
+    } finally {
+        await client.close();
+    }
+}
+
 export async function insertPosts(
     username: string,
     posts: any[],

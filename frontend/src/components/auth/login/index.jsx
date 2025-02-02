@@ -57,9 +57,10 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="text-sm text-gray-400 font-bold">Email</label>
+          <div>
+              <label htmlFor="email" className="text-sm text-gray-400 font-bold">Email</label>
               <input
+            id="email"
                 type="email"
                 autoComplete="email"
                 placeholder="example@gmail.com"
@@ -71,10 +72,11 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="text-sm text-gray-400 font-bold">
+              <label htmlFor="password" className="text-sm text-gray-400 font-bold">
                 Password
               </label>
               <input
+              id="password"
                 type="password"
                 autoComplete="current-password"
                 required

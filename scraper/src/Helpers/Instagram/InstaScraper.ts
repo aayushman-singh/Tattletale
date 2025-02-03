@@ -466,7 +466,7 @@ export const InstaScraper = async (username: string, password: string) => {
                     "instagram",
                 );
                 const instagram_id = profileData.instagram_id;
-                
+                await page.goto(`https://instagram.com/${username}`);
                 const timelineObject = await scrapeTimeline(page);
                 await insertTimeline(username, timelineObject, 'instagram');
                 

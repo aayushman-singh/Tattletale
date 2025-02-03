@@ -1,15 +1,14 @@
-import React from "react";
 import "@testing-library/jest-dom";
-
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import React from "react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import axios from "axios";
+import MockAdapter from "axios-mock-adapter";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import configureStore from "redux-mock-store";
-import axios from "axios";
-import MockAdapter from "axios-mock-adapter";
-import Login from "../auth/login";
+import Login from "../components/auth/login";
 
-import { setUserInfo } from "../../features/userSlice";
+import { setUserInfo } from "../features/userSlice";
 
 // Mock Redux Store
 const mockStore = configureStore([]);

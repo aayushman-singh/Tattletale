@@ -31,7 +31,7 @@ export async function scrapeTimeline(
             console.error("❌ Error processing response:", error);
         }
     });
-
+    
     // Scroll to load more content.
     for (let i = 0; i < maxScrolls; i++) {
         await page.evaluate(() =>
@@ -44,7 +44,7 @@ export async function scrapeTimeline(
     await page.waitForTimeout(5000);
 
     console.log(
-        `✅ Saved ${timelineItems.length} items to instagram_timeline.json`
+        `✅ Saved ${timelineItems.length} items`
     );
 
     return timelineItems;

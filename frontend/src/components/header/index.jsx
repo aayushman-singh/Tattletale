@@ -106,7 +106,7 @@ const Header = () => {
                 </span>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <span className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group cursor-pointer">
+                    <span data-testid="services-dropdown"  className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group cursor-pointer">
                       Services
                       <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 group-hover:w-full"></span>
                     </span>
@@ -173,39 +173,96 @@ const Header = () => {
             <button
               onClick={toggleMenu}
               className="text-gray-300 hover:text-white focus:outline-none"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
             >
               {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
-        </div>
-
-        {/* Mobile Dropdown Menu */}
-        {menuOpen && (
-          <div className="md:hidden mt-2 space-y-2 bg-gray-800 rounded-lg p-4">
-            <Link
-              to="/services"
-              className="block text-sm text-gray-300 hover:text-white"
-            >
-              Social Media Investigation
-            </Link>
-            <Link to="/osint" className="block text-sm text-gray-300 hover:text-white">
-              OSINT Tools
-            </Link>
-            <Link
-              to="/pastData"
-              className="block text-sm text-gray-300 hover:text-white"
-            >
-              Past Data
-            </Link>
-            <Link
-              to="/profileAnalysis"
-              className="block text-sm text-gray-300 hover:text-white"
-            >
-              Profile Analysis
-            </Link>
           </div>
-        )}
-      </div>
+
+          {/* Mobile Dropdown Menu */}
+          {menuOpen && (
+            <div className="md:hidden mt-2 space-y-2 bg-gray-800 rounded-lg p-4">
+              {user ? (
+                <>
+                  <Link
+                    to="/profilePage"
+                    className="block text-sm text-gray-300 hover:text-white"
+                  >
+                    Profile
+                  </Link>
+                  <span
+                    onClick={() => {
+                      handleNavigation("features");
+                      setMenuOpen(false);
+                    }}
+                    className="block text-sm text-gray-300 hover:text-white cursor-pointer"
+                  >
+                    Features
+                  </span>
+                  <span
+                    onClick={() => {
+                      handleNavigation("about");
+                      setMenuOpen(false);
+                    }}
+                    className="block text-sm text-gray-300 hover:text-white cursor-pointer"
+                  >
+                    About
+                  </span>
+                  <Link
+                    to="/services"
+                    className="block text-sm text-gray-300 hover:text-white"
+                  >
+                    Social Media Investigation
+                  </Link>
+                  <Link
+                    to="/osint"
+                    className="block text-sm text-gray-300 hover:text-white"
+                  >
+                    OSINT Tools
+                  </Link>
+                  <Link
+                    to="/pastData"
+                    className="block text-sm text-gray-300 hover:text-white"
+                  >
+                    Past Data
+                  </Link>
+                  <Link
+                    to="/profileAnalysis"
+                    className="block text-sm text-gray-300 hover:text-white"
+                  >
+                    Profile Analysis
+                  </Link>
+                  <span
+                    onClick={() => {
+                      handleLogout();
+                      setMenuOpen(false);
+                    }}
+                    className="block text-sm text-gray-300 hover:text-white cursor-pointer"
+                  >
+                    Logout
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="block text-sm text-gray-300 hover:text-white"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="block text-sm text-gray-300 hover:text-white"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
+        </div>
     </nav>
   );
 };

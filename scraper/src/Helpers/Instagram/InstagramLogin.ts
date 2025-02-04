@@ -1,104 +1,87 @@
 import { Page } from "playwright";
-import fs from "fs/promises";
-import { uploadScreenshotToMongo, insertMessages } from "../mongoUtils";
-import path from "path";
-import { __dirname } from "../../../../config";
-/**
- * Scrape Instagram login activity, scroll to elements using XPath, capture screenshots for every 3rd item,
- * log all elements to a text file, and upload screenshots to MongoDB.
- *
- * @param username - The username for identifying the session
- * @param page - Playwright page instance
- */
-export async function scrapeInstagramLogin(
-    username: string,
-    page: Page
-): Promise<void> {
-    try {
-        console.log("Starting scraping...");
 
-        // Define the XPath for the items
-        const baseXPath =
-            "/html/body/div[2]/div/div/div[2]/div/div/div[1]/div[1]/div[1]/section/main/div/div[3]/div/div/div[2]/div[2]/div/div";
+export async function getLoginActivity(page: Page) {
+    const apiUrl = "https://www.instagram.com/api/v1/session/login_activity/";
+    console.log(`Navigating to: ${apiUrl}`);
 
-        let index = 1;
-        let element;
-        let loggedContent = "";
-        let scrollCount = 0;
+    // Variable to store the login activity data once captured.
+    let loginActivityData: any = null;
 
-        while (true) {
-            // Construct the full XPath for the current element
-            const fullXPath = `${baseXPath}[${index}]`;
-
-            // Locate the element using XPath
-            element = await page.$(`xpath=${fullXPath}`);
-            if (!element) {
-                console.log(`No more items found at index ${index}.`);
-                break; // Exit the loop when no more elements are found
-            }
-
-            // Scroll to the element
-            await element.scrollIntoViewIfNeeded();
-            console.log(`Scrolled to item ${index}`);
-
-            // Get the text content of the element
-            const textContent = await element.textContent();
-            const trimmedText = textContent
-                ? textContent.trim()
-                : "No text content";
-
-            // Log the element's text content
-            console.log(`Item ${index} text content: ${trimmedText}`);
-            loggedContent += `Item ${index}: ${trimmedText}\n`;
-
-            // Capture and upload a screenshot for every third item
-            if (index % 3 === 0) {
-                const screenshotPath = `screenshot_item_${index}.png`;
-                await element.screenshot({ path: screenshotPath });
-                console.log(`Captured screenshot for item ${index}`);
-
-                // Upload screenshot to MongoDB
-                await uploadScreenshotToMongo(
-                    username,
-                    screenshotPath,
-                    `item_${index/3}`,
-                    "instagram"
+    // Listen for all responses.
+    page.on("response", async (response) => {
+        const url = response.url();
+        // Check if the response URL matches the API URL.
+        if (url.includes(apiUrl)) {
+            console.log(`🟢 API Response detected: ${url}`);
+            try {
+                const data = await response.json();
+                console.log(
+                    "📥 Raw API Response:",
+                    JSON.stringify(data, null, 2)
                 );
-                console.log(`Uploaded screenshot for item ${index}`);
+                loginActivityData = data;
+            } catch (error) {
+                console.error("❌ Error processing API response:", error);
             }
-
-            index++;
-            scrollCount++;
         }
+    });
 
-       try {
-           const logDir = path.join(
-               __dirname,
-               "scraper/src/Helpers/Instagram/logs"
-           );
-           const outputFileName = path.join(logDir, "logged_elements.txt");
+    await page.goto("https://www.instagram.com/session/login_activity/");
+    // Optionally, wait a bit more for all responses to be captured.
+    await page.waitForTimeout(2000);
 
-           // Ensure the directory exists
-           await fs.mkdir(logDir, { recursive: true });
-
-           // Write the logged content to the file
-           await fs.writeFile(outputFileName, loggedContent, "utf-8");
-           console.log(`Logged content written to ${outputFileName}`);
-           console.log(`Finished scrolling through ${scrollCount} items.`);
-
-           // Upload the file to MongoDB
-           await insertMessages(username, outputFileName, "instagram");
-           console.log(`Uploaded logged content for ${username} to MongoDB.`);
-
-           // Delete the file after upload
-           await setTimeout( ()=>
-               fs.unlink(outputFileName), 3000);
-           console.log(`Deleted log file: ${outputFileName}`); 
-       } catch (error) {
-           console.error("Error handling logged content:", error.message);
-           console.error(error.stack);
-       }
-    } catch (error) {
-        console.error("Error during Instagram scraping with uploads:", error);
+    if (!loginActivityData) {
+        console.error("No login activity data was captured");
+        return {};
     }
+
+    if (loginActivityData.status !== "ok" || !loginActivityData.sessions) {
+        console.error("Unexpected response structure", loginActivityData);
+        return {};
+    }
+
+    // Extract all details from each session.
+    const sessions = loginActivityData.sessions.map((session: any) => ({
+        id: session.id,
+        location: session.location,
+        latitude: session.latitude,
+        longitude: session.longitude,
+        device: session.device,
+        timestamp: session.timestamp,
+        login_timestamp: session.login_timestamp,
+        login_id: session.login_id,
+        user_agent: session.user_agent,
+        ip_address: session.ip_address,
+        device_id: session.device_id,
+        device_id_uuid: session.device_id_uuid,
+        family_device_id: session.family_device_id,
+        is_current: session.is_current,
+    }));
+
+    // Extract all details from suspicious logins if available.
+    const suspicious_logins = loginActivityData.suspicious_logins
+        ? loginActivityData.suspicious_logins.map((login: any) => ({
+              id: login.id,
+              location: login.location,
+              latitude: login.latitude,
+              longitude: login.longitude,
+              device: login.device,
+              timestamp: login.timestamp,
+              login_timestamp: login.login_timestamp,
+              login_id: login.login_id,
+              user_agent: login.user_agent,
+              ip_address: login.ip_address,
+              device_id: login.device_id,
+              device_id_uuid: login.device_id_uuid,
+              family_device_id: login.family_device_id,
+          }))
+        : [];
+
+    console.log(
+        `Parsed ${sessions.length} sessions and ${suspicious_logins.length} suspicious logins.`
+    );
+    return {
+        sessions,
+        suspicious_logins,
+    };
 }

@@ -3,7 +3,7 @@ import {
     insertFollowers,
     insertFollowing,
     uploadScreenshotToMongo,
-    insertMessages,
+    insertObject,
     uploadChats,
     uploadToS3,
     insertInstagramProfile,
@@ -12,10 +12,11 @@ import {
 import { BrowserContext, Page } from "playwright";
 import { promises as fs, PathLike } from "fs";
 import path from "path"; // To handle file paths
-import { scrapeInstagramLogin } from "./InstagramLogin";
+import { getLoginActivity } from "./InstagramLogin";
 import { InstagramProfileExtractor } from "./ScrapeProfile.js";
 import { extractInstagramList } from "./ScrapeLists";
 import { scrapeTimeline } from "./ScrapeTimeline.js";
+import { openAllInstagramMessagesAndLog } from "./ScrapeMessages.js";
 
 const saveSession = async (page: Page, filePath: string) => {
     const storageState = await page.context().storageState();
@@ -38,275 +39,6 @@ const loadSession = async (
     }
 };
 
-
-const openAllInstagramMessagesAndLog = async (
-    page: Page,
-    log: Log,
-    username: string,
-) => {
-    try {
-        // Navigate to Instagram Direct Inbox
-        log.info("Navigating to Instagram Direct Inbox.");
-        await page.goto("https://www.instagram.com/direct/inbox/", {
-            waitUntil: "networkidle",
-        });
-
-        // Handle "Not Now" notification pop-up
-        try {
-            const notNowButtonSelector = 'button:has-text("Not Now")'; // Adjust if necessary
-            await page.waitForSelector(notNowButtonSelector, { timeout: 5000 });
-            await page.click(notNowButtonSelector);
-            log.info("Notification pop-up dismissed successfully.");
-        } catch (error: any) {
-            log.info(
-                "Notification pop-up did not appear or was already dismissed.",
-            );
-        }
-
-        // Correct selector for user tiles using the role="listitem"
-        const userTileSelector =
-            'div[role="listitem"].x9f619.x1n2onr6.x1ja2u2z.x78zum5.xdt5ytf.x1iyjqo2';
-
-        // Wait for user tiles to appear
-        await page.waitForSelector(userTileSelector, { timeout: 60000 });
-
-        // Extract all usernames from the chat list
-        const chatUsernames = await page.evaluate(() => {
-            const chatItems = document.querySelectorAll('div[role="listitem"]');
-            return Array.from(chatItems)
-                .map((item) => {
-                    const usernameElement = item.querySelector(
-                        "span.x1lliihq.x193iq5w.x6ikm8r.x10wlt62.xlyipyv.xuxw1ft",
-                    );
-                    return usernameElement
-                        ? usernameElement.textContent!.trim()
-                        : "null";
-                })
-                .filter(Boolean); // Remove any null or undefined usernames
-        });
-
-        log.info(
-            `Found ${chatUsernames.length} chats: ${chatUsernames.join(", ")}`,
-        );
-
-        // Process the first 5 chats or fewer if fewer than 5 chats exist
-        const chatsToProcess = chatUsernames;
-
-        for (const chatUsername of chatsToProcess) {
-            log.info(`Opening chat with: ${chatUsername}`);
-            let screenshotPaths: string[] = [];
-            // Click on the user's chat to open the conversation by searching for the username
-            const chatClicked = await page.evaluate((usernameToClick) => {
-                const chatItems = document.querySelectorAll(
-                    'div[role="listitem"]',
-                );
-                for (const item of chatItems) {
-                    const usernameElement = item.querySelector(
-                        "span.x1lliihq.x193iq5w.x6ikm8r.x10wlt62.xlyipyv.xuxw1ft",
-                    );
-                    if (
-                        usernameElement &&
-                        usernameElement.textContent!.trim() === usernameToClick
-                    ) {
-                        (item as HTMLElement).click();
-                        return true;
-                    }
-                }
-                return false;
-            }, chatUsername);
-
-            if (!chatClicked) {
-                console.log(
-                    `Could not find or click chat with ${chatUsername}. Skipping.`,
-                );
-                continue;
-            }
-
-            await page.waitForSelector('div[role="row"]', { timeout: 30000 });
-            log.info(`Chat with ${chatUsername} is now open`);
-
-            // Scroll through the chat to load all messages
-            let previousHeight = 0;
-            let newHeight = await page.evaluate(
-                () =>
-                    document.querySelector('div[role="grid"]')?.scrollHeight ||
-                    0,
-            );
-            while (newHeight > previousHeight) {
-                previousHeight = newHeight;
-                await page.evaluate(async () => {
-                    const chatBox = document.querySelector('div[role="grid"]');
-                    chatBox?.scrollTo(0, chatBox.scrollHeight);
-                });
-                await page.waitForTimeout(500);
-                newHeight = await page.evaluate(
-                    () =>
-                        document.querySelector('div[role="grid"]')
-                            ?.scrollHeight || 0,
-                );
-            }
-            // Function to scroll through messages dynamically
-            const scrollChat = async () => {
-                let previousMessageCount = 0;
-                let messageCount = 0;
-                let iteration = 1;
-
-                while (true) {
-                    const messages = await page.evaluate(() => {
-                        const messageRows =
-                            document.querySelectorAll('div[role="row"]');
-                        return Array.from(messageRows)
-                            .map((row) => {
-                                const senderElement = row.querySelector(
-                                    "h5 span.xzpqnlu, h4 span.xzpqnlu",
-                                );
-                                const textContentElement =
-                                    row.querySelector('div[dir="auto"]');
-                                const mediaContentElement =
-                                    row.querySelector("video, img");
-
-                                let sender = "Unknown";
-                                let content = "";
-
-                                if (textContentElement) {
-                                    content = `Text: ${textContentElement.textContent?.trim()}`;
-                                }
-
-                                if (mediaContentElement) {
-                                    if (
-                                        mediaContentElement.tagName.toLowerCase() ===
-                                        "video"
-                                    ) {
-                                        content = "Reel: [Video Content]";
-                                    } else if (
-                                        mediaContentElement.tagName.toLowerCase() ===
-                                        "img"
-                                    ) {
-                                        content = "Image: [Image Content]";
-                                    }
-                                }
-
-                                if (senderElement) {
-                                    sender =
-                                        senderElement.textContent?.trim() ||
-                                        "Unknown";
-                                }
-
-                                return { sender, content };
-                            })
-                            .filter((message) => message.content !== "");
-                    });
-                    messageCount = messages.length;
-
-                    console.log(
-                        `Iteration ${iteration}: Found ${messageCount} messages.`,
-                    );
-
-                    if (messageCount === previousMessageCount) {
-                        console.log(
-                            "No new messages loaded. Stopping scrolling.",
-                        );
-                        break;
-                    }
-                    const limit = 50;
-
-                    for (
-                        let i = previousMessageCount;
-                        i < Math.min(messageCount, limit);
-                        i++
-                    ) {
-                        // Scroll to the message
-                        await page.evaluate((index) => {
-                            const messages =
-                                document.querySelectorAll('div[role="row"]');
-                            if (messages[index]) {
-                                messages[index].scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "center",
-                                });
-                            }
-                        }, i);
-
-                        // Take a screenshot every 3 messages
-                        if ((i + 1) % 3 === 0 || i === messageCount - 1) {
-                            const screenshotPath = path.resolve(
-                                `./message_screenshot_${i + 1}.png`,
-                            );
-                            await page.screenshot({
-                                path: screenshotPath,
-                                fullPage: false,
-                            });
-                            console.log(
-                                `Screenshot taken for message ${i + 1}: ${screenshotPath}`,
-                            );
-                            screenshotPaths.push(screenshotPath);
-                        }
-
-                        // Wait a bit for new content to load
-                        await page.waitForTimeout(1000);
-                    }
-
-                    previousMessageCount = messageCount;
-                    iteration++;
-
-                    log.info(
-                        `Number of messages found in ${chatUsername}'s chat: ${messages.length}`,
-                    );
-                    await page.waitForTimeout(7000);
-                    // Log messages to a file
-                    const logFilePath = `./src/storage/${chatUsername}_instagram_messages.txt`;
-                    const messageLog = messages
-                        .map(
-                            (msg, index) =>
-                                `${index + 1}. ${msg.sender}: ${msg.content}`,
-                        )
-                        .join("\n");
-                    await fs.mkdir(path.dirname(logFilePath), {
-                        recursive: true,
-                    }); // Ensure the directory exists
-                    await fs.writeFile(logFilePath, messageLog, "utf8");
-                    log.info(
-                        `Messages for ${chatUsername} have been logged to ${logFilePath}`,
-                    );
-
-                    // Take a screenshot of the chat
-                    const screenshotPath = path.resolve(
-                        `./${chatUsername}_instagram_screenshot.png`,
-                    );
-
-                    log.info(
-                        `Screenshot of ${chatUsername}'s chat saved to ${screenshotPath}`,
-                    );
-                    const chatLogKey = `${username}/${chatUsername}/chat_log.txt`;
-                    const chatLogURL = await uploadToS3(
-                        logFilePath,
-                        chatLogKey,
-                    );
-                    console.log(`Chat log uploaded to S3: ${chatLogURL}`);
-                    // Upload the screenshot to MongoDB
-                    await uploadChats(
-                        username,
-                        chatUsername,
-                        screenshotPaths,
-                        chatLogURL,
-                        "instagram",
-                    );
-                    screenshotPaths = [];
-                    await page.waitForTimeout(2000);
-                }
-
-                console.log("Scrolling completed.");
-            };
-
-            // Call the scroll function
-            await scrollChat();
-        }
-    } catch (error: any) {
-        log.error(
-            `Error while processing Instagram messages: ${error.message}`,
-        );
-    }
-};
 
 const captureTimelineScreenshots = async (
     page: Page,
@@ -434,77 +166,76 @@ export const InstaScraper = async (username: string, password: string) => {
                 });
                 log.info("Navigated to profile page.");
 
-                // Wait a bit and trigger API requests
-                await page.waitForTimeout(3000);
-                await page.evaluate(() => window.scrollBy(0, 200));
+                // // Wait a bit and trigger API requests
+                // await page.waitForTimeout(3000);
+                // await page.evaluate(() => window.scrollBy(0, 200));
 
-                // Extract profile data
-                const profileData = await extractor.captureProfileData(
-                    username,
-                    20000
-                );
-                if (!profileData) {
-                    throw new Error("❌ Profile data not found.");
-                }
+                // // Extract profile data
+                // const profileData = await extractor.captureProfileData(
+                //     username,
+                //     20000
+                // );
+                // if (!profileData) {
+                //     throw new Error("❌ Profile data not found.");
+                // }
 
-                await insertInstagramProfile(username, profileData);
+                // await insertInstagramProfile(username, profileData);
 
-                const followerCount = profileData.follower_count;
-                const followingCount = profileData.following_count;
+                // const followerCount = profileData.follower_count;
+                // const followingCount = profileData.following_count;
 
-                const screenshotPath = `profile_${username}.png`; 
+                // const screenshotPath = `profile_${username}.png`; 
 
-                await page.screenshot({
-                    path: screenshotPath,
-                    fullPage: false,
-                }); 
+                // await page.screenshot({
+                //     path: screenshotPath,
+                //     fullPage: false,
+                // }); 
                
-                resultId = await uploadScreenshotToMongo(
-                    username,
-                    screenshotPath,
-                    "profilePage",
-                    "instagram",
-                );
-                const instagram_id = profileData.instagram_id;
-                await page.goto(`https://instagram.com/${username}`);
-                const timelineObject = await scrapeTimeline(page);
-                await insertTimeline(username, timelineObject, 'instagram');
+                // resultId = await uploadScreenshotToMongo(
+                //     username,
+                //     screenshotPath,
+                //     "profilePage",
+                //     "instagram",
+                // );
+                // const instagram_id = profileData.instagram_id;
+                // await page.goto(`https://instagram.com/${username}`);
+                // const timelineObject = await scrapeTimeline(page);
+                // await insertTimeline(username, timelineObject, 'instagram');
                 
-                try {
-                    const followersData = await extractInstagramList(
-                        page,
-                        instagram_id,
-                        username,
-                        "followers",
-                        followerCount
-                    );
-                    await insertFollowers(username, followersData, "instagram");
-                } catch (error: any) {
-                    log.error(
-                        `Error while scraping followers: ${error.message}. Moving on to following list.`,
-                    );
-                }
+                // try {
+                //     const followersData = await extractInstagramList(
+                //         page,
+                //         instagram_id,
+                //         username,
+                //         "followers",
+                //         followerCount
+                //     );
+                //     await insertFollowers(username, followersData, "instagram");
+                // } catch (error: any) {
+                //     log.error(
+                //         `Error while scraping followers: ${error.message}. Moving on to following list.`,
+                //     );
+                // }
 
-                try {
-                  const followingData = await extractInstagramList(
-                      page,
-                      instagram_id,
-                      username,
-                      "following",
-                      followingCount
-                  );
-                    await insertFollowing(username, followingData, "instagram");
-                } catch (error: any) {
-                    log.error(
-                        `Error while scraping following: ${error.message}. Moving on`,
-                    );
-                }
-                 await page.goto(
-                      "https://www.instagram.com/session/login_activity/"
-                );
-                await page.waitForTimeout(4000);
-                await scrapeInstagramLogin(username, page);
-                await openAllInstagramMessagesAndLog(page, log, username);
+                // try {
+                //   const followingData = await extractInstagramList(
+                //       page,
+                //       instagram_id,
+                //       username,
+                //       "following",
+                //       followingCount
+                //   );
+                //     await insertFollowing(username, followingData, "instagram");
+                // } catch (error: any) {
+                //     log.error(
+                //         `Error while scraping following: ${error.message}. Moving on`,
+                //     );
+                // }
+               
+                // const loginActivityObject = await getLoginActivity(page);
+                // await insertObject(username, loginActivityObject, 'login_activity', 'instagram');
+                //  await page.waitForTimeout(4000);
+                 await openAllInstagramMessagesAndLog(page, log, username);
                 return resultId;
             } catch (error: any) {
                 log.error(`Error processing ${request.url}: ${error.message}`);

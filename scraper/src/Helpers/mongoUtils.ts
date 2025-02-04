@@ -354,7 +354,7 @@ export async function uploadMastodon(
     }
 }
 
-export async function uploadChats(
+export async function uploadChats( // Deprecated
     username: string,
     receiverUsername: string,
     screenshotPaths: string[],
@@ -642,32 +642,81 @@ export async function insertPosts(
 }
 
 
-export async function insertMessages(
+export const insertMessages = async (
     username: string,
-    filePath: string,
-    platform: string,
-) {
-    await client.connect();
-    const db = client.db(`${platform}DB`);
-    const collection = db.collection<InstagramUserDocument>(
-        `${platform}_users`,
-    );
-
+    receiverUsername: string,
+    data: any,
+    chatLogURL: string,
+    screenshotPaths: string[],
+    platform: string
+) => {
+ 
     try {
-        const fileName = path.basename(filePath); // Use the file name as the S3 key
+        await client.connect();
+        const db = client.db(`${platform}DB`);
+        const collection = db.collection(`${platform}_users`);
 
-        const s3Key = `${username}/logs/${fileName}`;
-        const s3Url = await uploadToS3(filePath, s3Key);
-        // Update or insert the user's messages into the 'messages' array
-        await collection.updateOne(
-            { username: username },
-            { $set: { login_activity_logs: s3Url } },
-            { upsert: true },
-        );
-    } catch (error: any) {
-        console.error(`Failed to upload messages: ${error.message}`);
+        // Upload each screenshot to S3 and collect their URLs.
+        const screenshotURLs: string[] = [];
+        for (const filePath of screenshotPaths) {
+            const fileName = path.basename(filePath);
+            const s3Key = `${username}/${receiverUsername}/${fileName}`;
+            const s3URL = await uploadToS3(filePath, s3Key);
+            screenshotURLs.push(s3URL);
+        }
+
+        // Check if a chat with this receiverUsername already exists.
+        const existingChat = await collection.findOne({
+            username,
+            "chats.receiverUsername": receiverUsername,
+        });
+
+        if (existingChat) {
+            // Update the existing chat entry: set the latest messages and chatLogURL,
+            // and add (without duplicates) the new screenshot URLs.
+            await collection.updateOne(
+                { username, "chats.receiverUsername": receiverUsername },
+                {
+                    $set: {
+                        "chats.$.messages": data,
+                        "chats.$.chatLogURL": chatLogURL,
+                    },
+                    $addToSet: {
+                        "chats.$.screenshots": { $each: screenshotURLs },
+                    },
+                }
+            );
+            console.log(
+                `Updated existing chat entry for ${username} -> ${receiverUsername}`
+            );
+        } else {
+            // Create a new chat entry.
+            await collection.updateOne(
+                { username },
+                {
+                    $setOnInsert: { username },
+                    $set: {
+                        chats: {
+                            receiverUsername,
+                            messages: data,
+                            chatLogURL,
+                            screenshots: screenshotURLs,
+                           
+                        },
+                    },
+                },
+                { upsert: true }
+            );
+            console.log(
+                `Added new chat entry for ${username} -> ${receiverUsername}`
+            );
+        }
+    } catch (error) {
+        console.error("Error inserting messages into MongoDB:", error);
+    } finally {
+        await client.close();
     }
-}
+};
 
 export async function insertTweets(
     username: string,
@@ -704,6 +753,32 @@ export async function insertMeta(
     } catch (error) {
         console.error(`Error inserting data into ${platform}DB:`, error);
     } finally {
+        await client.close();
+    }
+}
+
+export async function insertObject(username:string, data:any, fieldName:string, platform:string) {
+  
+    try {
+        await client.connect();
+
+        const db = client.db(`${platform}DB`);
+        const collection = db.collection(`${platform}_users`);
+
+        const updateResult = await collection.updateOne(
+            { username: username },
+            { $set: { [fieldName]: data },
+               },
+            { upsert: true }
+        );
+
+        console.log(
+            `Document updated or inserted: ${JSON.stringify(updateResult)}`
+        );
+    } catch (error) {
+        console.error("Error inserting object:", error);
+    } finally {
+        // Ensure the client will close when you finish/error
         await client.close();
     }
 }

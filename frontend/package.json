@@ -39,6 +39,7 @@
     "framer-motion": "^11.5.4",
     "gsap": "^3.12.5",
     "jest-environment-jsdom": "^29.7.0",
+    "jest-fetch-mock": "^3.0.3",
     "jest-matchmedia-mock": "^1.1.0",
     "lucide-react": "^0.441.0",
     "mongoose": "^8.8.4",

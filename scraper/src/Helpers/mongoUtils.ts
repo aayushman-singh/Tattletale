@@ -672,8 +672,7 @@ export const insertMessages = async (
         });
 
         if (existingChat) {
-            // Update the existing chat entry: set the latest messages and chatLogURL,
-            // and add (without duplicates) the new screenshot URLs.
+
             await collection.updateOne(
                 { username, "chats.receiverUsername": receiverUsername },
                 {

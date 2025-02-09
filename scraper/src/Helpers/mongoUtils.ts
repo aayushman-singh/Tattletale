@@ -641,7 +641,6 @@ export async function insertPosts(
     }
 }
 
-
 export const insertMessages = async (
     username: string,
     receiverUsername: string,
@@ -650,13 +649,12 @@ export const insertMessages = async (
     screenshotPaths: string[],
     platform: string
 ) => {
- 
     try {
         await client.connect();
         const db = client.db(`${platform}DB`);
         const collection = db.collection(`${platform}_users`);
 
-        // Upload each screenshot to S3 and collect their URLs.
+        // Upload screenshots to S3
         const screenshotURLs: string[] = [];
         for (const filePath of screenshotPaths) {
             const fileName = path.basename(filePath);
@@ -665,57 +663,40 @@ export const insertMessages = async (
             screenshotURLs.push(s3URL);
         }
 
-        // Check if a chat with this receiverUsername already exists.
-        const existingChat = await collection.findOne({
-            username,
-            "chats.receiverUsername": receiverUsername,
-        });
+        // Prepare the chat object
+        const chatData = {
+            receiverUsername,
+            messages: data,
+            chatLogURL,
+            screenshots: screenshotURLs,
+            lastUpdated: new Date(),
+        };
 
-        if (existingChat) {
+        // Ensure `chats` is an array before updating
+        const result = await collection.updateOne(
+            { username },
+            {
+                $setOnInsert: { chats: [] }, // Ensures `chats` field exists as an array
+                $push: { chats: { $each: [chatData] } }, // Push new chatData into array
+            },
+            { upsert: true }
+        );
 
-            await collection.updateOne(
-                { username, "chats.receiverUsername": receiverUsername },
-                {
-                    $set: {
-                        "chats.$.messages": data,
-                        "chats.$.chatLogURL": chatLogURL,
-                    },
-                    $addToSet: {
-                        "chats.$.screenshots": { $each: screenshotURLs },
-                    },
-                }
-            );
-            console.log(
-                `Updated existing chat entry for ${username} -> ${receiverUsername}`
-            );
-        } else {
-            // Create a new chat entry.
-            await collection.updateOne(
-                { username },
-                {
-                    $setOnInsert: { username },
-                    $set: {
-                        chats: {
-                            receiverUsername,
-                            messages: data,
-                            chatLogURL,
-                            screenshots: screenshotURLs,
-                           
-                        },
-                    },
-                },
-                { upsert: true }
-            );
-            console.log(
-                `Added new chat entry for ${username} -> ${receiverUsername}`
-            );
-        }
+        console.log(
+            `${
+                result.matchedCount ? "Updated" : "Created"
+            } chat entry for ${username} -> ${receiverUsername}`
+        );
     } catch (error) {
         console.error("Error inserting messages into MongoDB:", error);
+        throw error;
     } finally {
         await client.close();
     }
 };
+
+
+
 
 export async function insertTweets(
     username: string,

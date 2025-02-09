@@ -6,14 +6,117 @@ import fs from "fs/promises";
 import { extractVideos } from "./DownloadVideo";
 import { extractImages } from "./DownloadImages";
 
+
+interface ChatMessage {
+    index: number;
+    type: "text" | "post";
+    content?: string;
+    postUrl?: string;
+    timestamp?: string;
+}
+
+export async function processChatPostsAndLog(
+    page: Page
+): Promise<ChatMessage[]> {
+    const messages: ChatMessage[] = [];
+
+    // Get all chat message rows
+    const messageRows = await page.$$('div[role="row"]');
+    console.log(`Found ${messageRows.length} message rows.`);
+
+    for (let i = 0; i < messageRows.length; i++) {
+        console.log(`\n=== Processing message row ${i + 1} ===`);
+
+        // Create base message object
+        const message: ChatMessage = {
+            index: i,
+            type: "text",
+        };
+
+        // Try to get text content first
+        const textContent = await messageRows[i].evaluate((row) => {
+            const textEl = row.querySelector('div[dir="auto"]');
+            return textEl ? textEl.textContent?.trim() : null;
+        });
+
+        if (textContent) {
+            message.content = textContent;
+        }
+
+        // Look for post element
+        const postElement = await messageRows[i].$(
+            'div[role="button"][aria-label="Double tap to like"]'
+        );
+
+        if (postElement) {
+            message.type = "post";
+            const postText = await postElement.textContent();
+            message.content = postText;
+            console.log(`Row ${i + 1}: Post text content -> ${postText}`);
+
+            // Check for media
+            const mediaElement = await postElement.$("img, video");
+            if (mediaElement) {
+                try {
+                    await postElement.scrollIntoViewIfNeeded();
+                    await postElement.click({ force: true });
+                    console.log(`Row ${i + 1}: Clicked the post element.`);
+
+                    // Wait for modal URL
+                    await page.waitForURL(
+                        (url: URL) =>
+                            url.toString().includes("/p/") ||
+                            url.toString().includes("/reel/"),
+                        { timeout: 5000 }
+                    );
+
+                    const modalUrl = page.url();
+                    message.postUrl = modalUrl;
+                    console.log(
+                        `Row ${i + 1}: Extracted modal URL -> ${modalUrl}`
+                    );
+
+                    // Close modal
+                    await page.getByRole("button", { name: "Close" }).click();
+                    console.log(`Row ${i + 1}: Closed the modal.`);
+                } catch (error) {
+                    console.error(
+                        `Row ${i + 1}: Error processing post:`,
+                        error
+                    );
+                }
+            }
+        }
+
+        // Add timestamp if available (you might need to adjust the selector)
+        try {
+            const timestamp = await messageRows[i].evaluate((row) => {
+                const timeEl = row.querySelector("time");
+                return timeEl ? timeEl.getAttribute("datetime") : null;
+            });
+            if (timestamp) {
+                message.timestamp = timestamp;
+            }
+        } catch (error) {
+            console.warn(`Row ${i + 1}: Could not extract timestamp`);
+        }
+
+        messages.push(message);
+        await page.waitForTimeout(2000);
+    }
+
+    return messages;
+}
+
+
 export const openAllInstagramMessagesAndLog = async (
     page: Page,
-    log: Log,
+   
     username: string
 ) => {
     try {
         // Navigate to Instagram Direct Inbox
-        log.info("Navigating to Instagram Direct Inbox.");
+        console.log("Navigating to Instagram Direct Inbox.");
         await page.goto("https://www.instagram.com/direct/inbox/", {
             waitUntil: "networkidle",
         });
@@ -23,9 +126,9 @@ export const openAllInstagramMessagesAndLog = async (
             const notNowButtonSelector = 'button:has-text("Not Now")'; // Adjust if necessary
             await page.waitForSelector(notNowButtonSelector, { timeout: 5000 });
             await page.click(notNowButtonSelector);
-            log.info("Notification pop-up dismissed successfully.");
+            console.log("Notification pop-up dismissed successfully.");
         } catch (error: any) {
-            log.info(
+            console.log(
                 "Notification pop-up did not appear or was already dismissed."
             );
         }
@@ -52,7 +155,7 @@ export const openAllInstagramMessagesAndLog = async (
                 .filter(Boolean); // Remove any null or undefined usernames
         });
 
-        log.info(
+        console.log(
             `Found ${chatUsernames.length} chats: ${chatUsernames.join(", ")}`
         );
 
@@ -60,7 +163,7 @@ export const openAllInstagramMessagesAndLog = async (
         const chatsToProcess = chatUsernames;
 
         for (const chatUsername of chatsToProcess) {
-            log.info(`Opening chat with: ${chatUsername}`);
+            console.log(`\n=== Opening chat with: ${chatUsername} ===`);
             let screenshotPaths: string[] = [];
 
             // Click the chat item using page.evaluate.
@@ -91,7 +194,7 @@ export const openAllInstagramMessagesAndLog = async (
             }
 
             await page.waitForSelector('div[role="row"]', { timeout: 30000 });
-            log.info(`Chat with ${chatUsername} is now open`);
+            console.log(`Chat with ${chatUsername} is now open`);
 
             // Scroll through the chat to load all messages
             let previousHeight = 0;
@@ -114,8 +217,8 @@ export const openAllInstagramMessagesAndLog = async (
                 );
             }
 
-            // Function to scroll through messages dynamically and log them,
-            // and process media messages using the new extraction methods.
+            // Function to scroll through messages dynamically and log them.
+            // (This remains largely unchanged from your original code.)
             const scrollChat = async () => {
                 let previousMessageCount = 0;
                 let messageCount = 0;
@@ -130,13 +233,11 @@ export const openAllInstagramMessagesAndLog = async (
                                 document.querySelectorAll('div[role="row"]');
                             return Array.from(messageRows)
                                 .map((row) => {
-                                    // Use the chat partner's username as default if sender not found.
                                     const sender = chatUsername;
                                     const textContentElement =
                                         row.querySelector('div[dir="auto"]');
                                     let type: string | null = null;
                                     let content: string | null = null;
-                                    let url: string | null = null;
 
                                     if (textContentElement) {
                                         type = "text";
@@ -145,33 +246,17 @@ export const openAllInstagramMessagesAndLog = async (
                                             "";
                                     }
 
-                                    // Instead of directly reading media element URL, we set a flag.
-                                    const mediaContentElement =
-                                        row.querySelector("video, img");
-                                    if (mediaContentElement) {
-                                        if (
-                                            mediaContentElement.tagName.toLowerCase() ===
-                                            "video"
-                                        ) {
-                                            type = "video";
-                                        } else if (
-                                            mediaContentElement.tagName.toLowerCase() ===
-                                            "img"
-                                        ) {
-                                            type = "image";
-                                        }
-                                        // The raw URL from the element is stored temporarily.
-                                        url =
-                                            mediaContentElement.getAttribute(
-                                                "src"
-                                            ) ||
-                                            mediaContentElement
-                                                .getAttribute("srcset")
-                                                ?.split(" ")[0] ||
-                                            null;
-                                    }
+                                    // Check for any button in the row (as a flag for media posts)
+                                    const rowButton =
+                                        row.querySelector("button");
+
                                     return type
-                                        ? { sender, type, content, url }
+                                        ? {
+                                              sender,
+                                              type,
+                                              content,
+                                              buttonExists: !!rowButton,
+                                          }
                                         : null;
                                 })
                                 .filter((message) => message !== null);
@@ -184,8 +269,11 @@ export const openAllInstagramMessagesAndLog = async (
                         `Iteration ${iteration}: Found ${messageCount} messages.`
                     );
 
-                    // Process any new messages that have media content.
-                    // We loop over the new message rows (using the index within the page).
+                    // (Your existing code to process individual messages and take screenshots remains here)
+                    // For brevity, we leave the per-message screenshot and scrolling logic intact.
+                    // Only the media-processing part is being handled later via our new function.
+
+                    // Process only the new messages in this iteration.
                     const startIndex = previousMessageCount;
                     const endIndex = Math.min(
                         messageCount,
@@ -195,116 +283,73 @@ export const openAllInstagramMessagesAndLog = async (
                     // Get all message rows from the page.
                     const messageRows = await page.$$('div[role="row"]');
 
-async function retryGetElement<T>(
-    fetchElement: () => Promise<T | null>,
-    retries: number = 3,
-    delayMs: number = 500
-): Promise<T | null> {
-    for (let attempt = 1; attempt <= retries; attempt++) {
-        const element = await fetchElement();
-        if (element) return element;
-        console.warn(`Attempt ${attempt}: Element not found, retrying...`);
-        await page.waitForTimeout(delayMs);
-    }
-    console.warn("Max retries reached: Element not found.");
-    return null;
-}
+                    async function retryGetElement<T>(
+                        fetchElement: () => Promise<T | null>,
+                        retries: number = 3,
+                        delayMs: number = 500
+                    ): Promise<T | null> {
+                        for (let attempt = 1; attempt <= retries; attempt++) {
+                            const element = await fetchElement();
+                            if (element) return element;
+                            console.warn(
+                                `Attempt ${attempt}: Element not found, retrying...`
+                            );
+                            await page.waitForTimeout(delayMs);
+                        }
+                        console.warn("Max retries reached: Element not found.");
+                        return null;
+                    }
 
-for (let i = startIndex; i < endIndex; i++) {
-    // Re-fetch the message row before each action
-    const messageElement = await retryGetElement(async () => {
-        const messageRows = await page.$$('div[role="row"]');
-        return messageRows[i] || null;
-    });
+                    for (let i = startIndex; i < endIndex; i++) {
+                        // Re-fetch the message row before each action.
+                        const messageElement = await retryGetElement(
+                            async () => {
+                                const messageRows = await page.$$(
+                                    'div[role="row"]'
+                                );
+                                return messageRows[i] || null;
+                            }
+                        );
+                        if (!messageElement) {
+                            console.warn(
+                                `Skipping message ${
+                                    i + 1
+                                } as it is no longer in the DOM.`
+                            );
+                            continue;
+                        }
 
-    if (!messageElement) {
-        console.warn(
-            `Skipping message ${i + 1} as it is no longer in the DOM.`
-        );
-        continue;
-    }
+                        // Scroll the message into view.
+                        try {
+                            await messageElement.scrollIntoViewIfNeeded();
+                        } catch (error) {
+                            console.warn(
+                                `Message ${i + 1} is not attached. Skipping.`
+                            );
+                            continue;
+                        }
 
-    // Scroll to the message safely
-    try {
-        await messageElement.scrollIntoViewIfNeeded();
-    } catch (error) {
-        console.warn(`Message ${i + 1} is not attached. Skipping.`);
-        continue;
-    }
+                        // (Optional) Take a screenshot every 3 messages.
+                        if ((i + 1) % 3 === 0 || i === endIndex - 1) {
+                            const screenshotPath = path.resolve(
+                                `./message_screenshot_${i + 1}.png`
+                            );
+                            await page.screenshot({
+                                path: screenshotPath,
+                                fullPage: false,
+                            });
+                            console.log(
+                                `Screenshot taken for message ${
+                                    i + 1
+                                }: ${screenshotPath}`
+                            );
+                            screenshotPaths.push(screenshotPath);
+                        }
 
-    // Take a screenshot every 3 messages
-    if ((i + 1) % 3 === 0 || i === endIndex - 1) {
-        const screenshotPath = path.resolve(
-            `./message_screenshot_${i + 1}.png`
-        );
-        await page.screenshot({ path: screenshotPath, fullPage: false });
-        console.log(`Screenshot taken for message ${i + 1}: ${screenshotPath}`);
-        screenshotPaths.push(screenshotPath);
-    }
+                        // (We are not processing media here in the per-message loop anymore.)
+                        await page.waitForTimeout(1000);
+                    }
 
-    // Check for a media element inside the message row
-    const mediaElement = await retryGetElement(() =>
-        messageElement.$("video, img")
-    );
-
-    if (mediaElement) {
-        try {
-            // Click the media element to open the modal
-            await mediaElement.click();
-            await page.waitForSelector('svg[aria-label="Close"]', {
-                timeout: 10000,
-            });
-
-            // Determine the media type from the modal
-            const modalMediaType = await page.evaluate(() => {
-                const modalMedia = document.querySelector(
-                    'div[role="dialog"] video, div[role="dialog"] img'
-                );
-                return modalMedia ? modalMedia.tagName.toLowerCase() : null;
-            });
-
-            let mediaUrl = null;
-            try {
-                if (modalMediaType === "video") {
-                    mediaUrl = await extractVideos(page);
-                } else if (modalMediaType === "img") {
-                    mediaUrl = await extractImages(page);
-                } else {
-                    console.warn("Could not determine media type from modal.");
-                }
-            } catch (extractionError) {
-                console.error(
-                    "Error during media extraction:",
-                    extractionError
-                );
-            }
-
-            // Click the modal close button
-            try {
-                await page.click('svg[aria-label="Close"]');
-            } catch (closeError) {
-                console.warn(
-                    "Could not click the modal close button:",
-                    closeError
-                );
-            }
-
-            // Update the message with extracted media URL
-            rawMessages[i].url = mediaUrl;
-        } catch (error) {
-            console.error(
-                `Error processing media for message ${i + 1}:`,
-                error
-            );
-        }
-    }
-
-    // Short delay before processing the next message
-    await page.waitForTimeout(1000);
-}
-
-
-                    // Append or update our overall messages.
                     allRawMessages = rawMessages;
 
                     console.log(
@@ -319,7 +364,7 @@ for (let i = startIndex; i < endIndex; i++) {
                     previousMessageCount = messageCount;
                     iteration++;
 
-                    log.info(
+                    console.log(
                         `Number of messages found in ${chatUsername}'s chat: ${messageCount}`
                     );
                     await page.waitForTimeout(7000);
@@ -332,28 +377,24 @@ for (let i = startIndex; i < endIndex; i++) {
             // Call the scroll function for this chat.
             const finalRawMessages = await scrollChat();
 
-            // Save the messages to a JSON file.
-            const jsonContent = JSON.stringify(
-                { messages: finalRawMessages },
-                null,
-                2
-            );
+
+            // Call the new media processing function for this chat.
+            const processedMessages= await processChatPostsAndLog(page);
+
+            const chatData = {
+                messages: processedMessages,
+                rawMessages: finalRawMessages,
+            };
+
+            const jsonContent = JSON.stringify(chatData, null, 2);
             const jsonFilePath = `./src/storage/${chatUsername}_instagram_messages.json`;
             await fs.mkdir(path.dirname(jsonFilePath), { recursive: true });
             await fs.writeFile(jsonFilePath, jsonContent, "utf8");
-            log.info(
+            console.log(
                 `Messages for ${chatUsername} have been logged to ${jsonFilePath}`
             );
 
-            // Optionally take a screenshot of the overall chat.
-            const screenshotPath = path.resolve(
-                `./${chatUsername}_instagram_screenshot.png`
-            );
-            log.info(
-                `Screenshot of ${chatUsername}'s chat saved to ${screenshotPath}`
-            );
-
-            // Upload the JSON log to S3.
+            // Upload to S3 and MongoDB (your existing code)
             const chatLogKey = `${username}/${chatUsername}/chat_log.json`;
             const chatLogURL = await uploadToS3(jsonFilePath, chatLogKey);
             console.log(`Chat log uploaded to S3: ${chatLogURL}`);
@@ -361,7 +402,30 @@ for (let i = startIndex; i < endIndex; i++) {
             await insertMessages(
                 username,
                 chatUsername,
-                { rawMessages: finalRawMessages },
+                chatData,
+                chatLogURL,
+                screenshotPaths,
+                "instagram"
+            );
+            console.log(
+                `Messages for ${chatUsername} have been logged to ${jsonFilePath}`
+            );
+
+            // Optionally take a screenshot of the overall chat.
+            const overallScreenshotPath = path.resolve(
+                `./${chatUsername}_instagram_screenshot.png`
+            );
+            console.log(
+                `Screenshot of ${chatUsername}'s chat saved to ${overallScreenshotPath}`
+            );
+
+          
+            console.log(`Chat log uploaded to S3: ${chatLogURL}`);
+
+            await insertMessages(
+                username,
+                chatUsername,
+                { messages: chatData },
                 chatLogURL,
                 screenshotPaths,
                 "instagram"
@@ -372,7 +436,7 @@ for (let i = startIndex; i < endIndex; i++) {
             await page.waitForTimeout(2000);
         }
     } catch (error: any) {
-        log.error(
+        console.log(
             `Error while processing Instagram messages: ${error.message}`
         );
     }

@@ -7,111 +7,283 @@ import { extractVideos } from "./DownloadVideo";
 import { extractImages } from "./DownloadImages";
 
 
-interface ChatMessage {
+interface ChatItem {
     index: number;
-    type: "text" | "post";
+    type: "text" | "post" | "date";
     content?: string;
     postUrl?: string;
-    timestamp?: string;
+    date?: Date;
 }
 
-export async function processChatPostsAndLog(
-    page: Page
-): Promise<ChatMessage[]> {
-    const messages: ChatMessage[] = [];
+export async function processChatPostsAndLog(page: Page): Promise<ChatItem[]> {
+    const chatItems: ChatItem[] = [];
+    const loggedContent = new Set<string>(); // To track logged content and prevent duplicates. Add date to set
 
-    // Get all chat message rows
-    const messageRows = await page.$$('div[role="row"]');
-    console.log(`Found ${messageRows.length} message rows.`);
+    console.log("Starting to process chat posts...");
 
-    for (let i = 0; i < messageRows.length; i++) {
-        console.log(`\n=== Processing message row ${i + 1} ===`);
+    // Wait for the chat container to load
+    await page.waitForSelector(
+        'div[role="button"][aria-label="Double tap to like"]',
+        { timeout: 5000 }
+    );
 
-        // Create base message object
-        const message: ChatMessage = {
-            index: i,
-            type: "text",
-        };
+    // Get all divs in the chat
+    const allDivs = await page.$$("div");
+    console.log(`Found ${allDivs.length} div elements.`);
 
-        // Try to get text content first
-        const textContent = await messageRows[i].evaluate((row) => {
-            const textEl = row.querySelector('div[dir="auto"]');
-            return textEl ? textEl.textContent?.trim() : null;
+    for (let i = 0; i < allDivs.length; i++) {
+        const div = allDivs[i];
+        console.log(`\n=== Processing div ${i + 1} ===`);
+
+        // Check if this div is a message (text or post)
+        const isMessage = await div.evaluate((el) => {
+            const hasText = el.querySelector('div[dir="auto"]');
+            const isPost =
+                el.getAttribute("aria-label") === "Double tap to like";
+            return hasText || isPost;
         });
 
-        if (textContent) {
-            message.content = textContent;
+        if (isMessage) {
+            const chatItem: ChatItem = { index: i, type: "text" };
+
+            // Try to get text content
+            const textContent = await div.evaluate((el) => {
+                const textEl = el.querySelector('div[dir="auto"]');
+                return textEl ? textEl.textContent?.trim() : null;
+            });
+
+            if (textContent) {
+                chatItem.content = textContent;
+                if (
+                    textContent &&
+                    textContent.trim() !== "" &&
+                    !loggedContent.has(textContent)
+                ) {
+                    // Check for non-empty and duplicates
+                    console.log(
+                        `Div ${i + 1}: Found text content -> ${textContent}`
+                    );
+
+                    loggedContent.add(textContent);
+
+                    chatItems.push(chatItem);
+                    console.log(
+                        `Div ${i + 1}: Added to chat items as type ${
+                            chatItem.type
+                        }.`
+                    );
+                } else {
+                    console.log(
+                        `Div ${
+                            i + 1
+                        }: Duplicate or empty text content, skipping.`
+                    );
+                }
+            } else {
+                // If textContent is empty but isMessage is true, it's probably an empty message
+                console.log(`Div ${i + 1}: No text content found, skipping.`);
+            }
+
+            // Check if it's a post
+            const isPost = await div.evaluate(
+                (el) => el.getAttribute("aria-label") === "Double tap to like"
+            );
+            if (isPost) {
+                chatItem.type = "post";
+                console.log(`Div ${i + 1}: Identified as a post.`);
+
+                // Check for media (image or video)
+                const mediaElement = await div.$("img, video");
+                if (mediaElement) {
+                    console.log(`Div ${i + 1}: Media element found.`);
+
+                    try {
+                        // Scroll the post into view and click it
+                        console.log(
+                            `Div ${i + 1}: Scrolling post element into view...`
+                        );
+                        await div.scrollIntoViewIfNeeded();
+                        console.log(
+                            `Div ${i + 1}: Clicking the post element...`
+                        );
+                        await div.click({ force: true });
+
+                        // Wait for the modal to load
+                        console.log(`Div ${i + 1}: Waiting for modal URL...`);
+                        await page.waitForURL(
+                            (url: URL) =>
+                                url.toString().includes("/p/") ||
+                                url.toString().includes("/reel/"),
+                            { timeout: 5000 }
+                        );
+
+                        // Extract the modal URL
+                        const modalUrl = page.url();
+
+                        if (modalUrl && !loggedContent.has(modalUrl)) {
+                            chatItem.postUrl = modalUrl;
+                            console.log(
+                                `Div ${
+                                    i + 1
+                                }: Extracted post URL -> ${modalUrl}`
+                            );
+                            loggedContent.add(modalUrl);
+
+                            chatItems.push(chatItem);
+                            console.log(
+                                `Div ${i + 1}: Added to chat items as type ${
+                                    chatItem.type
+                                }.`
+                            );
+                        } else {
+                            console.log(
+                                `Div ${i + 1}: Duplicate URL, skipping.`
+                            );
+                        }
+                        await page.waitForSelector('svg[aria-label="Close"]', {
+                            timeout: 2000,
+                        }); // Adjust timeout as needed
+                        await page.click('svg[aria-label="Close"]');
+
+                    } catch (error) {
+                        console.warn(
+                            `Div ${i + 1}: Could not extract post URL:`,
+                            error
+                        );
+                    }
+                }
+            }
+        } else {
+            // Check if this div is a timestamp
+            const timestampText = await div.evaluate((el) => {
+                const h4El = el.querySelector("h4.html-h4");
+                if (h4El) {
+                    const timeEl = h4El.querySelector(
+                        'div[data-scope="date_break"] span span'
+                    );
+                    const fullTimeEl = h4El.querySelector("div.xzpqnlu");
+                    return (timeEl || fullTimeEl)?.textContent?.trim() || null;
+                }
+                return null;
+            });
+
+            if (timestampText) {
+                console.log(
+                    `Div ${i + 1}: Found timestamp text -> ${timestampText}`
+                );
+
+                try {
+                    let date: Date;
+
+                    if (timestampText.includes("Today at")) {
+                        const timeStr = timestampText.replace("Today at ", "");
+                        const [time, period] = timeStr.split(" ");
+                        const [hours, minutes] = time.split(":");
+                        let hour = parseInt(hours);
+
+                        if (period === "PM" && hour !== 12) hour += 12;
+                        if (period === "AM" && hour === 12) hour = 0;
+
+                        date = new Date();
+                        date.setHours(hour, parseInt(minutes), 0, 0);
+                    } else if (timestampText.includes("Yesterday at")) {
+                        const timeStr = timestampText.replace(
+                            "Yesterday at ",
+                            ""
+                        );
+                        const [time, period] = timeStr.split(" ");
+                        const [hours, minutes] = time.split(":");
+                        let hour = parseInt(hours);
+
+                        if (period === "PM" && hour !== 12) hour += 12;
+                        if (period === "AM" && hour === 12) hour = 0;
+
+                        date = new Date();
+                        date.setDate(date.getDate() - 1);
+                        date.setHours(hour, parseInt(minutes), 0, 0);
+                    }
+                   else if (timestampText.includes(",")) {
+    // Handle the format "9/13/24, 2:17 PM"
+    const [dateStr, timeStr] = timestampText.split(",");
+    const [month, day, year] = dateStr
+        .split("/")
+        .map(Number);
+    const [time, period] = timeStr.trim().split(" ");
+    const [hours, minutes] = time.split(":").map(Number);
+    let hour = hours;
+
+    if (period === "PM" && hour !== 12) hour += 12;
+    if (period === "AM" && hour === 12) hour = 0;
+
+    // Correct year handling 
+    const fullYear = year < 100 ? 2000 + year : (year < 1000 ? 2000 + year : year) ; // Ensure we have full year (e.g., 2024)
+
+    try {
+        // Create the date object
+        date = new Date(fullYear, month - 1, day, hour, minutes);
+
+        // Check if the date is valid  (Important!)
+        if (isNaN(date.getTime())) {  // Use getTime() to check validity
+            throw new Error("Invalid date created"); // Throw an error to be caught
         }
 
-        // Look for post element
-        const postElement = await messageRows[i].$(
-            'div[role="button"][aria-label="Double tap to like"]'
-        );
+    } catch (dateError) {
+        console.warn(`Div ${i + 1}:  Invalid date components after parsing: month=${month}, day=${day}, year=${fullYear}, hour=${hour}, minutes=${minutes}`);
+        throw dateError; // Re-throw to provide more specifics or handle downstream
 
-        if (postElement) {
-            message.type = "post";
-            const postText = await postElement.textContent();
-            message.content = postText;
-            console.log(`Row ${i + 1}: Post text content -> ${postText}`);
+    }
+}
+ else {
+                        // Handle standalone time format like "2:17 PM"
+                        const [time, period] = timestampText.split(" ");
+                        const [hours, minutes] = time.split(":").map(Number);
+                        let hour = hours;
 
-            // Check for media
-            const mediaElement = await postElement.$("img, video");
-            if (mediaElement) {
-                try {
-                    await postElement.scrollIntoViewIfNeeded();
-                    await postElement.click({ force: true });
-                    console.log(`Row ${i + 1}: Clicked the post element.`);
+                        if (period === "PM" && hour !== 12) hour += 12;
+                        if (period === "AM" && hour === 12) hour = 0;
 
-                    // Wait for modal URL
-                    await page.waitForURL(
-                        (url: URL) =>
-                            url.toString().includes("/p/") ||
-                            url.toString().includes("/reel/"),
-                        { timeout: 5000 }
-                    );
+                        date = new Date();
+                        date.setHours(hour, minutes, 0, 0);
+                    }
 
-                    const modalUrl = page.url();
-                    message.postUrl = modalUrl;
-                    console.log(
-                        `Row ${i + 1}: Extracted modal URL -> ${modalUrl}`
-                    );
+                    const dateString = date.toISOString();
+                    if (!loggedContent.has(dateString)) {
+                        chatItems.push({ index: i, type: "date", date });
+                        console.log(
+                            `Div ${
+                                i + 1
+                            }: Added to chat items as type date -> ${date.toISOString()}`
+                        );
 
-                    // Close modal
-                    await page.getByRole("button", { name: "Close" }).click();
-                    console.log(`Row ${i + 1}: Closed the modal.`);
+                        loggedContent.add(dateString);
+                    } else {
+                        console.log(`Div ${i + 1}: Duplicate date, skipping.`);
+                    }
                 } catch (error) {
-                    console.error(
-                        `Row ${i + 1}: Error processing post:`,
+                    console.warn(
+                        `Div ${
+                            i + 1
+                        }: Could not parse timestamp -> ${timestampText}`,
                         error
                     );
                 }
+            } else {
+                console.log(
+                    `Div ${i + 1}: Not a message or timestamp, skipping.`
+                );
             }
         }
-
-        // Add timestamp if available (you might need to adjust the selector)
-        try {
-            const timestamp = await messageRows[i].evaluate((row) => {
-                const timeEl = row.querySelector("time");
-                return timeEl ? timeEl.getAttribute("datetime") : null;
-            });
-            if (timestamp) {
-                message.timestamp = timestamp;
-            }
-        } catch (error) {
-            console.warn(`Row ${i + 1}: Could not extract timestamp`);
-        }
-
-        messages.push(message);
-        await page.waitForTimeout(2000);
     }
 
-    return messages;
+    console.log("Finished processing chat posts.");
+    return chatItems;
 }
+
 
 
 export const openAllInstagramMessagesAndLog = async (
     page: Page,
-   
+
     username: string
 ) => {
     try {
@@ -124,7 +296,7 @@ export const openAllInstagramMessagesAndLog = async (
         // Handle "Not Now" notification pop-up
         try {
             const notNowButtonSelector = 'button:has-text("Not Now")'; // Adjust if necessary
-            await page.waitForSelector(notNowButtonSelector, { timeout: 5000 });
+            await page.waitForSelector(notNowButtonSelector, { timeout: 3000 });
             await page.click(notNowButtonSelector);
             console.log("Notification pop-up dismissed successfully.");
         } catch (error: any) {
@@ -229,6 +401,8 @@ export const openAllInstagramMessagesAndLog = async (
                     // Get the current messages from the DOM.
                     let rawMessages: any[] = await page.evaluate(
                         (chatUsername) => {
+                          
+
                             const messageRows =
                                 document.querySelectorAll('div[role="row"]');
                             return Array.from(messageRows)
@@ -374,19 +548,15 @@ export const openAllInstagramMessagesAndLog = async (
                 return allRawMessages;
             };
 
-            // Call the scroll function for this chat.
-            const finalRawMessages = await scrollChat();
+            await scrollChat(); // We still call this to load all messages, but don't use the return value
 
+            // Process the chat messages
+            const processedMessages = await processChatPostsAndLog(page);
 
-            // Call the new media processing function for this chat.
-            const processedMessages= await processChatPostsAndLog(page);
+            // Create chat data object with only processed messages
 
-            const chatData = {
-                messages: processedMessages,
-                rawMessages: finalRawMessages,
-            };
-
-            const jsonContent = JSON.stringify(chatData, null, 2);
+            // Save to JSON file
+            const jsonContent = JSON.stringify(processedMessages, null, 2);
             const jsonFilePath = `./src/storage/${chatUsername}_instagram_messages.json`;
             await fs.mkdir(path.dirname(jsonFilePath), { recursive: true });
             await fs.writeFile(jsonFilePath, jsonContent, "utf8");
@@ -394,24 +564,22 @@ export const openAllInstagramMessagesAndLog = async (
                 `Messages for ${chatUsername} have been logged to ${jsonFilePath}`
             );
 
-            // Upload to S3 and MongoDB (your existing code)
+            // Upload to S3 and MongoDB with only processed messages
             const chatLogKey = `${username}/${chatUsername}/chat_log.json`;
             const chatLogURL = await uploadToS3(jsonFilePath, chatLogKey);
             console.log(`Chat log uploaded to S3: ${chatLogURL}`);
 
+            // Insert only processed messages to MongoDB
             await insertMessages(
                 username,
                 chatUsername,
-                chatData,
+                processedMessages, // This now only contains processed messages
                 chatLogURL,
                 screenshotPaths,
                 "instagram"
             );
-            console.log(
-                `Messages for ${chatUsername} have been logged to ${jsonFilePath}`
-            );
 
-            // Optionally take a screenshot of the overall chat.
+            // Take overall screenshot if needed
             const overallScreenshotPath = path.resolve(
                 `./${chatUsername}_instagram_screenshot.png`
             );
@@ -419,19 +587,7 @@ export const openAllInstagramMessagesAndLog = async (
                 `Screenshot of ${chatUsername}'s chat saved to ${overallScreenshotPath}`
             );
 
-          
-            console.log(`Chat log uploaded to S3: ${chatLogURL}`);
-
-            await insertMessages(
-                username,
-                chatUsername,
-                { messages: chatData },
-                chatLogURL,
-                screenshotPaths,
-                "instagram"
-            );
-
-            // Clear screenshots for next iteration.
+            // Clear screenshots for next iteration
             screenshotPaths = [];
             await page.waitForTimeout(2000);
         }

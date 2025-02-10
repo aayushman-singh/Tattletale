@@ -71,77 +71,77 @@ export const InstaScraper = async (username: string, password: string) => {
             const extractor = new InstagramProfileExtractor(page);
             console.log("Extracting profile data...");
 
-            // // Wait a bit and trigger API requests
-            // await page.waitForTimeout(3000);
-            // await page.evaluate(() => window.scrollBy(0, 200));
+            // Wait a bit and trigger API requests
+            await page.waitForTimeout(3000);
+            await page.evaluate(() => window.scrollBy(0, 200));
 
-            // // Extract profile data
-            // const profileData = await extractor.captureProfileData(
-            //     username,
-            //     20000
-            // );
-            // if (!profileData) {
-            //     throw new Error("❌ Profile data not found.");
-            // }
+            // Extract profile data
+            const profileData = await extractor.captureProfileData(
+                username,
+                20000
+            );
+            if (!profileData) {
+                throw new Error("❌ Profile data not found.");
+            }
 
-            // await insertInstagramProfile(username, profileData);
+            await insertInstagramProfile(username, profileData);
 
-            // const followerCount = profileData.follower_count;
-            // const followingCount = profileData.following_count;
+            const followerCount = profileData.follower_count;
+            const followingCount = profileData.following_count;
 
-            // const screenshotPath = `profile_${username}.png`;
+            const screenshotPath = `profile_${username}.png`;
 
-            // await page.screenshot({
-            //     path: screenshotPath,
-            //     fullPage: false,
-            // });
+            await page.screenshot({
+                path: screenshotPath,
+                fullPage: false,
+            });
 
-            // resultId = await uploadScreenshotToMongo(
-            //     username,
-            //     screenshotPath,
-            //     "profilePage",
-            //     "instagram",
-            // );
+            resultId = await uploadScreenshotToMongo(
+                username,
+                screenshotPath,
+                "profilePage",
+                "instagram",
+            );
 
-            // const instagram_id = profileData.instagram_id;
-            // await page.goto(`https://instagram.com/${username}`);
-            // const timelineObject = await scrapeTimeline(page);
-            // await insertTimeline(username, timelineObject, 'instagram');
+            const instagram_id = profileData.instagram_id;
+            await page.goto(`https://instagram.com/${username}`);
+            const timelineObject = await scrapeTimeline(page);
+            await insertTimeline(username, timelineObject, 'instagram');
 
-            // try {
-            //     const followersData = await extractInstagramList(
-            //         page,
-            //         instagram_id,
-            //         username,
-            //         "followers",
-            //         followerCount
-            //     );
-            //     await insertFollowers(username, followersData, "instagram");
-            // } catch (error: any) {
-            //     console.error(
-            //         `Error while scraping followers: ${error.message}. Moving on to following list.`,
-            //     );
-            // }
+            try {
+                const followersData = await extractInstagramList(
+                    page,
+                    instagram_id,
+                    username,
+                    "followers",
+                    followerCount
+                );
+                await insertFollowers(username, followersData, "instagram");
+            } catch (error: any) {
+                console.error(
+                    `Error while scraping followers: ${error.message}. Moving on to following list.`,
+                );
+            }
 
-            // try {
-            //   const followingData = await extractInstagramList(
-            //       page,
-            //       instagram_id,
-            //       username,
-            //       "following",
-            //       followingCount
-            //   );
-            //     await insertFollowing(username, followingData, "instagram");
-            // } catch (error: any) {
-            //     console.error(
-            //         `Error while scraping following: ${error.message}. Moving on`,
-            //     );
-            // }
+            try {
+              const followingData = await extractInstagramList(
+                  page,
+                  instagram_id,
+                  username,
+                  "following",
+                  followingCount
+              );
+                await insertFollowing(username, followingData, "instagram");
+            } catch (error: any) {
+                console.error(
+                    `Error while scraping following: ${error.message}. Moving on`,
+                );
+            }
 
-            // const loginActivityObject = await getLoginActivity(page);
-            // await insertObject(username, loginActivityObject, 'login_activity', 'instagram');
+            const loginActivityObject = await getLoginActivity(page);
+            await insertObject(username, loginActivityObject, 'login_activity', 'instagram');
 
-            //  await page.waitForTimeout(4000);
+             await page.waitForTimeout(4000);
             await openAllInstagramMessagesAndLog(page, username);
         } catch (error: any) {
             console.error(`Error extracting profile data: ${error.message}`);

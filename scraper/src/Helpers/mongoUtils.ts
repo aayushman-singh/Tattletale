@@ -649,6 +649,7 @@ export const insertMessages = async (
     screenshotPaths: string[],
     platform: string
 ) => {
+ 
     try {
         await client.connect();
         const db = client.db(`${platform}DB`);
@@ -666,37 +667,120 @@ export const insertMessages = async (
         // Prepare the chat object
         const chatData = {
             receiverUsername,
-            messages: data,
+            messages: Array.isArray(data) ? data : [data],
             chatLogURL,
             screenshots: screenshotURLs,
             lastUpdated: new Date(),
         };
 
-        // Ensure `chats` is an array before updating
-        const result = await collection.updateOne(
-            { username },
+        // First, try to fix any existing document with incorrect schema
+        const migrationResult = await collection.updateOne(
             {
-                $setOnInsert: { chats: [] }, // Ensures `chats` field exists as an array
-                $push: { chats: { $each: [chatData] } }, // Push new chatData into array
+                username,
+                chats: { $type: "object" }, // Find documents where chats is an object
             },
-            { upsert: true }
+            [
+                {
+                    $set: {
+                        chats: {
+                            $cond: {
+                                if: { $isArray: "$chats" },
+                                then: "$chats",
+                                else: [], // Convert to empty array if it's not already an array
+                            },
+                        },
+                    },
+                },
+            ]
         );
 
-        console.log(
-            `${
-                result.matchedCount ? "Updated" : "Created"
-            } chat entry for ${username} -> ${receiverUsername}`
-        );
+        if (migrationResult.modifiedCount > 0) {
+            console.log(`Migrated document structure for user ${username}`);
+        }
+
+        // Now proceed with the normal insert/update logic
+        const existingUser = await collection.findOne({ username });
+
+        if (!existingUser) {
+            // Create new user document with chats array
+            await collection.insertOne({
+                username,
+                chats: [chatData],
+            });
+            console.log(`Created new user document for ${username}`);
+        } else {
+            // Check if chat with this receiver already exists
+            const existingChat = existingUser.chats?.find?.(
+                (chat: any) => chat.receiverUsername === receiverUsername
+            );
+
+            if (existingChat) {
+                // Update existing chat
+                await collection.updateOne(
+                    {
+                        username,
+                        "chats.receiverUsername": receiverUsername,
+                    },
+                    {
+                        $set: { "chats.$": chatData },
+                    }
+                );
+            } else {
+                // Add new chat
+                await collection.updateOne(
+                    { username },
+                    {
+                        $push: { chats: chatData },
+                    }
+                );
+            }
+            console.log(
+                `Updated chat entry for ${username} -> ${receiverUsername}`
+            );
+        }
     } catch (error) {
         console.error("Error inserting messages into MongoDB:", error);
         throw error;
     } finally {
-        await client.close();
+        if (client) {
+            await client.close();
+        }
     }
 };
 
+export const migrateChatsToArray = async (platform: string) => {
+    
+    try {
+        await client.connect();
+        const db = client.db(`${platform}DB`);
+        const collection = db.collection(`${platform}_users`);
 
+        // Find all documents where chats is not an array
+        const result = await collection.updateMany(
+            {
+                chats: { $exists: true, $not: { $type: "array" } },
+            },
+            [
+                {
+                    $set: {
+                        chats: [], // Convert to empty array
+                    },
+                },
+            ]
+        );
 
+        console.log(
+            `Migration completed. Modified ${result.modifiedCount} documents.`
+        );
+    } catch (error) {
+        console.error("Error during migration:", error);
+        throw error;
+    } finally {
+        if (client) {
+            await client.close();
+        }
+    }
+};
 
 export async function insertTweets(
     username: string,

@@ -113,7 +113,7 @@ const Home = () => {
               </div>
             </div>
             <div className="hidden lg:block relative">
-              <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-gray-700 bg-gray-800 bg-opacity-50 backdrop-blur-sm">
+              <div className="hidden lg:block relative w-full aspect-square rounded-lg overflow-hidden border border-gray-700 bg-gray-800 bg-opacity-50 backdrop-blur-sm">
                 <img
                   src="/images/post/lp1.jpeg"
                   alt="Analytics Dashboard"

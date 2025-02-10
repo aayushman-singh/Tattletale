@@ -26,6 +26,7 @@ const Header = () => {
     }
   }, []);
 
+  // Check auth on mount and storage events
   useEffect(() => {
     checkUserAuth();
     window.addEventListener("storage", checkUserAuth);
@@ -33,6 +34,11 @@ const Header = () => {
       window.removeEventListener("storage", checkUserAuth);
     };
   }, [checkUserAuth]);
+
+  // Additional check on route changes
+  useEffect(() => {
+    checkUserAuth();
+  }, [checkUserAuth, location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("userInfo");
@@ -161,7 +167,7 @@ const Header = () => {
                 >
                   <Link to="/login">Login</Link>
                 </Button>
-                <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-800" asChild>
+                <Button variant="outline" className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white" asChild>
                   <Link to="/register">Register</Link>
                 </Button>
               </>

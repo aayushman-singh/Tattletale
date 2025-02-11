@@ -10,12 +10,12 @@ import {
 } from "../mongoUtils";
 import { BrowserContext, Page, chromium } from "playwright";
 import path from "path";
-import { getLoginActivity } from "./InstagramLogin";
+import { getLoginActivity } from "./InstagramLoginActivity";
 import { InstagramProfileExtractor } from "./ScrapeProfile";
 import { extractInstagramList } from "./ScrapeLists";
 import { scrapeTimeline } from "./ScrapeTimeline.js";
 import { openAllInstagramMessagesAndLog } from "./ScrapeMessages";
-import { captureTimelineScreenshots } from "./InstagramTimeline.js";
+import { captureTimelineScreenshots } from "./InstagramTimeline";
 
 export const InstaScraper = async (username: string, password: string) => {
     if (!username || !password) {

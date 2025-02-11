@@ -201,39 +201,53 @@ export async function processChatPostsAndLog(page: Page): Promise<ChatItem[]> {
                         date = new Date();
                         date.setDate(date.getDate() - 1);
                         date.setHours(hour, parseInt(minutes), 0, 0);
-                    }
-                   else if (timestampText.includes(",")) {
-    // Handle the format "9/13/24, 2:17 PM"
-    const [dateStr, timeStr] = timestampText.split(",");
-    const [month, day, year] = dateStr
-        .split("/")
-        .map(Number);
-    const [time, period] = timeStr.trim().split(" ");
-    const [hours, minutes] = time.split(":").map(Number);
-    let hour = hours;
+                    } else if (timestampText.includes(",")) {
+                        // Handle the format "9/13/24, 2:17 PM"
+                        const [dateStr, timeStr] = timestampText.split(",");
+                        const [month, day, year] = dateStr
+                            .split("/")
+                            .map(Number);
 
-    if (period === "PM" && hour !== 12) hour += 12;
-    if (period === "AM" && hour === 12) hour = 0;
+                        // Correctly handle the narrow non-breaking space (\u202F)
+                        const [time, period] = timeStr.trim().split(/\s+/); // Use regex to split on any whitespace, including narrow non-breaking spaces
+                        const [hours, minutes] = time.split(":").map(Number);
+                        let hour = hours;
 
-    // Correct year handling 
-    const fullYear = year < 100 ? 2000 + year : (year < 1000 ? 2000 + year : year) ; // Ensure we have full year (e.g., 2024)
+                        if (period === "PM" && hour !== 12) hour += 12;
+                        if (period === "AM" && hour === 12) hour = 0;
 
-    try {
-        // Create the date object
-        date = new Date(fullYear, month - 1, day, hour, minutes);
+                        // Correct year handling
+                        const fullYear =
+                            year < 100
+                                ? 2000 + year
+                                : year < 1000
+                                ? 2000 + year
+                                : year; // Ensure we have full year (e.g., 2024)
 
-        // Check if the date is valid  (Important!)
-        if (isNaN(date.getTime())) {  // Use getTime() to check validity
-            throw new Error("Invalid date created"); // Throw an error to be caught
-        }
+                        try {
+                            // Create the date object
+                            date = new Date(
+                                fullYear,
+                                month - 1,
+                                day,
+                                hour,
+                                minutes
+                            );
 
-    } catch (dateError) {
-        console.warn(`Div ${i + 1}:  Invalid date components after parsing: month=${month}, day=${day}, year=${fullYear}, hour=${hour}, minutes=${minutes}`);
-        throw dateError; // Re-throw to provide more specifics or handle downstream
-
-    }
-}
- else {
+                            // Check if the date is valid  (Important!)
+                            if (isNaN(date.getTime())) {
+                                // Use getTime() to check validity
+                                throw new Error("Invalid date created"); // Throw an error to be caught
+                            }
+                        } catch (dateError) {
+                            console.warn(
+                                `Div ${
+                                    i + 1
+                                }:  Invalid date components after parsing: month=${month}, day=${day}, year=${fullYear}, hour=${hour}, minutes=${minutes}`
+                            );
+                            throw dateError; // Re-throw to provide more specifics or handle downstream
+                        }
+                    } else {
                         // Handle standalone time format like "2:17 PM"
                         const [time, period] = timestampText.split(" ");
                         const [hours, minutes] = time.split(":").map(Number);

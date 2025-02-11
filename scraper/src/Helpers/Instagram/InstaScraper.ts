@@ -64,6 +64,7 @@ export const InstaScraper = async (username: string, password: string) => {
         await page.goto(`https://www.instagram.com/${username}/`, {
             waitUntil: "domcontentloaded",
             timeout: 15000,
+
         });
 
         let resultId: string | null = null;
@@ -132,6 +133,7 @@ export const InstaScraper = async (username: string, password: string) => {
                   followingCount
               );
                 await insertFollowing(username, followingData, "instagram");
+
             } catch (error: any) {
                 console.error(
                     `Error while scraping following: ${error.message}. Moving on`,

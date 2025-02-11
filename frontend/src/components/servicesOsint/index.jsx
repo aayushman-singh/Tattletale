@@ -29,7 +29,7 @@ const SearchPage = () => {
       }
 
       const data = await response.json()
-      console.log(data)
+     
 
       let extractedUrls = []
 

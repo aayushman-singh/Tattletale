@@ -1,4 +1,4 @@
-import { useState } from "react";
+import  React ,{useState } from "react";
 import {  Link, useNavigate } from "react-router-dom";
 import {  useDispatch } from "react-redux";
 import { setUserInfo } from "../../../features/userSlice";
@@ -51,7 +51,8 @@ const Register = () => {
       localStorage.setItem("userInfo", JSON.stringify(data));
       navigate("/home");
     } catch (error) {
-      setErrorMessage("Registration failed. Please try again."+error);
+      const message = error.response?.data?.message || "Registration failed. Please try again.";
+      setErrorMessage(message);
     } finally {
       setIsRegistering(false);
     }
@@ -66,7 +67,7 @@ const Register = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 font-bold">Full Name</label>
+            <label htmlFor="name" className="text-sm text-gray-400 font-bold">Full Name</label>
             <input
               id="name"
               type="text"
@@ -78,7 +79,7 @@ const Register = () => {
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 font-bold">Email</label>
+            <label htmlFor="email" className="text-sm text-gray-400 font-bold">Email</label>
             <input
               id="email"
               type="email"
@@ -90,7 +91,7 @@ const Register = () => {
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 font-bold">Password</label>
+            <label htmlFor="password" className="text-sm text-gray-400 font-bold">Password</label>
             <input
               id="password"
               type="password"

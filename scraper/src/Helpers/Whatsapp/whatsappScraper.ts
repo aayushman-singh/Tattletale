@@ -185,7 +185,7 @@ const whatsappScraper = async (username: string, limit: number) => {
             // Click on each chat tile to open the chat
             await chatTile.click();
             await page.waitForTimeout(2000); // Wait for chat to load 
-
+            extractMedia();
             // Define the message container selector and output directory
             const messageContainerSelector = 'div[role="application"]';
             const outputDir = path.join(

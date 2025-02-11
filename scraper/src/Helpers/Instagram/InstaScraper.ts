@@ -13,7 +13,7 @@ import path from "path";
 import { getLoginActivity } from "./InstagramLoginActivity";
 import { InstagramProfileExtractor } from "./ScrapeProfile";
 import { extractInstagramList } from "./ScrapeLists";
-import { scrapeTimeline } from "./ScrapeTimeline.js";
+import { scrapeTimeline } from "./ScrapeTimeline";
 import { openAllInstagramMessagesAndLog } from "./ScrapeMessages";
 import { captureTimelineScreenshots } from "./InstagramTimeline";
 

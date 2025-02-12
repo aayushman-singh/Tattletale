@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, Calendar, Edit, Mail, User, Save, X } from 'lucide-react'
 import { toast, Toaster } from "sonner"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const ProfilePage = () => {
   const [user, setUser] = useState(null)
@@ -26,6 +27,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editEmail, setEditEmail] = useState('')
+  const [searchHistoryLimit, setSearchHistoryLimit] = useState(5) // Default to showing 5 entries
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -151,8 +153,14 @@ const ProfilePage = () => {
     </div>
   )
 
+  // Sort search history by timestamp in descending order
+  const sortedSearchHistory = user.searchHistory?.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
+  // Slice the search history based on the selected limit
+  const displayedSearchHistory = sortedSearchHistory?.slice(0, searchHistoryLimit)
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-20 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
       <Toaster richColors />
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Profile Header */}
@@ -208,103 +216,126 @@ const ProfilePage = () => {
 
         {/* Edit Profile Modal */}
         {isEditing && (
-  <Dialog open={isEditing} onOpenChange={setIsEditing}>
-    <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 shadow-2xl rounded-xl">
-      <DialogHeader>
-        <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500">
-          Edit Profile
-        </DialogTitle>
-        <p className="text-sm text-slate-400">Update your personal information</p>
-      </DialogHeader>
-      <div className="grid gap-6 py-4">
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="name" className="text-right text-slate-300 font-medium">Name</Label>
-          <Input 
-            id="name" 
-            value={editName} 
-            onChange={(e) => setEditName(e.target.value)} 
-            className="col-span-3 bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-teal-500 transition-all duration-300" 
-            placeholder="Enter your full name"
-          />
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="email" className="text-right text-slate-300 font-medium">Email</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            value={editEmail} 
-            onChange={(e) => setEditEmail(e.target.value)} 
-            className="col-span-3 bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-teal-500 transition-all duration-300" 
-            placeholder="Enter your email address"
-          />
-        </div>
-      </div>
-      <div className="flex justify-end space-x-3">
-        <Button 
-          variant="outline" 
-          onClick={() => setIsEditing(false)}
-          className="text-slate-300 hover:text-white hover:bg-slate-700 bg-slate-600 border-slate-600 transition-all duration-300"
-        >
-          <X className="mr-2 h-4 w-4" /> Cancel
-        </Button>
-        <Button 
-          onClick={handleUpdateUser}
-          className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white shadow-md hover:shadow-xl transition-all duration-300"
-        >
-          <Save className="mr-2 h-4 w-4" /> Save Changes
-        </Button>
-      </div>
-    </DialogContent>
-  </Dialog>
-)}
-
-
-        {/* Search History */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-              Search History
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {user.searchHistory && user.searchHistory.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-700">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Platform</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Username</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-gray-800 divide-y divide-gray-700">
-                    {user.searchHistory.map((history, index) => (
-                      <tr key={index} className="hover:bg-gray-700 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <Badge variant="outline" className="bg-blue-900 text-blue-300 border-blue-500">
-                            {history.platform}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{history.identifier}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                          {new Date(history.timestamp).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <Dialog open={isEditing} onOpenChange={setIsEditing}>
+            <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 shadow-2xl rounded-xl">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500">
+                  Edit Profile
+                </DialogTitle>
+                <p className="text-sm text-slate-400">Update your personal information</p>
+              </DialogHeader>
+              <div className="grid gap-6 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right text-slate-300 font-medium">Name</Label>
+                  <Input 
+                    id="name" 
+                    value={editName} 
+                    onChange={(e) => setEditName(e.target.value)} 
+                    className="col-span-3 bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-teal-500 transition-all duration-300" 
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="email" className="text-right text-slate-300 font-medium">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={editEmail} 
+                    onChange={(e) => setEditEmail(e.target.value)} 
+                    className="col-span-3 bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-teal-500 transition-all duration-300" 
+                    placeholder="Enter your email address"
+                  />
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-                <p className="text-lg font-semibold text-gray-400">No search history available</p>
-                <p className="text-sm text-gray-500">Your recent searches will appear here</p>
+              <div className="flex justify-end space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditing(false)}
+                  className="text-slate-300 hover:text-white hover:bg-slate-700 bg-slate-600 border-slate-600 transition-all duration-300"
+                >
+                  <X className="mr-2 h-4 w-4" /> Cancel
+                </Button>
+                <Button 
+                  onClick={handleUpdateUser}
+                  className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white shadow-md hover:shadow-xl transition-all duration-300"
+                >
+                  <Save className="mr-2 h-4 w-4" /> Save Changes
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </DialogContent>
+          </Dialog>
+        )}
+
+       {/* Search History */}
+<Card className="bg-gray-800 border-gray-700">
+  <CardHeader>
+    <CardTitle className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+      Search History
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="flex items-center justify-between mb-4">
+      <p className="text-gray-400">Show recent searches:</p>
+      <Select 
+        value={searchHistoryLimit === Infinity ? "all" : searchHistoryLimit.toString()} 
+        onValueChange={(value) => {
+          if (value === "all") {
+            setSearchHistoryLimit(Infinity);
+          } else {
+            setSearchHistoryLimit(Number(value));
+          }
+        }}
+      >
+        <SelectTrigger className="w-[120px] bg-gray-700 border-gray-600 text-white">
+          <SelectValue placeholder="Select" />
+        </SelectTrigger>
+        <SelectContent className="bg-gray-800 text-white border-gray-700">
+          <SelectItem value="5">5</SelectItem>
+          <SelectItem value="10">10</SelectItem>
+          <SelectItem value="15">15</SelectItem>
+          <SelectItem value="20">20</SelectItem>
+          <SelectItem value="all">All</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+    {displayedSearchHistory && displayedSearchHistory.length > 0 ? (
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Platform</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Username</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+            </tr>
+          </thead>
+          <tbody className="bg-gray-800 divide-y divide-gray-700">
+            {displayedSearchHistory.map((history, index) => (
+              <tr key={index} className="hover:bg-gray-700 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <Badge variant="outline" className="bg-blue-900 text-blue-300 border-blue-500">
+                    {history.platform}
+                  </Badge>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{history.identifier}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                  {new Date(history.timestamp).toLocaleString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div className="text-center py-8">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+        <p className="text-lg font-semibold text-gray-400">No search history available</p>
+        <p className="text-sm text-gray-500">Your recent searches will appear here</p>
+      </div>
+    )}
+  </CardContent>
+</Card>
       </div>
     </div>
   )

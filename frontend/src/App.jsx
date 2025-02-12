@@ -8,6 +8,7 @@ import SearchPage from "./components/servicesOsint";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import InstagramDataDisplay from "./components/pastData";
 import DataAnalysisPage from "./components/analysis";
+import AuthCheck from "./components/protectedRoute";
 // import CursorFollower from "./components/cursor";
 import { AuthProvider } from "./contexts/authContext";
 import GoogleDriveFileExplorer from "./components/services/GoogleDrive"
@@ -22,10 +23,6 @@ function App() {
       element: <Login />,
     },
     {
-      path: "/services",
-      element: <Services />,
-    },
-    {
       path: "/login",
       element: <Login />,
     },
@@ -33,45 +30,49 @@ function App() {
       path: "/register",
       element: <Register />,
     },
+  
+    {
+      path: "/services",
+      element: <AuthCheck><Services /></AuthCheck>,
+    },
     {
       path: "/home",
-      element: <Home />,
+      element: <AuthCheck><Home /></AuthCheck>,
     },
     {
       path: "/servicesMain",
-      element: <ServicesMain />,
+      element: <AuthCheck><ServicesMain /></AuthCheck>,
     },
     {
       path: "/osint",
-      element: <SearchPage />,
+      element: <AuthCheck><SearchPage /></AuthCheck>,
     },
     {
       path: "/pastData",
-      element: <InstagramDataDisplay />,
+      element: <AuthCheck><InstagramDataDisplay /></AuthCheck>,
     },
     {
       path: "/profileAnalysis",
-      element: <DataAnalysisPage />,
+      element: <AuthCheck><DataAnalysisPage /></AuthCheck>,
     },
     {
       path: "/profilePage",
-      element: <ProfilePage/>,
+      element: <AuthCheck><ProfilePage /></AuthCheck>,
     },
     {
       path: "/google",
-      element: <GoogleDriveFileExplorer/>,
+      element: <AuthCheck><GoogleDriveFileExplorer /></AuthCheck>,
     },
     {
       path: "/activity",
-      element: <UserActivity/>,
+      element: <AuthCheck><UserActivity /></AuthCheck>,
     },
-   
   ];
-
   let routesElement = useRoutes(routesArray);
 
   return (
     <>
+  
       {/* <CursorFollower/> */}
       <GoogleOAuthProvider clientId="218022995131-pkv99vvugfmhr73ua600lg44q362bbsj.apps.googleusercontent.com">
       <Header />
@@ -81,6 +82,7 @@ function App() {
       </div>
       <ChatbotAvatar />
       </GoogleOAuthProvider>
+  
     </>
   );
 }

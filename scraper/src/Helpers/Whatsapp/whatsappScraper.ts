@@ -4,6 +4,7 @@ import path from "path";
 import { uploadChats, uploadToS3 } from "../mongoUtils";
 import { __dirname } from "../../../../config";
 import dotenv from "dotenv";
+import { extractMedia } from "./whatsappMedia";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ const scrollChatWithLogging = async (
     const screenshotPaths: string[] = [];
     const textFilePath = path.join(outputDir, `chat_text.txt`);
     try {
+
         console.log("Starting infinite scrolling upward...");
         let totalMessageCount = 0;
         let attempt = 0;
@@ -148,7 +150,7 @@ const whatsappScraper = async (username: string, limit: number) => {
         page = await browser.newPage();
 
         await page.goto("https://web.whatsapp.com/", {
-            waitUntil: "networkidle",
+            waitUntil: "domcontentloaded",
         });
         await page.waitForTimeout(30000); // Add a 10-second delay
 
@@ -166,7 +168,7 @@ const whatsappScraper = async (username: string, limit: number) => {
 
         // Select the main chat container once logged in
         const chatContainerSelector = 'div[aria-label="Chat list"]';
-        await page.waitForSelector(chatContainerSelector, { timeout: 60000 });
+        await page.waitForSelector(chatContainerSelector, {timeout: 60000 });
 
         await page.waitForTimeout(2500);
         // Iterate through each chat user tile
@@ -181,17 +183,31 @@ const whatsappScraper = async (username: string, limit: number) => {
                 .split(":")[0]
                 .replace(/[^a-zA-Z0-9_]/g, "");
             console.log(`Processing chat ${index + 1}: ${receiverUsername}`);
-
+             const messageContainerSelector = 'div[role="application"]';
+             const outputDir = path.join(
+                 __dirname,
+                 `screenshots_chat_${index + 1}`
+             );
             // Click on each chat tile to open the chat
             await chatTile.click();
             await page.waitForTimeout(2000); // Wait for chat to load 
-            extractMedia();
+         
+                    console.log(
+                        `Starting Media scraping for ${receiverUsername}`
+                    );
+                    const mediaData = await extractMedia(username, page);
+                    const dirPath = path.join(__dirname);
+
+                    await fs.mkdir(dirPath, { recursive: true });
+
+                    // Write mediaData to the media.json file
+                    const filePath = path.join(
+                        dirPath,
+                        `${username}_media.json`
+                    );
+                    await fs.writeFile(filePath, mediaData);
             // Define the message container selector and output directory
-            const messageContainerSelector = 'div[role="application"]';
-            const outputDir = path.join(
-                __dirname,
-                `screenshots_chat_${index + 1}`,
-            );
+           
             await scrollChatWithLogging(
                 username,
                 receiverUsername,

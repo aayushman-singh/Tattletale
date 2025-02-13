@@ -113,7 +113,7 @@ export async function processChatPostsAndLog(page: Page): Promise<ChatItem[]> {
                         await page.waitForURL(
                             (url: URL) =>
                                 url.toString().includes("/p/") ||
-                                url.toString().includes("/reel/"),
+                                url.toString().includes("/reel/"), // Might be unnecessary but doesn't hurt to leave it as is
                             { timeout: 5000 }
                         );
 
@@ -153,141 +153,144 @@ export async function processChatPostsAndLog(page: Page): Promise<ChatItem[]> {
                     }
                 }
             }
-        } else {
-            // Check if this div is a timestamp
-            const timestampText = await div.evaluate((el) => {
-                const h4El = el.querySelector("h4.html-h4");
-                if (h4El) {
-                    const timeEl = h4El.querySelector(
-                        'div[data-scope="date_break"] span span'
-                    );
-                    const fullTimeEl = h4El.querySelector("div.xzpqnlu");
-                    return (timeEl || fullTimeEl)?.textContent?.trim() || null;
-                }
-                return null;
-            });
+      } else {
+    // Check if this div is a timestamp
+    const timestampText = await div.evaluate((el) => {
+        const h4El = el.querySelector("h4.html-h4");
+        if (h4El) {
+            const timeEl = h4El.querySelector(
+                'div[data-scope="date_break"] span span'
+            );
+            const fullTimeEl = h4El.querySelector("div.xzpqnlu");
+            return (timeEl || fullTimeEl)?.textContent?.trim() || null;
+        }
+        return null;
+    });
 
-            if (timestampText) {
-                console.log(
-                    `Div ${i + 1}: Found timestamp text -> ${timestampText}`
-                );
+    if (timestampText) {
+        console.log(`Div ${i + 1}: Found timestamp text -> ${timestampText}`);
+
+        try {
+            let date: Date;
+
+            if (timestampText.includes("Today at")) {
+                const timeStr = timestampText.replace("Today at ", "");
+                const [time, period] = timeStr.split(" ");
+                const [hours, minutes] = time.split(":");
+                let hour = parseInt(hours);
+
+                if (period === "PM" && hour !== 12) hour += 12;
+                if (period === "AM" && hour === 12) hour = 0;
+
+                date = new Date();
+                date.setHours(hour, parseInt(minutes), 0, 0);
+            } else if (timestampText.includes("Yesterday at")) {
+                const timeStr = timestampText.replace("Yesterday at ", "");
+                const [time, period] = timeStr.split(" ");
+                const [hours, minutes] = time.split(":");
+                let hour = parseInt(hours);
+
+                if (period === "PM" && hour !== 12) hour += 12;
+                if (period === "AM" && hour === 12) hour = 0;
+
+                date = new Date();
+                date.setDate(date.getDate() - 1);
+                date.setHours(hour, parseInt(minutes), 0, 0);
+            } else if (timestampText.includes(",")) {
+                // Handle the format "9/13/24, 2:17 PM"
+                const [dateStr, timeStr] = timestampText.split(",");
+                const [month, day, year] = dateStr.split("/").map(Number);
+
+                // Correctly handle the narrow non-breaking space (\u202F)
+                const [time, period] = timeStr.trim().split(/\s+/); // Use regex to split on any whitespace, including narrow non-breaking spaces
+                const [hours, minutes] = time.split(":").map(Number);
+                let hour = hours;
+
+                if (period === "PM" && hour !== 12) hour += 12;
+                if (period === "AM" && hour === 12) hour = 0;
+
+                // Correct year handling
+                const fullYear =
+                    year < 100
+                        ? 2000 + year
+                        : year < 1000
+                        ? 2000 + year
+                        : year; // Ensure we have full year (e.g., 2024)
 
                 try {
-                    let date: Date;
-
-                    if (timestampText.includes("Today at")) {
-                        const timeStr = timestampText.replace("Today at ", "");
-                        const [time, period] = timeStr.split(" ");
-                        const [hours, minutes] = time.split(":");
-                        let hour = parseInt(hours);
-
-                        if (period === "PM" && hour !== 12) hour += 12;
-                        if (period === "AM" && hour === 12) hour = 0;
-
-                        date = new Date();
-                        date.setHours(hour, parseInt(minutes), 0, 0);
-                    } else if (timestampText.includes("Yesterday at")) {
-                        const timeStr = timestampText.replace(
-                            "Yesterday at ",
-                            ""
-                        );
-                        const [time, period] = timeStr.split(" ");
-                        const [hours, minutes] = time.split(":");
-                        let hour = parseInt(hours);
-
-                        if (period === "PM" && hour !== 12) hour += 12;
-                        if (period === "AM" && hour === 12) hour = 0;
-
-                        date = new Date();
-                        date.setDate(date.getDate() - 1);
-                        date.setHours(hour, parseInt(minutes), 0, 0);
-                    } else if (timestampText.includes(",")) {
-                        // Handle the format "9/13/24, 2:17 PM"
-                        const [dateStr, timeStr] = timestampText.split(",");
-                        const [month, day, year] = dateStr
-                            .split("/")
-                            .map(Number);
-
-                        // Correctly handle the narrow non-breaking space (\u202F)
-                        const [time, period] = timeStr.trim().split(/\s+/); // Use regex to split on any whitespace, including narrow non-breaking spaces
-                        const [hours, minutes] = time.split(":").map(Number);
-                        let hour = hours;
-
-                        if (period === "PM" && hour !== 12) hour += 12;
-                        if (period === "AM" && hour === 12) hour = 0;
-
-                        // Correct year handling
-                        const fullYear =
-                            year < 100
-                                ? 2000 + year
-                                : year < 1000
-                                ? 2000 + year
-                                : year; // Ensure we have full year (e.g., 2024)
-
-                        try {
-                            // Create the date object
-                            date = new Date(
-                                fullYear,
-                                month - 1,
-                                day,
-                                hour,
-                                minutes
-                            );
-
-                            // Check if the date is valid  (Important!)
-                            if (isNaN(date.getTime())) {
-                                // Use getTime() to check validity
-                                throw new Error("Invalid date created"); // Throw an error to be caught
-                            }
-                        } catch (dateError) {
-                            console.warn(
-                                `Div ${
-                                    i + 1
-                                }:  Invalid date components after parsing: month=${month}, day=${day}, year=${fullYear}, hour=${hour}, minutes=${minutes}`
-                            );
-                            throw dateError; // Re-throw to provide more specifics or handle downstream
-                        }
-                    } else {
-                        // Handle standalone time format like "2:17 PM"
-                        const [time, period] = timestampText.split(" ");
-                        const [hours, minutes] = time.split(":").map(Number);
-                        let hour = hours;
-
-                        if (period === "PM" && hour !== 12) hour += 12;
-                        if (period === "AM" && hour === 12) hour = 0;
-
-                        date = new Date();
-                        date.setHours(hour, minutes, 0, 0);
-                    }
-
-                    const dateString = date.toISOString();
-                    if (!loggedContent.has(dateString)) {
-                        chatItems.push({ index: i, type: "date", date });
-                        console.log(
-                            `Div ${
-                                i + 1
-                            }: Added to chat items as type date -> ${date.toISOString()}`
-                        );
-
-                        loggedContent.add(dateString);
-                    } else {
-                        console.log(`Div ${i + 1}: Duplicate date, skipping.`);
-                    }
-                } catch (error) {
+                    // Create the date object
+                    date = new Date(fullYear, month - 1, day, hour, minutes);
+                } catch (dateError) {
                     console.warn(
                         `Div ${
                             i + 1
-                        }: Could not parse timestamp -> ${timestampText}`,
-                        error
+                        }: Invalid date components after parsing: month=${month}, day=${day}, year=${fullYear}, hour=${hour}, minutes=${minutes}`
                     );
+                    throw dateError; // Re-throw to provide more specifics or handle downstream
                 }
             } else {
-                console.log(
-                    `Div ${i + 1}: Not a message or timestamp, skipping.`
-                );
+                // Handle standalone time format like "Mon 10:28 AM"
+                const [dayOfWeek, time, period] = timestampText.split(" ");
+                const [hours, minutes] = time.split(":").map(Number);
+                let hour = hours;
+
+                if (period === "PM" && hour !== 12) hour += 12;
+                if (period === "AM" && hour === 12) hour = 0;
+
+                // Create a Date object for today
+                date = new Date();
+                date.setHours(hour, minutes, 0, 0);
+
+                // Adjust the date to the correct day of the week
+                const currentDayOfWeek = date.getDay();
+                const targetDayOfWeek = [
+                    "Sun",
+                    "Mon",
+                    "Tue",
+                    "Wed",
+                    "Thu",
+                    "Fri",
+                    "Sat",
+                ].indexOf(dayOfWeek);
+
+                if (targetDayOfWeek !== currentDayOfWeek) {
+                    date.setDate(
+                        date.getDate() +
+                            (targetDayOfWeek - currentDayOfWeek + 7) % 7
+                    );
+                }
             }
+
+            // Check if the date is valid
+            if (isNaN(date.getTime())) {
+                throw new RangeError("Invalid date created");
+            }
+
+            const dateString = date.toISOString();
+            if (!loggedContent.has(dateString)) {
+                chatItems.push({ index: i, type: "date", date });
+                console.log(
+                    `Div ${
+                        i + 1
+                    }: Added to chat items as type date -> ${date.toISOString()}`
+                );
+
+                loggedContent.add(dateString);
+            } else {
+                console.log(`Div ${i + 1}: Duplicate date, skipping.`);
+            }
+        } catch (error) {
+            console.warn(
+                `Div ${i + 1}: Could not parse timestamp -> ${timestampText}`,
+                error
+            );
+        }
+    } else {
+        console.log(`Div ${i + 1}: Not a message or timestamp, skipping.`);
+    }
         }
     }
+
 
     console.log("Finished processing chat posts.");
     return chatItems;
@@ -304,7 +307,7 @@ export const openAllInstagramMessagesAndLog = async (
         // Navigate to Instagram Direct Inbox
         console.log("Navigating to Instagram Direct Inbox.");
         await page.goto("https://www.instagram.com/direct/inbox/", {
-            waitUntil: "networkidle",
+            waitUntil: "domcontentloaded",
         });
 
         // Handle "Not Now" notification pop-up

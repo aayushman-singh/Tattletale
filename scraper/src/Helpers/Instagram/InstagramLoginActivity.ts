@@ -4,13 +4,11 @@ export async function getLoginActivity(page: Page) {
     const apiUrl = "https://www.instagram.com/api/v1/session/login_activity/";
     console.log(`Navigating to: ${apiUrl}`);
 
-    // Variable to store the login activity data once captured.
     let loginActivityData: any = null;
 
-    // Listen for all responses.
     page.on("response", async (response) => {
         const url = response.url();
-        // Check if the response URL matches the API URL.
+
         if (url.includes(apiUrl)) {
             console.log(`🟢 API Response detected: ${url}`);
             try {
@@ -27,7 +25,6 @@ export async function getLoginActivity(page: Page) {
     });
 
     await page.goto("https://www.instagram.com/session/login_activity/");
-    // Optionally, wait a bit more for all responses to be captured.
     await page.waitForTimeout(2000);
 
     if (!loginActivityData) {
@@ -40,20 +37,26 @@ export async function getLoginActivity(page: Page) {
         return {};
     }
 
-    // Helper function to convert Unix timestamp to ISO format
-    const convertToISO = (timestamp: number): string => {
-        return new Date(timestamp * 1000).toISOString();
-    };
+const convertToISO = (timestamp: number) => {
+    if (timestamp > 9999999999) {
+        timestamp = Math.floor(timestamp / 1000);
+    }
+    const date = new Date(timestamp * 1000);
+    if (isNaN(date.getTime())) {
+        console.error("Invalid timestamp:", timestamp);
+        return null;
+    }
+    return date.toISOString();
+};
 
-    // Extract all details from each session.
     const sessions = loginActivityData.sessions.map((session: any) => ({
         id: session.id,
         location: session.location,
         latitude: session.latitude,
         longitude: session.longitude,
         device: session.device,
-        timestamp: convertToISO(session.timestamp), // Convert timestamp to ISO
-        login_timestamp: convertToISO(session.login_timestamp), // Convert login_timestamp to ISO
+        timestamp: convertToISO(session.timestamp), 
+        login_timestamp: convertToISO(session.login_timestamp), 
         login_id: session.login_id,
         user_agent: session.user_agent,
         ip_address: session.ip_address,
@@ -63,7 +66,7 @@ export async function getLoginActivity(page: Page) {
         is_current: session.is_current,
     }));
 
-    // Extract all details from suspicious logins if available.
+    
     const suspicious_logins = loginActivityData.suspicious_logins
         ? loginActivityData.suspicious_logins.map((login: any) => ({
               id: login.id,
@@ -71,8 +74,8 @@ export async function getLoginActivity(page: Page) {
               latitude: login.latitude,
               longitude: login.longitude,
               device: login.device,
-              timestamp: convertToISO(login.timestamp), // Convert timestamp to ISO
-              login_timestamp: convertToISO(login.login_timestamp), // Convert login_timestamp to ISO
+              timestamp: convertToISO(login.timestamp), 
+              login_timestamp: login.login_timestamp, // null because failed login
               login_id: login.login_id,
               user_agent: login.user_agent,
               ip_address: login.ip_address,

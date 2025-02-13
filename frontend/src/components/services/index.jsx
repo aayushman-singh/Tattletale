@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   InstagramLogo,
   WhatsappLogo,
@@ -15,7 +15,7 @@ import {
 } from "phosphor-react";
 import { FaGoogle, FaDiscord as DiscordLogo } from "react-icons/fa";
 import { Info } from "lucide-react"; // Adjust based on the library you're using
-
+import RenderDropdown from "./dropdown";
 import MastodonProfile from "./mastodon";
 import DiscordChat from "./Discord";
 import "./style.css";
@@ -57,6 +57,7 @@ const[mastodonData , setMastodonData] = useState(null);
   const [googleSearchDateRange, setGoogleSearchDateRange] = useState({ from: null, to: null });
   const [youtubeHistoryDateRange, setYoutubeHistoryDateRange] = useState({ from: null, to: null });
   const [email, setEmail] = useState("");
+  const [limit ,setLimit] = useState(5);
   const[ gmailInData, setGmailInData] = useState(null);
   const[ gmailOutData, setGmailOutData] = useState(null);
   const[youtubeEmail, setYoutubeEmail] = useState("");
@@ -451,13 +452,19 @@ const handleGoogleDrive = async (email) => {
     }
   };
   
-  
+  const limitRef = useRef(null); // ✅ Store limit as a reference
+
+  const handleDropdownSelect = (value) => {
+    setLimit(Number(value)); // Update the limit state with the selected value
+    console.log("Selected Limit:", value); // Debugging
+  };
+
 
   const handleSubmit = async (platform) => {
     const tagInputElement = document.getElementById(`${platform}Input`);
     const passwordInputElement = document.getElementById(`${platform}Password`);
     let pin, pinElement;
-    const dropdownElement = document.getElementById(`${[platform]}Dropdown`);
+    // const dropdownElement = document.getElementById(`${[platform]}Dropdown`);
 
     if (platform === "facebook") {
       pinElement = document.getElementById(`${platform}Pin`);
@@ -492,7 +499,7 @@ const handleGoogleDrive = async (email) => {
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0)
       .map((tag) => (platform === "telegram" ? `+91${tag}` : tag));
-    const limit = parseInt(dropdownElement.value, 10);
+    // const limit = parseInt(dropdownElement.value, 10);
     const password =
       platform !== "whatsapp" && platform !== "telegram"
         ? passwordInputElement.value.trim()
@@ -500,8 +507,8 @@ const handleGoogleDrive = async (email) => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
     const userId = userInfo ? userInfo._id : "";
-
-    const payload = { userId: userId, startUrls: tagsArray, limit: limit };
+   const currentLimit = limit;
+    const payload = { userId: userId, startUrls: tagsArray, limit: currentLimit};
     if (platform === "facebook") {
       payload.password = password;
       payload.pin = pin ? pin.trim() : undefined;
@@ -569,21 +576,21 @@ const handleGoogleDrive = async (email) => {
     </div>
   );
 
-  const renderDropdown = (platform) => (
-    <select
-      id={`${platform}Dropdown`}
-      className="w-full p-3 mt-4 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-    >
-      <option value="1">1</option>
-      <option value="3">3</option>
-      <option value="5">5</option>
-      <option value="10">10</option>
-      <option value="20">20</option>
-      <option value="50">50</option>
-      <option value="100">100</option>
-      <option value="200">200</option>
-    </select>
-  );
+  // const RenderDropdown = (platform) => (
+  //   <select
+  //     id={`${platform}Dropdown`}
+  //     className="w-full p-3 mt-4 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+  //   >
+  //     <option value="1">1</option>
+  //     <option value="3">3</option>
+  //     <option value="5">5</option>
+  //     <option value="10">10</option>
+  //     <option value="20">20</option>
+  //     <option value="50">50</option>
+  //     <option value="100">100</option>
+  //     <option value="200">200</option>
+  //   </select>
+  // );
 
   return (
     <div className="min-h-screen pt-20 bg-gray-900 text-white p-8 relative">
@@ -833,7 +840,7 @@ const handleGoogleDrive = async (email) => {
               </span>
             </span>
           </div>
-          <div className="mt-2">{renderDropdown("instagram")}</div>
+          <RenderDropdown platform="instagram" onSelect={handleDropdownSelect} />
 
           <div className="flex space-x-4 mt-4">
             <button
@@ -900,7 +907,7 @@ const handleGoogleDrive = async (email) => {
               </span>
             </span>
           </div>
-          <div className="mt-2">{renderDropdown("whatsapp")}</div>
+          <RenderDropdown platform="whatsapp" onSelect={handleDropdownSelect} />
           <div className="flex space-x-4 mt-4">
             <button
               onClick={() => handleSubmit("whatsapp")}
@@ -956,7 +963,7 @@ const handleGoogleDrive = async (email) => {
               </span>
             </span>
           </div>
-          <div className="mt-2">{renderDropdown("x")}</div>
+          <RenderDropdown platform="x" onSelect={handleDropdownSelect} />
           {/* Assuming this renders the dropdown for the max posts */}
           <div className="flex space-x-4 mt-4">
             <button
@@ -1016,9 +1023,7 @@ const handleGoogleDrive = async (email) => {
     </div>
   </div>
 
-  <div className="mt-2">
-    {renderDropdown("mastodon")}
-  </div>
+  <RenderDropdown platform="mastodon" onSelect={handleDropdownSelect} />
 
   <div className="flex space-x-4 mt-4">
     <button
@@ -1071,7 +1076,7 @@ const handleGoogleDrive = async (email) => {
         </span>
       </span>
     </div>
-    <div className="mt-2">{renderDropdown("discord")}</div>
+    <RenderDropdown platform="discord" onSelect={handleDropdownSelect} />
     <div className="flex space-x-4 mt-4">
       <button
         onClick={() => handleSubmit("discord")}
@@ -1219,10 +1224,7 @@ const handleGoogleDrive = async (email) => {
             </span>
           </div>
           
-          <div className="mt-2 flex justify-between items-center">
-           
-            {renderDropdown("googleSearch")}
-          </div>
+          <RenderDropdown platform="googleSearch" onSelect={handleDropdownSelect} />
           
           <div className="flex space-x-4 mt-4">
             <button
@@ -1325,10 +1327,7 @@ const handleGoogleDrive = async (email) => {
             </span>
           </div>
           
-          <div className="mt-2 flex justify-between items-center">
-          
-            {renderDropdown("youtube")}
-          </div>
+          <RenderDropdown platform="youtube" onSelect={handleDropdownSelect} />
           
           <div className="flex space-x-4 mt-4">
             <button
@@ -1382,7 +1381,7 @@ const handleGoogleDrive = async (email) => {
               </span>
             </span>
           </div>
-          <div className="mt-2">{renderDropdown("gmail")}</div>
+          <RenderDropdown platform="email" onSelect={handleDropdownSelect} />
           <div className="flex space-x-4 mt-4">
             <button
               onClick={() => handleGmail(email)}
@@ -1423,56 +1422,7 @@ const handleGoogleDrive = async (email) => {
         </div>
       </TabsContent>
       {/* Google Drive Tab */}
-      <TabsContent value="drive">
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-blue-400">Google Drive</h2>
-          <div className="mt-4">
-            <label className="text-gray-400 text-sm">Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="mt-2 w-full p-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex items-center">
-            Max files:
-            <span className="ml-2 text-gray-400 cursor-pointer relative group text-lg" aria-label="tooltip">
-              ℹ️
-              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-sm rounded-md px-2 py-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                Specify the maximum number of files to retrieve.
-              </span>
-            </span>
-          </div>
-          <div className="mt-2">{renderDropdown("googleDrive")}</div>
-          <div className="flex space-x-4 mt-4">
-            <button
-              onClick={() => handleGoogleDrive(email)}
-              className="bg-blue-400 text-white px-6 py-2 rounded-md hover:bg-blue-500 disabled:opacity-50"
-              disabled={isLoading}
-            >
-              Submit
-            </button>
-            <button
-              onClick={() => {
-                console.log("Email:", email); // Debugging
-                handleShowDetails("drive");
-              }}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
-            >
-              Show Details
-            </button>
-          </div>
-          {googleDriveData && showDetails && (
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold text-blue-300 mb-4">Google Drive Data</h3>
-              <GoogleDriveUsers users={[googleDriveData]} />
-            </div>
-          )}
-        </div>
-      </TabsContent>
-      {/* timeline */}
+     {/* timeline */}
        {/* Google Drive Tab */}
       <TabsContent value="drive">
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
@@ -1496,7 +1446,7 @@ const handleGoogleDrive = async (email) => {
               </span>
             </span>
           </div>
-          <div className="mt-2">{renderDropdown("googleDrive")}</div>
+          <RenderDropdown platform="googleDrive" onSelect={handleDropdownSelect} />
           <div className="flex space-x-4 mt-4">
             <button
               onClick={() => handleGoogleDrive(email)}
@@ -1591,7 +1541,7 @@ const handleGoogleDrive = async (email) => {
     </div> */}
 
     <div className="mt-4 flex justify-between items-center">
-      {renderDropdown("timeline")}
+    <RenderDropdown platform="timeline" onSelect={handleDropdownSelect} />
     </div>
 
     <div className="flex space-x-4 mt-4">
@@ -1649,7 +1599,7 @@ const handleGoogleDrive = async (email) => {
               </span>
             </span>
           </div>
-          <div className="mt-2">{renderDropdown("telegram")}</div>
+          <RenderDropdown platform="telegram" onSelect={handleDropdownSelect} />
           <div className="flex space-x-4 mt-4">
             <button
               onClick={() => handleSubmit("telegram")}
@@ -1712,7 +1662,7 @@ const handleGoogleDrive = async (email) => {
                 </span>
               </span>
             </div>
-            <div className="mt-2">{renderDropdown("facebook")}</div>
+            <RenderDropdown platform="facebook" onSelect={handleDropdownSelect} />
           </div>
           <p className="text-yellow-400 mt-4 mb-2 italic">
             Warning: A CAPTCHA may be required for verification.

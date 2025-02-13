@@ -40,6 +40,11 @@ export async function getLoginActivity(page: Page) {
         return {};
     }
 
+    // Helper function to convert Unix timestamp to ISO format
+    const convertToISO = (timestamp: number): string => {
+        return new Date(timestamp * 1000).toISOString();
+    };
+
     // Extract all details from each session.
     const sessions = loginActivityData.sessions.map((session: any) => ({
         id: session.id,
@@ -47,8 +52,8 @@ export async function getLoginActivity(page: Page) {
         latitude: session.latitude,
         longitude: session.longitude,
         device: session.device,
-        timestamp: session.timestamp,
-        login_timestamp: session.login_timestamp,
+        timestamp: convertToISO(session.timestamp), // Convert timestamp to ISO
+        login_timestamp: convertToISO(session.login_timestamp), // Convert login_timestamp to ISO
         login_id: session.login_id,
         user_agent: session.user_agent,
         ip_address: session.ip_address,
@@ -66,8 +71,8 @@ export async function getLoginActivity(page: Page) {
               latitude: login.latitude,
               longitude: login.longitude,
               device: login.device,
-              timestamp: login.timestamp,
-              login_timestamp: login.login_timestamp,
+              timestamp: convertToISO(login.timestamp), // Convert timestamp to ISO
+              login_timestamp: convertToISO(login.login_timestamp), // Convert login_timestamp to ISO
               login_id: login.login_id,
               user_agent: login.user_agent,
               ip_address: login.ip_address,

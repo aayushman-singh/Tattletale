@@ -593,7 +593,7 @@ const handleGoogleDrive = async (email) => {
   // );
 
   return (
-    <div className="min-h-screen pt-20 bg-gray-900 text-white p-8 relative">
+    <div className="min-h-screen pt-20 bg-gray-900 text-white p-8 sm:p-20 relative">
       {alert.visible && (
         <div
           className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform ${
@@ -674,144 +674,149 @@ const handleGoogleDrive = async (email) => {
           </div>
         </div>
       )}
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        Social Media Investigation Tool
-      </h1>
+    <h1 className="text-3xl font-bold mb-8 text-center">
+  Social Media Investigation Tool
+</h1>
 
-      <div className="flex justify-center space-x-8 mb-8">
-        <button
-          onClick={() => handleSectionClick("instagram")}
-          className="flex items-center space-x-2"
-        >
-          <InstagramLogo
-            size={32}
-            color={activeSection === "instagram" ? "#E1306C" : "#ccc"}
-          />
-          <span
-            className={`text-lg ${
-              activeSection === "instagram" ? "text-pink-500" : "text-gray-400"
-            }`}
-          >
-            Instagram
-          </span>
-        </button>
-
-        <button
-          onClick={() => handleSectionClick("facebook")}
-          className="flex items-center space-x-2"
-        >
-          <FacebookLogo
-            size={32}
-            color={activeSection === "facebook" ? "#3b5998" : "#ccc"}
-          />
-          <span
-            className={`text-lg ${
-              activeSection === "facebook" ? "text-blue-600" : "text-gray-400"
-            }`}
-          >
-            Facebook
-          </span>
-        </button>
-       
-        <button
-          onClick={() => handleSectionClick("x")}
-          className="flex items-center space-x-2"
-        >
-          <TwitterLogo
-            size={32}
-            color={activeSection === "x" ? "#1DA1F2" : "#ccc"}
-          />
-          <span
-            className={`text-lg ${
-              activeSection === "x" ? "text-blue-500" : "text-gray-400"
-            }`}
-          >
-            X
-          </span>
-        </button>
-       
-        <button
-          onClick={() => handleSectionClick("telegram")}
-          className="flex items-center space-x-2"
-        >
-          <TelegramLogo
-            size={32}
-            color={activeSection === "telegram" ? "#0088cc" : "#ccc"}
-          />
-          <span
-            className={`text-lg ${
-              activeSection === "telegram" ? "text-blue-400" : "text-gray-400"
-            }`}
-          >
-            Telegram
-          </span>
-        </button>
-        <button
-  onClick={() => handleSectionClick("google")}
-  className="flex items-center space-x-2"
->
-  <FaGoogle
-    size={32}
-    color={activeSection === "google" ? "#4285F4" : "#ccc"} // Google color when active
-  />
-  <span
-    className={`text-lg ${activeSection === "google" ? "text-blue-500" : "text-gray-400"}`}
+<div className="flex flex-wrap justify-center space-x-8 mb-8">
+  <button
+    onClick={() => handleSectionClick("instagram")}
+    className="flex items-center space-x-2 mb-4 md:mb-0"
   >
-    Google
-  </span>
-</button>
-
-        <button
-          onClick={() => handleSectionClick("whatsapp")}
-          className="flex items-center space-x-2"
-        >
-          <WhatsappLogo
-            size={32}
-            color={activeSection === "whatsapp" ? "#25D366" : "#ccc"}
-          />
-          <span
-            className={`text-lg ${
-              activeSection === "whatsapp" ? "text-green-500" : "text-gray-400"
-            }`}
-          >
-            WhatsApp
-          </span>
-        </button>
-        <button
-  onClick={() => handleSectionClick("discord")}
-  className="flex items-center space-x-2"
->
-  <DiscordLogo
-    size={32}
-    color={activeSection === "discord" ? "#5865F2" : "#ccc"}
-  />
-  <span
-    className={`text-lg ${
-      activeSection === "discord" ? "text-blue-400" : "text-gray-400"
-    }`}
-  >
-    Discord
-  </span>
-</button>
-<button 
-      onClick={() => handleSectionClick("mastodon")}
-      className="flex items-center space-x-2"
+    <InstagramLogo
+      size={32}
+      color={activeSection === "instagram" ? "#E1306C" : "#ccc"}
+    />
+    <span
+      className={`text-lg ${
+        activeSection === "instagram" ? "text-pink-500" : "text-gray-400"
+      }`}
     >
-      <SocialIcon 
-        network="mastodon" 
-        style={{ height: 32, width: 32 }}
-        bgColor={activeSection === "mastodon" ? "#6364FF" : "#ccc"}
-      />
-      <span 
-        className={`text-lg ${
-          activeSection === "mastodon" ? "text-blue-400" : "text-gray-400"
-        }`}
-      >
-        Mastodon
-      </span>
-    </button>
+      Instagram
+    </span>
+  </button>
 
-      </div>
+  <button
+    onClick={() => handleSectionClick("facebook")}
+    className="flex items-center space-x-2 mb-4 md:mb-0"
+  >
+    <FacebookLogo
+      size={32}
+      color={activeSection === "facebook" ? "#3b5998" : "#ccc"}
+    />
+    <span
+      className={`text-lg ${
+        activeSection === "facebook" ? "text-blue-600" : "text-gray-400"
+      }`}
+    >
+      Facebook
+    </span>
+  </button>
+
+  <button
+    onClick={() => handleSectionClick("x")}
+    className="flex items-center space-x-2 mb-4 md:mb-0"
+  >
+    <TwitterLogo
+      size={32}
+      color={activeSection === "x" ? "#1DA1F2" : "#ccc"}
+    />
+    <span
+      className={`text-lg ${
+        activeSection === "x" ? "text-blue-500" : "text-gray-400"
+      }`}
+    >
+      X
+    </span>
+  </button>
+
+  <button
+    onClick={() => handleSectionClick("telegram")}
+    className="flex items-center space-x-2 mb-4 md:mb-0"
+  >
+    <TelegramLogo
+      size={32}
+      color={activeSection === "telegram" ? "#0088cc" : "#ccc"}
+    />
+    <span
+      className={`text-lg ${
+        activeSection === "telegram" ? "text-blue-400" : "text-gray-400"
+      }`}
+    >
+      Telegram
+    </span>
+  </button>
+
+  <button
+    onClick={() => handleSectionClick("google")}
+    className="flex items-center space-x-2 mb-4 md:mb-0"
+  >
+    <FaGoogle
+      size={32}
+      color={activeSection === "google" ? "#4285F4" : "#ccc"}
+    />
+    <span
+      className={`text-lg ${
+        activeSection === "google" ? "text-blue-500" : "text-gray-400"
+      }`}
+    >
+      Google
+    </span>
+  </button>
+
+  <button
+    onClick={() => handleSectionClick("whatsapp")}
+    className="flex items-center space-x-2 mb-4 md:mb-0"
+  >
+    <WhatsappLogo
+      size={32}
+      color={activeSection === "whatsapp" ? "#25D366" : "#ccc"}
+    />
+    <span
+      className={`text-lg ${
+        activeSection === "whatsapp" ? "text-green-500" : "text-gray-400"
+      }`}
+    >
+      WhatsApp
+    </span>
+  </button>
+
+  <button
+    onClick={() => handleSectionClick("discord")}
+    className="flex items-center space-x-2 mb-4 md:mb-0"
+  >
+    <DiscordLogo
+      size={32}
+      color={activeSection === "discord" ? "#5865F2" : "#ccc"}
+    />
+    <span
+      className={`text-lg ${
+        activeSection === "discord" ? "text-blue-400" : "text-gray-400"
+      }`}
+    >
+      Discord
+    </span>
+  </button>
+
+  <button
+    onClick={() => handleSectionClick("mastodon")}
+    className="flex items-center space-x-2 mb-4 md:mb-0"
+  >
+    <SocialIcon
+      network="mastodon"
+      style={{ height: 32, width: 32 }}
+      bgColor={activeSection === "mastodon" ? "#6364FF" : "#ccc"}
+    />
+    <span
+      className={`text-lg ${
+        activeSection === "mastodon" ? "text-blue-400" : "text-gray-400"
+      }`}
+    >
+      Mastodon
+    </span>
+  </button>
+</div>
+
 
       {activeSection === "instagram" && (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">

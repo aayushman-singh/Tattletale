@@ -1,142 +1,13 @@
 import { Browser, chromium, Page } from "playwright";
 import fs from "fs/promises";
 import path from "path";
-import { uploadChats, uploadToS3 } from "../mongoUtils";
+import { insertObject} from "../mongoUtils";
 import { __dirname } from "../../../../config";
 import dotenv from "dotenv";
 import { extractMedia } from "./whatsappMedia";
+import { scrollChatWithLogging } from "./whatsappChats";
 
 dotenv.config();
-
-
-const scrollChatWithLogging = async (
-    username: string,
-    receiverUsername: string,
-    page: Page,
-    messageContainerSelector: string,
-    outputDir: string,
-    limit: number
-) => {
-    const screenshotPaths: string[] = [];
-    const textFilePath = path.join(outputDir, `chat_text.txt`);
-    try {
-
-        console.log("Starting infinite scrolling upward...");
-        let totalMessageCount = 0;
-        let attempt = 0;
-
-        while (totalMessageCount < limit) {
-            while (attempt < 10) {
-                const messageRows = await page.$$(
-                    messageContainerSelector +
-                        " div.message-in, div.message-out"
-                );
-                const newMessageCount = messageRows.length;
-
-                if (newMessageCount > totalMessageCount) {
-                    const messagesToLoad = Math.min(
-                        newMessageCount - totalMessageCount,
-                        limit - totalMessageCount
-                    );
-
-                    console.log(
-                        `Loaded ${messagesToLoad} new messages (Total: ${
-                            totalMessageCount + messagesToLoad
-                        }/${limit}).`
-                    );
-
-                    totalMessageCount += messagesToLoad;
-                    attempt = 0; // Reset attempts if new messages are found
-
-                    // Scroll to the first visible row
-                    await messageRows[0].scrollIntoViewIfNeeded();
-                    await page.waitForTimeout(1500); // Wait for messages to load
-                } else {
-                    attempt++;
-                    console.log(
-                        `No new messages found. Waiting... (Attempt ${attempt}/10)`
-                    );
-                    await page.waitForTimeout(2000);
-                }
-
-                if (totalMessageCount >= limit) {
-                    console.log(
-                        `Reached the limit of ${limit} messages. Stopping scroll.`
-                    );
-                    break;
-                }
-            }
-
-            if (attempt >= 10) {
-                console.log(
-                    "No more messages to load after 10 attempts. Stopping."
-                );
-                break;
-            }
-        }
-
-        console.log(
-            "Finished scrolling upward. Now capturing messages and screenshots..."
-        );
-
-        // Simplified logging and screenshot phase
-        await fs.mkdir(path.dirname(textFilePath), { recursive: true });
-        const messageRows = await page.$$(
-            messageContainerSelector + " div.message-in, div.message-out"
-        );
-
-        for (let msg = 0; msg < messageRows.length; msg++) {
-            const messageRow = messageRows[msg];
-            const messageText = await messageRow?.innerText();
-
-            if (messageText) {
-                const isIncoming = await messageRow.evaluate((node) =>
-                    node.classList.contains("message-in")
-                );
-                const messageType = isIncoming ? "Incoming" : "Outgoing";
-                await fs.appendFile(
-                    textFilePath,
-                    `${messageType} Message ${msg + 1}: ${messageText}\n`
-                );
-                console.log(
-                    `${messageType} Message ${msg + 1} written to text file.`
-                );
-            }
-
-            if (msg % 3 === 0) {
-                await messageRow.scrollIntoViewIfNeeded();
-                await page.waitForTimeout(500);
-                const screenshotPath = path.join(
-                    outputDir,
-                    `${username}_${receiverUsername}_screenshot_${msg + 1}.png`
-                );
-                await page.screenshot({ path: screenshotPath });
-                console.log(`Screenshot saved for message ${msg + 1}.`);
-                screenshotPaths.push(screenshotPath);
-            }
-        }
-
-        // Upload chat text file to S3
-        const chatLogKey = `${username}/${receiverUsername}_chat_log.txt`;
-        const chatLogURL = await uploadToS3(textFilePath, chatLogKey);
-        console.log(`Chat log uploaded to S3: ${chatLogURL}`);
-
-        // Upload screenshots and chat log URL to MongoDB
-        await uploadChats(
-            username,
-            receiverUsername,
-            screenshotPaths,
-            chatLogURL,
-            "whatsapp"
-        );
-        console.log("Finished capturing messages and screenshots.");
-    } catch (error: any) {
-        console.error(
-            "Error during scrolling and screenshot capture:",
-            error.message
-        );
-    }
-};
 
 const whatsappScraper = async (username: string, limit: number) => {
     let browser: Browser | null = null;
@@ -152,7 +23,6 @@ const whatsappScraper = async (username: string, limit: number) => {
         await page.goto("https://web.whatsapp.com/", {
             waitUntil: "domcontentloaded",
         });
-        await page.waitForTimeout(30000); // Add a 10-second delay
 
         // Wait for QR code scan only if cookies are not loaded
         if (!(await page.$('div[aria-label="Chat list"]'))) {
@@ -206,7 +76,7 @@ const whatsappScraper = async (username: string, limit: number) => {
                         `${username}_media.json`
                     );
                     await fs.writeFile(filePath, mediaData);
-            // Define the message container selector and output directory
+            await insertObject(username, mediaData, 'files', 'whatsapp');
            
             await scrollChatWithLogging(
                 username,

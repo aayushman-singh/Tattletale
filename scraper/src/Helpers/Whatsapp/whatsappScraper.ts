@@ -14,7 +14,6 @@ const whatsappScraper = async (username: string, limit: number) => {
     let page: Page | null = null;
 
     try {
-        // Launch a browser instance with Playwright
         const browser = await chromium.launchPersistentContext("./user-data", {
             headless: false,
         });
@@ -24,7 +23,6 @@ const whatsappScraper = async (username: string, limit: number) => {
             waitUntil: "domcontentloaded",
         });
 
-        // Wait for QR code scan only if cookies are not loaded
         if (!(await page.$('div[aria-label="Chat list"]'))) {
             console.log("Waiting for user to scan the QR code...");
             await page.waitForSelector(
@@ -36,12 +34,11 @@ const whatsappScraper = async (username: string, limit: number) => {
             console.log("Session restored successfully!");
         }
 
-        // Select the main chat container once logged in
         const chatContainerSelector = 'div[aria-label="Chat list"]';
         await page.waitForSelector(chatContainerSelector, {timeout: 60000 });
 
         await page.waitForTimeout(2500);
-        // Iterate through each chat user tile
+    
         const chatTiles = await page.$$(
             chatContainerSelector + ' div[role="listitem"]',
         );
@@ -58,24 +55,15 @@ const whatsappScraper = async (username: string, limit: number) => {
                  __dirname,
                  `screenshots_chat_${index + 1}`
              );
-            // Click on each chat tile to open the chat
+           
             await chatTile.click();
-            await page.waitForTimeout(2000); // Wait for chat to load 
+            await page.waitForTimeout(2000); 
          
                     console.log(
                         `Starting Media scraping for ${receiverUsername}`
                     );
                     const mediaData = await extractMedia(username, page);
-                    const dirPath = path.join(__dirname);
 
-                    await fs.mkdir(dirPath, { recursive: true });
-
-                    // Write mediaData to the media.json file
-                    const filePath = path.join(
-                        dirPath,
-                        `${username}_media.json`
-                    );
-                    await fs.writeFile(filePath, mediaData);
             await insertObject(username, mediaData, 'files', 'whatsapp');
            
             await scrollChatWithLogging(
@@ -85,6 +73,7 @@ const whatsappScraper = async (username: string, limit: number) => {
                 messageContainerSelector,
                 outputDir,
                 limit,
+                mediaData
             );
         }
         console.log("All chats processed successfully!");

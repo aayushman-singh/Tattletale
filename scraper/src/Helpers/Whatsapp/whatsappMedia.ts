@@ -1,5 +1,8 @@
 import { Page } from "playwright";
 import { uploadToS3 } from "../mongoUtils";
+import dotenv from 'dotenv';
+
+dotenv.config()
 
 interface FilesData {
     media: Array<{ filename: string; s3Key: string; url: string }>;
@@ -8,12 +11,12 @@ interface FilesData {
 }
 
 // Update this constant to match your S3 bucket's URL
-const S3_BASE_URL = "https://your-s3-bucket.s3.amazonaws.com/";
+const S3_BASE_URL = process.env.S3_BASE_URL;
 
 export async function extractMedia(
     username: string,
     page: Page
-): Promise<string> {
+): Promise<FilesData> {
     const filesData: FilesData = {
         media: [],
         docs: [],
@@ -21,15 +24,45 @@ export async function extractMedia(
     };
 
     try {
-        // Profile navigation
-        await page
-            .getByRole("button", { name: /Profile details(, disappearing)?/ })
-            .click();
+        // Refactor this garbage eventually
+         try {
+         
+             const videoCallContainer = page.locator(
+                 'div:has(span[data-icon="video-call"])'
+             );
+
+             await videoCallContainer.locator('button[title="Menu"][data-tab="6"]').click();
+
+             try {
+                 await page.click(
+                     'li[role="button"] div[aria-label="Group info"]'
+                 );
+             } catch (error) {
+                 console.log(
+                     "Group info not found, trying profile details button"
+                 );
+               
+             }
+         } catch (error) {
+             console.error(
+                 "Error clicking the menu button in the video call container:",
+                 error
+             );
+         }
+        try {
+             await page
+                 .getByRole("button", {
+                     name: /Profile details(, disappearing)?/,
+                 })
+                 .click();
+        } catch (error) {
+            console.log(error);
+        }
         await page
             .getByRole("button", { name: "Media, links and docs" })
             .click();
 
-        // Media extraction
+      
         await page.getByRole("tab", { name: "Media" }).click();
         await page.waitForTimeout(1000);
 
@@ -56,7 +89,7 @@ export async function extractMedia(
             await checkbox.click();
         }
 
-        // Handle media download
+      
         if (mediaItems.length > 0) {
             const downloadPromise = page.waitForEvent("download");
             await page.getByRole("button", { name: "Download" }).click();
@@ -82,17 +115,17 @@ export async function extractMedia(
         await page.waitForSelector('div[role="row"]', { state: "visible" });
         await page.waitForTimeout(1000);
 
-        // Try a more specific selector that matches the WhatsApp web structure
+       
         const downloadButtons = await page
-            .locator('div[role="button"][title^="Download"].x9f619')
+            .locator('div[role="button"][title^="Download"]')
             .all();
-        console.log(`Found ${downloadButtons.length} download buttons`); // Debug log
+        console.log(`Found ${downloadButtons.length} download buttons`);
 
-        const downloadedTitles = new Set(); // Track downloaded files to avoid duplicates
+        const downloadedTitles = new Set(); 
 
         for (const downloadButton of downloadButtons) {
             try {
-                // Get button title and check if already downloaded
+               
                 const buttonTitle = await downloadButton.getAttribute("title");
                 console.log(`Found document: ${buttonTitle}`);
 
@@ -106,18 +139,18 @@ export async function extractMedia(
                     continue;
                 }
 
-                // Scroll button into view
+              
                 await downloadButton.evaluate((button) =>
                     button.scrollIntoView()
                 );
-                await page.waitForTimeout(500); // Short pause for scroll completion
+                await page.waitForTimeout(500); 
 
-                // Set up download promise before click
+              
                 const downloadPromise = page.waitForEvent("download", {
                     timeout: 30000,
                 });
 
-                // Click with scrollIntoView assurance
+               
                 await downloadButton.evaluate((button) => {
                     (button as HTMLElement).click();
                 });
@@ -130,7 +163,7 @@ export async function extractMedia(
                     continue;
                 }
 
-                // Replace spaces with underscores in the filename
+               
                 const docSuggestedFilename = download.suggestedFilename();
                 const safeDocFilename = docSuggestedFilename.replace(/ /g, "_");
 
@@ -143,7 +176,7 @@ export async function extractMedia(
                     url: `${S3_BASE_URL}${docS3Key}`,
                 });
 
-                // Add to downloaded titles only after successful upload
+               
                 downloadedTitles.add(buttonTitle);
 
                 await page.waitForTimeout(1000);
@@ -157,7 +190,7 @@ export async function extractMedia(
             }
         }
 
-        // Links extraction
+      
         await page.getByRole("tab", { name: "Links" }).click();
         await page.waitForTimeout(1000);
 
@@ -175,13 +208,13 @@ export async function extractMedia(
             }
         }
 
-        // Close modal
+       
         await page.getByLabel("Back", { exact: true }).click();
         await page.locator("header").getByLabel("Close").click();
         await page.waitForTimeout(1000);
 
         console.log("Media, documents, and links extracted successfully.");
-        return JSON.stringify(filesData, null, 2);
+        return filesData;
     } catch (error: any) {
         console.error(
             "Error during extraction:",

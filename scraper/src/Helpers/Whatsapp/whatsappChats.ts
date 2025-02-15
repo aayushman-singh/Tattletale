@@ -1,7 +1,7 @@
 import path from "path";
 import { Page } from "playwright";
 import fs from "fs/promises";
-import { uploadChats, uploadToS3, insertObject } from "../mongoUtils";
+import { uploadToS3, insertMessages } from "../mongoUtils";
 
 interface ChatMessage {
     type: string;
@@ -36,7 +36,8 @@ export const scrollChatWithLogging = async (
     page: Page,
     messageContainerSelector: string,
     outputDir: string,
-    limit: number
+    limit: number,
+    mediaData: object
 ) => {
     const screenshotPaths: string[] = [];
     const jsonFilePath = path.join(outputDir, `chat_text.json`);
@@ -72,7 +73,7 @@ export const scrollChatWithLogging = async (
 
                     // Scroll to the first visible row
                     await messageRows[0].scrollIntoViewIfNeeded();
-                    await page.waitForTimeout(1500); // Wait for messages to load
+                    await page.waitForTimeout(1500);
                 } else {
                     attempt++;
                     console.log(
@@ -101,9 +102,8 @@ export const scrollChatWithLogging = async (
             "Finished scrolling upward. Now capturing messages and screenshots..."
         );
 
-        // Simplified logging and screenshot phase
         await fs.mkdir(path.dirname(jsonFilePath), { recursive: true });
-        // Get all elements (messages and dates)
+ 
         const allElements = await page.$$(
             `${messageContainerSelector} div.message-in, ` +
                 `${messageContainerSelector} div.message-out, ` +
@@ -173,25 +173,22 @@ export const scrollChatWithLogging = async (
             }
         }
 
-        // Write JSON object to file
         await fs.writeFile(jsonFilePath, JSON.stringify(chatData, null, 2));
         console.log(`Chat data written to JSON file: ${jsonFilePath}`);
 
-        // Upload JSON file to S3
         const chatLogKey = `${username}/${receiverUsername}_chat_log.json`;
         const chatLogURL = await uploadToS3(jsonFilePath, chatLogKey);
         console.log(`Chat log uploaded to S3: ${chatLogURL}`);
 
-        // Upload JSON object and file to MongoDB
-        await insertObject(username, chatData, "chats", "whatsapp");
 
-        // Upload screenshots and chat log URL to MongoDB
-        await uploadChats(
+        await insertMessages(
             username,
             receiverUsername,
-            screenshotPaths,
+            chatData,
             chatLogURL,
-            "whatsapp"
+            screenshotPaths,
+            "whatsapp",
+            mediaData
         );
         console.log("Finished capturing messages and screenshots.");
     } catch (error: any) {

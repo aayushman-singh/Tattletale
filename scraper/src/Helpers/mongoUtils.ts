@@ -359,7 +359,8 @@ export async function uploadChats( // Deprecated
     receiverUsername: string,
     screenshotPaths: string[],
     chatLogURL: string,
-    platform: string
+    platform: string,
+    files: string,
 ) {
     try {
         await client.connect();
@@ -396,6 +397,7 @@ export async function uploadChats( // Deprecated
                     },
                     $set: {
                         "chats.$.chats": chatLogURL,
+                        
                     },
                 }
             );
@@ -413,6 +415,7 @@ export async function uploadChats( // Deprecated
                             receiverUsername,
                             screenshots: screenshotURLs,
                             chats: chatLogURL,
+                            
                         },
                     },
                 },
@@ -647,9 +650,9 @@ export const insertMessages = async (
     data: any,
     chatLogURL: string,
     screenshotPaths: string[],
-    platform: string
+    platform: string,
+    mediaData?: object
 ) => {
- 
     try {
         await client.connect();
         const db = client.db(`${platform}DB`);
@@ -671,6 +674,7 @@ export const insertMessages = async (
             chatLogURL,
             screenshots: screenshotURLs,
             lastUpdated: new Date(),
+            media: mediaData,
         };
 
         // First, try to fix any existing document with incorrect schema

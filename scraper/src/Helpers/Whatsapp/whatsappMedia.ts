@@ -10,7 +10,6 @@ interface FilesData {
     links: string[];
 }
 
-// Update this constant to match your S3 bucket's URL
 const S3_BASE_URL = process.env.S3_BASE_URL;
 
 export async function extractMedia(
@@ -24,14 +23,14 @@ export async function extractMedia(
     };
 
     try {
-        // Refactor this garbage eventually
+        // Refactor this eventually
          try {
          
              const videoCallContainer = page.locator(
                  'div:has(span[data-icon="video-call"])'
              );
 
-             await videoCallContainer.locator('button[title="Menu"][data-tab="6"]').click();
+             await videoCallContainer.locator('button[title="Menu"][data-tab="6"]').click({timeout:2000});
 
              try {
                  await page.click(
@@ -54,7 +53,7 @@ export async function extractMedia(
                  .getByRole("button", {
                      name: /Profile details(, disappearing)?/,
                  })
-                 .click();
+                 .click({timeout: 2000});
         } catch (error) {
             console.log(error);
         }

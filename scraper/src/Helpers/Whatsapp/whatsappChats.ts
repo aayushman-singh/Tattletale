@@ -107,7 +107,7 @@ export const scrollChatWithLogging = async (
         const allElements = await page.$$(
             `${messageContainerSelector} div.message-in, ` +
                 `${messageContainerSelector} div.message-out, ` +
-                `${messageContainerSelector} div[class^="focusable-list-item"][tabindex="0"]`
+                `${messageContainerSelector} div[class*="focusable-list-item"]:not([class*="message"])`
         );
 
         let messageCount = 0;
@@ -117,7 +117,9 @@ export const scrollChatWithLogging = async (
 
             // Check if element is a date separator
             const isDate = await element.evaluate((node) =>
-                node.matches('div[class^="focusable-list-item"][tabindex="0"]')
+                node.matches(
+                    'div[class*="focusable-list-item"]:not([class*="message"])'
+                )
             );
 
             if (isDate) {

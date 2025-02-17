@@ -5,7 +5,7 @@ import { insertObject} from "../mongoUtils";
 import { __dirname } from "../../../../config";
 import dotenv from "dotenv";
 import { extractMedia } from "./whatsappMedia";
-import { scrollChatWithLogging } from "./whatsappChats";
+import { scrapeWhatsappChats } from "./whatsappChats";
 
 dotenv.config();
 
@@ -66,7 +66,7 @@ const whatsappScraper = async (username: string, limit: number) => {
 
             await insertObject(username, mediaData, 'files', 'whatsapp');
            
-            await scrollChatWithLogging(
+            await scrapeWhatsappChats(
                 username,
                 receiverUsername,
                 page,

@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { CalendarIcon } from 'lucide-react';
 import GoogleDriveUsers from "./GoogleDrive"
 import FacebookData from "./Facebook";
@@ -129,8 +129,8 @@ const Services = () => {
       id: userId,
       email: emailInputElement.value.trim(),
       range: {
-        from: format(dateRange.from, "dd-MM-yyyy"),
-        to: format(dateRange.to, "dd-MM-yyyy"),
+        from: parse(dateRange.from, "dd-MM-yyyy", new Date()).toISOString(),
+        to: parse(dateRange.to, "dd-MM-yyyy", new Date()).toISOString(),
       },
       limit: parseInt(dropdownElement?.value, 10) || undefined,
     };
@@ -545,8 +545,8 @@ const Services = () => {
       startUrls: tagsArray,
       limit,
       range: {
-        from: format(dateRange?.from, "dd-MM-yyyy"),
-        to: format(dateRange?.to, "dd-MM-yyyy"),
+        from: new Date(dateRange.from).toISOString(),
+        to: new Date(dateRange.to).toISOString(),
       },
       messageLimit,
     };

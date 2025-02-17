@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import { scrapeFacebook } from "../Helpers/Facebook/FacebookTimeline.js";
+import { scrapeFacebook } from "../Helpers/Facebook/FacebookScraper.js";
 import { updateUserHistory } from "../Helpers/mongoUtils.js";
 import FacebookUser, { IFacebookUser } from "../models/FacebookUser.js";
 import "../../../config.js";
@@ -30,7 +30,7 @@ app.use(express.json());
 app.use(cors());
 
 app.post("/facebook", async (req, res) => {
-    const { userId, startUrls, password, pin, limit } = req.body;
+    const { userId, startUrls, password, pin, range, postLimit, messageLimit, chatLimit } = req.body;
 
     // Check if startUrls is undefined or not an array
     if (!startUrls || !Array.isArray(startUrls)) {
@@ -47,7 +47,10 @@ app.post("/facebook", async (req, res) => {
                 username,
                 password,
                 pin,
-                limit,
+                range,
+                postLimit,
+                messageLimit,
+                chatLimit
             );
             await updateUserHistory(userId, startUrls, resultId, "facebook");
         }

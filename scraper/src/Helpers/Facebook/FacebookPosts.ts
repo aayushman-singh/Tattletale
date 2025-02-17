@@ -5,17 +5,21 @@ import { uploadScreenshotToMongo } from "../mongoUtils";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
 
 export async function scrapeFacebookPosts(
     username: string,
     page: Page,
-    limit: number
+    postLimit: number | typeof Infinity = Infinity // Optional parameter with default value
 ) {
     try {
+         await page.goto("https://facebook.com/me", {
+             waitUntil: "domcontentloaded",
+             timeout: 60000,
+         });
+        page.waitForTimeout(2000);
+        
         let resultId;
         const xpath =
             "/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[2]/div[3]";
@@ -38,7 +42,14 @@ export async function scrapeFacebookPosts(
 
             if (postDivs.length > 0) {
                 console.log(`Found ${postDivs.length} post(s).`);
-                for (let i = 0; i < Math.min(limit, postDivs.length); i++) {
+
+                // Determine the number of posts to process
+                const limit =
+                    postLimit === Infinity
+                        ? postDivs.length
+                        : Math.min(postLimit, postDivs.length);
+
+                for (let i = 0; i < limit; i++) {
                     try {
                         const postXPath = `${xpath}/div[${postDivs[i]}]`;
                         const postElement = await page.$("xpath=" + postXPath);
@@ -62,7 +73,7 @@ export async function scrapeFacebookPosts(
                                 path: screenshotPath,
                             });
                             console.log(`Screenshot for post ${i + 1} taken.`);
-                            
+
                             // Upload the screenshot to MongoDB
                             resultId = await uploadScreenshotToMongo(
                                 username,
@@ -84,7 +95,6 @@ export async function scrapeFacebookPosts(
                         } else {
                             console.warn(`Post ${i + 1} not found.`);
                         }
-                        
                     } catch (error) {
                         console.error(`Error processing post ${i + 1}:`, error);
                     }

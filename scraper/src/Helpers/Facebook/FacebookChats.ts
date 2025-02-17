@@ -1,13 +1,16 @@
 import { Page } from "playwright";
 import fs from "fs";
 import path from "path";
-import { uploadChats, uploadToS3 } from "../mongoUtils";
+import { insertMessages, uploadChats, uploadToS3 } from "../mongoUtils";
 import { __dirname } from "../../../../config";
 
 export async function scrapeFacebookChats(
     page: Page,
     username: string,
-    pin: string
+    pin: string,
+    range?: any,
+    messageLimit: number | typeof Infinity = Infinity,
+    chatLimit?: number | typeof Infinity 
 ) {
     try {
         // Navigate to Facebook Messages
@@ -44,8 +47,14 @@ export async function scrapeFacebookChats(
         }
 
         console.log(`Found ${chatLinks.length} chat link(s).`);
-        for (let i = 0; i < chatLinks.length; i++) {
-            const chatLink = chatLinks[i];
+
+        // Apply chatLimit if provided
+        const limitedChatLinks = chatLimit
+            ? chatLinks.slice(0, chatLimit)
+            : chatLinks;
+
+        for (let i = 0; i < limitedChatLinks.length; i++) {
+            const chatLink = limitedChatLinks[i];
             const fullChatLink = chatLink?.startsWith("http")
                 ? chatLink
                 : `https://facebook.com${chatLink}`;
@@ -102,17 +111,18 @@ export async function scrapeFacebookChats(
                     )
             );
 
+            // Apply messageLimit
+            const limitedMessages = filteredMessages.slice(0, messageLimit);
+
             console.log(
-                `Filtered ${filteredMessages.length} messages for chat ${
-                    i + 1
-                }.`
+                `Filtered ${limitedMessages.length} messages for chat ${i + 1}.`
             );
 
             const screenshotPaths = [];
 
             // Iterate over messages to take screenshots
-            for (let j = 0; j < filteredMessages.length; j++) {
-                const { messageText, timestamp } = filteredMessages[j];
+            for (let j = 0; j < limitedMessages.length; j++) {
+                const { messageText, timestamp } = limitedMessages[j];
 
                 // Scroll to the message
                 await page.evaluate((index) => {
@@ -149,7 +159,7 @@ export async function scrapeFacebookChats(
                 "scraper/src/Helpers/Facebook",
                 `chat_${receiverUsername}_logs.txt`
             );
-            const chatLogs = filteredMessages
+            const chatLogs = limitedMessages
                 .map(
                     ({ messageText, timestamp }) =>
                         `${timestamp}: ${messageText}`
@@ -165,11 +175,12 @@ export async function scrapeFacebookChats(
             }/chat_logs.txt`;
             const chatLogUrl = await uploadToS3(chatLogPath, chatLogS3Key);
 
-            await uploadChats(
+            await insertMessages(
                 username,
                 receiverUsername || `receiver_${i + 1}`,
-                screenshotPaths,
+                chatLogs,
                 chatLogUrl,
+                screenshotPaths,
                 "facebook"
             );
 

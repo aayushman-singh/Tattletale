@@ -66,7 +66,7 @@ const Services = () => {
   const [xDateRange, setXDateRange] = useState({ from: null, to: null });
 
   const [email, setEmail] = useState("");
-  const [limit, setLimit] = useState(5);
+  const [postLimit, setLimit] = useState(5); 
   const [messageLimit, setMessageLimit] = useState(5);
   const [gmailInData, setGmailInData] = useState(null);
   const [gmailOutData, setGmailOutData] = useState(null);
@@ -132,7 +132,7 @@ const Services = () => {
         from: parse(dateRange.from, "dd-MM-yyyy", new Date()).toISOString(),
         to: parse(dateRange.to, "dd-MM-yyyy", new Date()).toISOString(),
       },
-      limit: parseInt(dropdownElement?.value, 10) || undefined,
+      postLimit: parseInt(dropdownElement?.value, 10) || undefined, 
     };
 
     console.log(`Payload for ${platform}:`, payload);
@@ -181,7 +181,7 @@ const Services = () => {
 
   const handleGmail = async (email) => {
     const dropdownElement = document.getElementById(`gmailDropdown`);
-    const limit = parseInt(dropdownElement.value, 10);
+    const postLimit = parseInt(dropdownElement.value, 10);
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const userId = userInfo ? userInfo._id : "";
 
@@ -189,7 +189,7 @@ const Services = () => {
       const response = await fetch("http://localhost:3006/auth-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, limit, userId }), // Added userId here
+        body: JSON.stringify({ email, postLimit, userId }), // Added userId here
       });
       const data = await response.json();
       window.open(data.authUrl, "_blank");
@@ -200,7 +200,7 @@ const Services = () => {
 
   const handleGoogleDrive = async (email) => {
     const dropdownElement = document.getElementById(`googleDriveDropdown`);
-    const limit = parseInt(dropdownElement.value, 10);
+    const postLimit = parseInt(dropdownElement.value, 10);
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const userId = userInfo ? userInfo._id : "";
 
@@ -208,7 +208,7 @@ const Services = () => {
       const response = await fetch("http://localhost:3009/auth-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, limit, userId }), // Added userId here
+        body: JSON.stringify({ email, postLimit, userId }), // Added userId here
       });
       const data = await response.json();
       window.open(data.authUrl, "_blank");
@@ -462,15 +462,12 @@ const Services = () => {
     }
   };
 
-  const limitRef = useRef(null); // ✅ Store limit as a reference
 
   const handleDropdownSelect = (value) => {
-    setLimit(Number(value)); // Update the limit state with the selected value
-    console.log("Selected Limit:", value); // Debugging
+    setLimit(Number(value)); 
   };
   const handleMessageDropdownSelect = (value) => {
-    setMessageLimit(Number(value)); // Update the limit state with the selected value
-    console.log("Selected Message Limit:", value); // Debugging
+    setMessageLimit(Number(value));
   };
 
   const handleSubmit = async (platform) => {
@@ -543,7 +540,7 @@ const Services = () => {
     const payload = {
       userId: userId,
       startUrls: tagsArray,
-      limit,
+      postLimit,
       range: {
         from: new Date(dateRange.from).toISOString(),
         to: new Date(dateRange.to).toISOString(),
@@ -611,29 +608,6 @@ const Services = () => {
       setIsLoading(false);
     }
   };
-
-  const DetailSection = ({ title, content }) => (
-    <div className="bg-gray-700 p-4 rounded-md mt-4">
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
-      {content}
-    </div>
-  );
-
-  // const RenderDropdown = (platform) => (
-  //   <select
-  //     id={`${platform}Dropdown`}
-  //     className="w-full p-3 mt-4 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-  //   >
-  //     <option value="1">1</option>
-  //     <option value="3">3</option>
-  //     <option value="5">5</option>
-  //     <option value="10">10</option>
-  //     <option value="20">20</option>
-  //     <option value="50">50</option>
-  //     <option value="100">100</option>
-  //     <option value="200">200</option>
-  //   </select>
-  // );
 
   return (
     <div className="min-h-screen pt-20 bg-gray-900 text-white p-8 sm:p-20 relative">

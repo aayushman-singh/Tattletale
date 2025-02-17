@@ -128,11 +128,13 @@ const Services = () => {
     const payload = {
       id: userId,
       email: emailInputElement.value.trim(),
-      range: {
+      ...(dateRange.from && dateRange.to &&{
+        range: {
         from: parse(dateRange.from, "dd-MM-yyyy", new Date()).toISOString(),
         to: parse(dateRange.to, "dd-MM-yyyy", new Date()).toISOString(),
-      },
-      postLimit: parseInt(dropdownElement?.value, 10) || undefined, 
+      }
+}),
+      ...(postLimit && { postLimit: parseInt(dropdownElement?.value, 10) || undefined }) 
     };
 
     console.log(`Payload for ${platform}:`, payload);
@@ -537,23 +539,32 @@ const Services = () => {
     }
 
 
-    const payload = {
-      userId: userId,
-      startUrls: tagsArray,
-      postLimit,
-      range: {
-        from: new Date(dateRange.from).toISOString(),
-        to: new Date(dateRange.to).toISOString(),
-      },
-      messageLimit,
-    };
+   const payload = {
+     userId: userId,
+     startUrls: tagsArray,
+     ...(postLimit && { postLimit }),
+     ...(dateRange.from &&
+       dateRange.to && {
+         range: {
+           from: new Date(dateRange.from).toISOString(),
+           to: new Date(dateRange.to).toISOString(),
+         },
+       }),
+     ...(messageLimit && { messageLimit }), 
+   };
     if (platform === "facebook") {
-      payload.password = password;
-      payload.pin = pin ? pin.trim() : undefined;
-    } else if (platform !== "whatsapp" || platform !== "telegram") {
-      payload.password = password;
+    if (password) {
+        payload.password = password;
+        if (pin) {
+            payload.pin = pin.trim();
+        }
     }
-    console.log(payload)
+} else if (platform !== "whatsapp" || platform !== "telegram") {
+    if (password) {
+        payload.password = password;
+    }
+}
+
     let apiEndpoint;
     const platformPorts = {
       instagram: 3001,

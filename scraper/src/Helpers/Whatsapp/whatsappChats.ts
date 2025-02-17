@@ -2,12 +2,7 @@ import path from "path";
 import { Page } from "playwright";
 import fs from "fs/promises";
 import { uploadToS3, insertMessages } from "../mongoUtils";
-
-interface ChatMessage {
-    type: string;
-    message: string;
-    timestamp: string | null;
-}
+import { ChatMessage } from "../utils";
 
 const convertDateToISO = (dateText: string): string => {
     const today = new Date();
@@ -30,7 +25,7 @@ const convertDateToISO = (dateText: string): string => {
     }
 };
 
-export const scrollChatWithLogging = async (
+export const scrapeWhatsappChats = async (
     username: string,
     receiverUsername: string,
     page: Page,

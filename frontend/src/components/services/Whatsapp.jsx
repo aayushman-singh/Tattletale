@@ -1,219 +1,265 @@
-import React, { useState } from "react";
-import { ChevronDown, ChevronUp, X, Image as ImageIcon, ExternalLink } from "lucide-react";
-import axios from "axios";
 
-const WhatsAppChat = ({ chat, index }) => {
-  const [isMediaExpanded, setIsMediaExpanded] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [chatLogs, setChatLogs] = useState(null); // Stores original chat logs
-  const [translatedLogs, setTranslatedLogs] = useState(null); // Stores translated chat logs
-  const [isLogsLoading, setIsLogsLoading] = useState(false); // Indicates loading state
-  const [isChatLogsVisible, setIsChatLogsVisible] = useState(false); // Controls visibility of chat logs
-  const [isTranslating, setIsTranslating] = useState(false); // Indicates translation loading state
-  const [selectedLanguage, setSelectedLanguage] = useState("en"); // Default translation language
 
-  const toggleMedia = () => setIsMediaExpanded(!isMediaExpanded);
-  const openImageViewer = (image) => setSelectedImage(image);
-  const closeImageViewer = () => setSelectedImage(null);
+import React, { useState } from "react"
+import { ChevronDown, ChevronUp, MessageSquareText, X, ExternalLink, ImageIcon, FileText, Link2, Image } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
-  const fetchChatLogs = async () => {
-    if (isChatLogsVisible) {
-      // Close chat logs if already open
-      setIsChatLogsVisible(false);
-      return;
-    }
+const WhatsAppChat = ({ chat }) => {
+  const [isMessagesExpanded, setIsMessagesExpanded] = useState(false)
+  const [isScreenshotsExpanded, setIsScreenshotsExpanded] = useState(false)
+  const [isMediaExpanded, setIsMediaExpanded] = useState(false)
+  const [isDocsExpanded, setIsDocsExpanded] = useState(false)
+  const [isLinksExpanded, setIsLinksExpanded] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null)
 
-    try {
-      setIsLogsLoading(true);
-      const response = await fetch(chat.chats);
+  if (!chat) return <p className="text-gray-400">No chat data available</p>
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch chat logs: ${response.statusText}`);
-      }
-
-      const text = await response.text();
-      setChatLogs(text);
-      setIsChatLogsVisible(true); // Make logs visible
-    } catch (error) {
-      console.error(error.message);
-      setChatLogs("Failed to load chat logs.");
-      setIsChatLogsVisible(true);
-    } finally {
-      setIsLogsLoading(false);
-    }
+  const toggleMessages = () => setIsMessagesExpanded(!isMessagesExpanded)
+  const toggleScreenshots = () => setIsScreenshotsExpanded(!isScreenshotsExpanded)
+  const toggleMedia = () => setIsMediaExpanded(!isMediaExpanded)
+  const toggleDocs = () => setIsDocsExpanded(!isDocsExpanded)
+  const toggleLinks = () => setIsLinksExpanded(!isLinksExpanded)
+  const openImageViewer = (image) => setSelectedImage(image)
+  const closeImageViewer = () => setSelectedImage(null)
+  const isISODate = (dateString) => {
+    return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(dateString);
   };
-
-  const translateChatLogs = async () => {
-    if (!chatLogs || !selectedLanguage) return;
-    setIsTranslating(true);
-
-    const apiKey = "AIzaSyCwqziN0xQTJUXtPRACkRwpMLrbY9P2uHg"; // Replace with your API key
-    const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
-
-    try {
-      const response = await axios.post(url, {
-        q: chatLogs,
-        target: selectedLanguage,
-      });
-
-      setTranslatedLogs(response.data.data.translations[0].translatedText);
-    } catch (error) {
-      console.error("Error translating chat logs:", error);
-      setTranslatedLogs("Translation failed.");
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
   return (
-    <div className="bg-gradient-to-br from-green-900 to-gray-800 p-6 rounded-xl shadow-lg mt-6 border border-green-700/20">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">
-              {chat.receiverUsername.charAt(0).toUpperCase()}
+    <Card className="bg-gradient-to-br from-green-700 to-gray-800 p-6 rounded-xl shadow-lg mt-6 border border-green-600/20 text-white">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold text-green-50">
+          {chat.receiverUsername}
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Chat Messages Section */}
+        <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50">
+          <Button
+            variant="ghost"
+            onClick={toggleMessages}
+            className="w-full justify-between text-green-400 hover:text-green-300 hover:bg-gray-700/50 font-medium"
+          >
+            <span className="flex items-center">
+              <MessageSquareText className="mr-2 h-5 w-5" />
+              Chat Messages ({chat.messages.length})
             </span>
-          </div>
-          <h3 className="text-xl font-bold text-white">
-            {chat.receiverUsername}
-          </h3>
-        </div>
-      </div>
+            {isMessagesExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </Button>
+          {isMessagesExpanded && (
+            <ScrollArea className="h-[400px] pr-4 mt-4">
+              {chat.messages.map((message, index) => (
+                <div key={index} className="mb-4">
+                  {message.type === "date" && (
+  <div className="text-center text-sm text-gray-400 my-4 bg-gray-800/30 py-1 rounded-full">
+    {isISODate(message.message) 
+      ? new Date(message.message).toLocaleDateString() 
+      : message.message}
+  </div>
+)}
 
-      <div className="space-y-4">
-        {chat.screenshots && chat.screenshots.length > 0 && (
-          <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm">
-            <button
-              onClick={toggleMedia}
-              className="flex items-center justify-between w-full text-green-400 hover:text-green-300 transition-all duration-200 group"
-              aria-expanded={isMediaExpanded}
-            >
-              <div className="flex items-center space-x-2">
-                <ImageIcon className="h-5 w-5" />
-                <span className="font-medium">
-                  Media Gallery ({chat.screenshots.length})
-                </span>
-              </div>
-              {isMediaExpanded ? (
-                <ChevronUp className="h-5 w-5 transition-transform duration-200" />
-              ) : (
-                <ChevronDown className="h-5 w-5 transition-transform duration-200" />
-              )}
-            </button>
-
-            <div
-              className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4 transition-all duration-300 ease-in-out ${
-                isMediaExpanded
-                  ? "opacity-100 max-h-[1000px]"
-                  : "opacity-0 max-h-0 overflow-hidden"
-              }`}
-            >
-              {chat.screenshots.map((screenshot, idx) => (
-                <div
-                  key={idx}
-                  className="relative group rounded-lg overflow-hidden cursor-pointer bg-gray-700/50 aspect-square"
-                  onClick={() => openImageViewer(screenshot)}
-                >
-                  <img
-                    src={screenshot}
-                    alt={`Screenshot ${idx + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center p-3">
-                    <span className="text-white text-sm font-medium">
-                      View Full
-                    </span>
-                  </div>
+                  {message.type === "Incoming" && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-700/80 rounded-2xl p-3 max-w-[70%] shadow-sm">
+                        <p className="text-gray-100">{message.message}</p>
+                        <span className="text-xs text-gray-400 mt-1 block">{message.timestamp || "N/A"}</span>
+                      </div>
+                    </div>
+                  )}
+                  {message.type === "Outgoing" && (
+                    <div className="flex justify-end">
+                      <div className="bg-green-600/90 rounded-2xl p-3 max-w-[70%] shadow-sm">
+                        <p className="text-white">{message.message}</p>
+                        <span className="text-xs text-green-100 mt-1 block">{message.timestamp || "N/A"}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-between items-center">
-          <button
-            onClick={fetchChatLogs}
-            className="inline-flex items-center space-x-2 text-green-400 hover:text-green-300 transition-colors duration-200 group"
-          >
-            <span className="font-medium">
-              {isChatLogsVisible ? "Close Chat History" : "View Chat History"}
-            </span>
-            <ExternalLink className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-          </button>
+            </ScrollArea>
+          )}
         </div>
 
-        {isChatLogsVisible && (
-          <div className="bg-gray-800/50 rounded-xl p-4 mt-4 overflow-auto max-h-64">
-            {isLogsLoading ? (
-              <p className="text-green-300">Loading chat logs...</p>
-            ) : (
-              <>
-                <pre className="text-gray-300 whitespace-pre-wrap">{chatLogs}</pre>
-                {translatedLogs && (
-                  <div className="mt-4 bg-gray-700 p-3 rounded-lg text-gray-300">
-                    <strong>Translated Logs:</strong>
-                    <pre className="whitespace-pre-wrap">{translatedLogs}</pre>
+        {/* Screenshots Section */}
+        {chat.screenshots && chat.screenshots.length > 0 && (
+          <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50">
+            <Button
+              variant="ghost"
+              onClick={toggleScreenshots}
+              className="w-full justify-between text-green-400 hover:text-green-300 hover:bg-gray-700/50 font-medium"
+            >
+              <span className="flex items-center">
+                <Image className="mr-2 h-5 w-5" />
+                Screenshots ({chat.screenshots.length})
+              </span>
+              {isScreenshotsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </Button>
+            {isScreenshotsExpanded && (
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                {chat.screenshots.map((screenshot, idx) => (
+                  <div
+                    key={idx}
+                    className="relative group rounded-xl overflow-hidden cursor-pointer bg-gray-700/50 aspect-square"
+                    onClick={() => openImageViewer(screenshot)}
+                  >
+                    <img
+                      src={screenshot || "/api/placeholder/400/400"}
+                      alt={`Screenshot ${idx + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center p-3">
+                      <span className="text-white text-sm font-medium">View Full</span>
+                    </div>
                   </div>
-                )}
-                <div className="flex items-center mt-4 space-x-4">
-                  <button
-                    onClick={translateChatLogs}
-                    disabled={isTranslating}
-                    className="text-green-400 hover:text-green-300 transition-colors"
-                  >
-                    {isTranslating ? "Translating..." : "Translate Logs"}
-                  </button>
-                  <select
-                    value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="bg-gray-800 text-white text-sm rounded-lg p-2"
-                  >
-                    <option value="en">English</option>
-                    <option value="hi">Hindi</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                  </select>
-                </div>
-              </>
+                ))}
+              </div>
             )}
           </div>
         )}
-      </div>
 
-      {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4"
-          onClick={closeImageViewer}
-        >
-          <div className="relative max-w-5xl w-full">
-            <img
-              src={selectedImage}
-              alt="Full size screenshot"
-              className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
-            />
-            <button
-              onClick={closeImageViewer}
-              className="absolute -top-2 -right-2 bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors duration-200 shadow-lg"
-              aria-label="Close image viewer"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+        {/* Media Section */}
+        <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50">
+          <Button
+            variant="ghost"
+            onClick={toggleMedia}
+            className="w-full justify-between text-green-400 hover:text-green-300 hover:bg-gray-700/50 font-medium"
+          >
+            <span className="flex items-center">
+              <ImageIcon className="mr-2 h-5 w-5" />
+              Media ({chat.media.media?.length || 0})
+            </span>
+            {isMediaExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </Button>
+          {isMediaExpanded && (
+            <div className="mt-4">
+              {chat.media.media?.length > 0 ? (
+                <div className="grid grid-cols-3 gap-3">
+                  {chat.media.media.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="relative group rounded-xl overflow-hidden cursor-pointer bg-gray-700/50 aspect-square"
+                      onClick={() => openImageViewer(item)}
+                    >
+                      <img
+                        src={item || "/api/placeholder/400/400"}
+                        alt={`Media ${idx + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center p-3">
+                        <span className="text-white text-sm font-medium">View Full</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm text-center py-2">No media files</p>
+              )}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
-};
 
-const WhatsAppChats = ({ chats }) => {
-  return (
-    <div className="space-y-6">
-      {chats.map((chat, index) => (
-        <WhatsAppChat key={index} chat={chat} index={index} />
-      ))}
-    </div>
-  );
-};
+        {/* Documents Section */}
+        <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50">
+          <Button
+            variant="ghost"
+            onClick={toggleDocs}
+            className="w-full justify-between text-green-400 hover:text-green-300 hover:bg-gray-700/50 font-medium"
+          >
+            <span className="flex items-center">
+              <FileText className="mr-2 h-5 w-5" />
+              Documents ({chat.media.docs?.length || 0})
+            </span>
+            {isDocsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </Button>
+          {isDocsExpanded && (
+            <div className="mt-4">
+              {chat.media.docs?.length > 0 ? (
+                <div className="space-y-2">
+                  {chat.media.docs.map((doc, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
+                    >
+                      <FileText className="h-4 w-4 mr-2 text-gray-400" />
+                      <span className="text-sm text-gray-200">{doc}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm text-center py-2">No documents</p>
+              )}
+            </div>
+          )}
+        </div>
 
-export default WhatsAppChats;
+        {/* Links Section */}
+        <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50">
+          <Button
+            variant="ghost"
+            onClick={toggleLinks}
+            className="w-full justify-between text-green-400 hover:text-green-300 hover:bg-gray-700/50 font-medium"
+          >
+            <span className="flex items-center">
+              <Link2 className="mr-2 h-5 w-5" />
+              Links ({chat.media.links?.length || 0})
+            </span>
+            {isLinksExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </Button>
+          {isLinksExpanded && (
+            <div className="mt-4">
+              {chat.media.links?.length > 0 ? (
+                <div className="space-y-2">
+                  {chat.media.links.map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-2 rounded-lg hover:bg-gray-700/50 transition-colors group"
+                    >
+                      <Link2 className="h-4 w-4 mr-2 text-gray-400 group-hover:text-green-400" />
+                      <span className="text-sm text-gray-200 group-hover:text-green-400 truncate">
+                        {link}
+                      </span>
+                      <ExternalLink className="h-4 w-4 ml-2 text-gray-400 group-hover:text-green-400" />
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm text-center py-2">No links</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Image Viewer */}
+        {selectedImage && (
+          <div 
+            className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4" 
+            onClick={closeImageViewer}
+          >
+            <div className="relative max-w-5xl w-full">
+              <img
+                src={selectedImage || "/api/placeholder/800/600"}
+                alt="Full size view"
+                className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute -top-2 -right-2 bg-green-600 text-white hover:bg-green-700 rounded-full shadow-lg"
+                onClick={closeImageViewer}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+export default WhatsAppChat

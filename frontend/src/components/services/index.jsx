@@ -20,11 +20,10 @@ import RenderDropdown from "./dropdown";
 import MastodonProfile from "./mastodon";
 import DiscordChat from "./Discord";
 import "./style.css";
-import WhatsAppChats from "./Whatsapp";
+
 import TelegramChats from "./Telegram";
-import GmailChats from "./GmailIn";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -35,11 +34,11 @@ import FacebookData from "./Facebook";
 import RenderInstagramData from "./Instagram";
 import GmailInUsers from "./GmailIn";
 import GmailOutUsers from "./GmailOut";
-import GoogleSection from "./GoogleSection"
 import TimelineDataViewer from "./Timeline";
 import TwitterDataDisplay from "./Twitter"
 import GoogleInfo from "./GoogleSection";
 import { SocialIcon } from 'react-social-icons';
+import WhatsAppChat from "./Whatsapp";
 const Services = () => {
   const [activeSection, setActiveSection] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -48,8 +47,7 @@ const Services = () => {
   const [telegramData, setTelegramData] = useState(null);
   const [googleData, setGoogleData] = useState(null);
   const [youtubeData, setYoutubeData] = useState(null);
-  const [telegramChats, setTelegramChats] = useState([]);
-  const [expandedChats, setExpandedChats] = useState({});
+ 
   const [googleEmail, setGoogleEmail] = useState("");
   const [timelineData, setTimelineData] = useState(null);
   const [mastodonData, setMastodonData] = useState(null);
@@ -70,7 +68,7 @@ const Services = () => {
   const [messageLimit, setMessageLimit] = useState(5);
   const [gmailInData, setGmailInData] = useState(null);
   const [gmailOutData, setGmailOutData] = useState(null);
-  const [youtubeEmail, setYoutubeEmail] = useState("");
+
   const [alert, setAlert] = useState({
     visible: false,
     message: "",
@@ -82,9 +80,7 @@ const Services = () => {
   const [facebookData, setFacebookData] = useState(null);
   const [gmailData, setGmailData] = useState(null);
   const [googleDriveData, setGoogleDriveData] = useState(null);
-  const [showFollowers, setShowFollowers] = useState(false);
-  const [showFollowing, setShowFollowing] = useState(false);
-  const [showTooltip, setShowTooltip] = useState({ messages: false, posts: false });
+
   const handleSectionClick = (section) => {
     setActiveSection((prev) => (prev === section ? "" : section));
   };
@@ -986,7 +982,12 @@ const Services = () => {
           {whatsappData && showDetails && (
             <div className="mt-6">
               <h3 className="text-xl font-bold text-white">User Chats</h3>
-              <WhatsAppChats chats={whatsappData.chats} />
+              {whatsappData?.chats?.map((chat, index) => (
+  <WhatsAppChat key={index} chat={chat} />
+))}
+
+
+
             </div>
           )}
         </div>

@@ -1,7 +1,7 @@
 
 
 import React, { useState } from "react"
-import { ChevronDown, ChevronUp, MessageSquareText, X, ExternalLink, ImageIcon, FileText, Link2, Image } from 'lucide-react'
+import { ChevronDown, ChevronUp, MessageSquareText, X,FileArchive, File , ExternalLink, ImageIcon, FileText, Link2, Image } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -128,37 +128,77 @@ const WhatsAppChat = ({ chat }) => {
           >
             <span className="flex items-center">
               <ImageIcon className="mr-2 h-5 w-5" />
-              Media ({chat.media.media?.length || 0})
+              Media ({chat.files.media?.length || 0})
             </span>
             {isMediaExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </Button>
           {isMediaExpanded && (
-            <div className="mt-4">
-              {chat.media.media?.length > 0 ? (
-                <div className="grid grid-cols-3 gap-3">
-                  {chat.media.media.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="relative group rounded-xl overflow-hidden cursor-pointer bg-gray-700/50 aspect-square"
-                      onClick={() => openImageViewer(item)}
-                    >
-                      <img
-                        src={item || "/api/placeholder/400/400"}
-                        alt={`Media ${idx + 1}`}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center p-3">
-                        <span className="text-white text-sm font-medium">View Full</span>
-                      </div>
-                    </div>
-                  ))}
+  <div className="mt-4">
+    {chat.files.media?.length > 0 ? (
+      <div className="grid grid-cols-3 gap-3">
+        {chat.files.media.map((item, idx) => {
+          // Extract file extension
+          const fileExt = item.filename?.split(".").pop().toLowerCase();
+          const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(fileExt);
+          const isZip = fileExt === "zip";
+
+          return (
+            <div
+              key={idx}
+              className="relative group rounded-xl overflow-hidden cursor-pointer bg-gray-700/50 aspect-square flex items-center justify-center"
+            >
+              {isImage ? (
+                // Display Image Preview
+                <img
+                  src={item.url}
+                  alt={item.filename}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+              ) : isZip ? (
+                // Display ZIP Icon
+                <div className="flex flex-col items-center">
+                  <FileArchive className="h-10 w-10 text-yellow-400" />
+                  <span className="text-xs text-gray-300 truncate max-w-full">{item.filename}</span>
+                  <a
+                    href={item.url}
+                    download
+                    className="mt-2 px-3 py-1 z-10 bg-green-500 text-white text-xs rounded-lg hover:bg-green-400 transition"
+                  >
+                    Download
+                  </a>
                 </div>
               ) : (
-                <p className="text-gray-400 text-sm text-center py-2">No media files</p>
+                // Fallback for Other Files
+                <div className="flex flex-col items-center">
+                  <File className="h-10 w-10 text-blue-400" />
+                  <span className="text-xs text-gray-300 truncate max-w-full">{item.filename}</span>
+                  <a
+                    href={item.url}
+                    download
+                    className="mt-2 px-3 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-400 transition"
+                  >
+                    Download
+                  </a>
+                </div>
               )}
+
+              {/* Overlay on Hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-3">
+                <span className="text-white text-xs font-medium truncate max-w-full">
+                  {item.filename || "Untitled"}
+                </span>
+              </div>
             </div>
-          )}
-        </div>
+          );
+        })}
+      </div>
+    ) : (
+      <p className="text-gray-400 text-sm text-center py-2">No media files</p>
+    )}
+  </div>
+)}
+</div>
+
 
         {/* Documents Section */}
         <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50">
@@ -169,29 +209,45 @@ const WhatsAppChat = ({ chat }) => {
           >
             <span className="flex items-center">
               <FileText className="mr-2 h-5 w-5" />
-              Documents ({chat.media.docs?.length || 0})
+              Documents ({chat.files.docs?.length || 0})
             </span>
             {isDocsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </Button>
           {isDocsExpanded && (
-            <div className="mt-4">
-              {chat.media.docs?.length > 0 ? (
-                <div className="space-y-2">
-                  {chat.media.docs.map((doc, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
-                    >
-                      <FileText className="h-4 w-4 mr-2 text-gray-400" />
-                      <span className="text-sm text-gray-200">{doc}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-400 text-sm text-center py-2">No documents</p>
-              )}
+  <div className="mt-4 bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm">
+    {chat.files.docs?.length > 0 ? (
+      <div className="space-y-3">
+        {chat.files.docs.map((doc, idx) => (
+          <div
+            key={idx}
+            className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/50 transition-colors"
+          >
+           
+            <div className="flex items-center">
+              <FileText className="h-5 w-5 mr-3 text-green-400" />
+              <span className="text-sm text-gray-200 truncate max-w-[250px]">
+                {doc.filename}
+              </span>
             </div>
-          )}
+            <a
+              href={doc.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-400 hover:text-green-300 text-sm flex items-center"
+            >
+              <ExternalLink className="h-4 w-4 mr-1" />
+              Open
+            </a>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-gray-400 text-sm text-center py-2">No documents available</p>
+    )}
+  </div>
+)}
+
+          
         </div>
 
         {/* Links Section */}
@@ -203,15 +259,15 @@ const WhatsAppChat = ({ chat }) => {
           >
             <span className="flex items-center">
               <Link2 className="mr-2 h-5 w-5" />
-              Links ({chat.media.links?.length || 0})
+              Links ({chat.files.links?.length || 0})
             </span>
             {isLinksExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </Button>
           {isLinksExpanded && (
             <div className="mt-4">
-              {chat.media.links?.length > 0 ? (
+              {chat.files.links?.length > 0 ? (
                 <div className="space-y-2">
-                  {chat.media.links.map((link, idx) => (
+                  {chat.files.links.map((link, idx) => (
                     <a
                       key={idx}
                       href={link}

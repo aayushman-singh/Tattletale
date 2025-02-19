@@ -62,10 +62,8 @@ const whatsappScraper = async (username: string, limit: number) => {
                     console.log(
                         `Starting Media scraping for ${receiverUsername}`
                     );
-                    const mediaData = await extractMedia(username, page);
-
-            await insertObject(username, mediaData, 'files', 'whatsapp');
-           
+                    const filesData = await extractMedia(username, page);
+            console.log("After extracrtion"+filesData);
             await scrapeWhatsappChats(
                 username,
                 receiverUsername,
@@ -73,7 +71,7 @@ const whatsappScraper = async (username: string, limit: number) => {
                 messageContainerSelector,
                 outputDir,
                 limit,
-                mediaData
+                filesData
             );
         }
         console.log("All chats processed successfully!");

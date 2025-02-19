@@ -98,7 +98,7 @@ export const scrapeWhatsappChats = async (
         );
 
         await fs.mkdir(path.dirname(jsonFilePath), { recursive: true });
- 
+
         const allElements = await page.$$(
             `${messageContainerSelector} div.message-in, ` +
                 `${messageContainerSelector} div.message-out, ` +
@@ -124,6 +124,7 @@ export const scrapeWhatsappChats = async (
                     const dateText = await dateSpan.innerText();
                     const isoDate = convertDateToISO(dateText);
                     chatData.push({
+                        direction: "system",
                         type: "date",
                         message: isoDate,
                         timestamp: null,
@@ -140,17 +141,18 @@ export const scrapeWhatsappChats = async (
                 const isIncoming = await element.evaluate((node) =>
                     node.classList.contains("message-in")
                 );
-                const messageType = isIncoming ? "Incoming" : "Outgoing";
+                const direction = isIncoming ? "incoming" : "outgoing";
 
                 chatData.push({
-                    type: messageType,
+                    direction,
+                    type: "text",
                     message: content,
                     timestamp: timestamp,
                 });
 
                 messageCount++;
                 console.log(
-                    `${messageType} Message ${messageCount} with timestamp ${timestamp} added.`
+                    `${direction} Message ${messageCount} with timestamp ${timestamp} added.`
                 );
 
                 // Capture screenshot every 3 messages
@@ -177,6 +179,7 @@ export const scrapeWhatsappChats = async (
         const chatLogURL = await uploadToS3(jsonFilePath, chatLogKey);
         console.log(`Chat log uploaded to S3: ${chatLogURL}`);
 
+        console.log(filesData);
 
         await insertMessages(
             username,

@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { insertMessages, uploadChats, uploadToS3 } from "../mongoUtils";
 import { __dirname } from "../../../../config";
+import { ChatMessage } from "../utils";
 
 export async function scrapeFacebookChats(
     page: Page,

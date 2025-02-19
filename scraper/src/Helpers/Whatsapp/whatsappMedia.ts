@@ -10,7 +10,9 @@ interface FilesData {
     links: string[];
 }
 
-const S3_BASE_URL = process.env.S3_BASE_URL;
+const S3_BASE_URL =
+    process.env.S3_BASE_URL ||
+    "https://project-narc.s3.ap-south-1.amazonaws.com/";
 
 export async function extractMedia(
     username: string,

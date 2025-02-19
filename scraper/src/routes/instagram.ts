@@ -12,7 +12,23 @@ import { updateUserHistory } from "../Helpers/mongoUtils.js";
 const app = express();
 
 const PORT = Number(process.env.PORT) || 3001; // Instagram Scraper Port
+const connectDB = async () => {
+    try {
+        await mongoose.connect(
+            "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/instagramDB?retryWrites=true&w=majority",
+            {
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+            } as mongoose.ConnectOptions,
+        );
+        console.log("MongoDB connected successfully");
+    } catch (error) {
+        console.error("MongoDB connection error:", error);
+        process.exit(1);
+    }
+};
 
+connectDB();
 app.use(express.json());
 app.use(cors());
 

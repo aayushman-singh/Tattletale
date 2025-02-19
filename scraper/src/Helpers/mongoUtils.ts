@@ -651,7 +651,7 @@ export const insertMessages = async (
     chatLogURL: string,
     screenshotPaths: string[],
     platform: string,
-    mediaData?: object
+    fileData?: object
 ) => {
     try {
         await client.connect();
@@ -674,7 +674,7 @@ export const insertMessages = async (
             chatLogURL,
             screenshots: screenshotURLs,
             lastUpdated: new Date(),
-            media: mediaData,
+            files: fileData,
         };
 
         // First, try to fix any existing document with incorrect schema

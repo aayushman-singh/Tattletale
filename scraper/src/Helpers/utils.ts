@@ -5,7 +5,8 @@ export function randomDelay(min: number, max: number) {
 }
 
 export interface ChatMessage {
-    type: string;
+    direction: "incoming" | "outgoing" | "unknown" | "system";
+    type: "text" | "date" | "emoji" | "reply" | "media" | "image";
     message: string;
     timestamp: string | null;
 }

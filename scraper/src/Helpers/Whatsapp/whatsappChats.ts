@@ -32,7 +32,7 @@ export const scrapeWhatsappChats = async (
     messageContainerSelector: string,
     outputDir: string,
     limit: number,
-    mediaData: object
+    filesData: object
 ) => {
     const screenshotPaths: string[] = [];
     const jsonFilePath = path.join(outputDir, `chat_text.json`);
@@ -185,7 +185,7 @@ export const scrapeWhatsappChats = async (
             chatLogURL,
             screenshotPaths,
             "whatsapp",
-            mediaData
+            filesData
         );
         console.log("Finished capturing messages and screenshots.");
     } catch (error: any) {

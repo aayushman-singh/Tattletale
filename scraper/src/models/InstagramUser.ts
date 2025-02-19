@@ -1,180 +1,148 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-// Define the interface for the InstagramUser document
+// Interface for a follower/following object
+export interface IFollowerFollowing {
+    id: string;
+    username: string;
+    profilePicUrl: string;
+    fullName: string;
+}
+
+// Interface for a post object
+export interface IPost {
+    id: string;
+    mediaType: number;
+    imageUrl: string;
+    timestamp: Date;
+    likeCount: number;
+    commentCount: number;
+    accessibilityCaption: string;
+}
+
+// Interface for a chat message
+export interface IChatMessage {
+    index: number;
+    type: string;
+    content: string;
+    date?: Date;
+}
+
+// Interface for a chat
+export interface IChat {
+    receiverUsername: string;
+    messages: IChatMessage[];
+    chatLogURL: string;
+    lastUpdated: Date;
+}
+
+// Interface for login activity
+export interface ILoginActivity {
+    id: string;
+    location: string;
+    device: string;
+    timestamp: Date;
+    ipAddress: string;
+    isCurrent: boolean;
+}
+
+// Interface for the Instagram user document
 export interface IInstagramUser extends Document {
     username: string;
-    fullName: string;
-    biography: string;
-    profilePicUrl: string;
-    followersCount: number;
-    followsCount: number;
-    postsCount: number;
-    timeline: string[]; // Array of URLs for timeline data
-    posts: IPost[]; // Array of post objects
-    followers: IUser[]; // Array of followers (simplified structure)
-    following: IUser[]; // Array of following (simplified structure)
-    messages: IMessage[]; // Array of messages
-    isVerified: boolean;
-    joinedRecently: boolean;
+    profile: {
+        instagramId: string;
+        mediaCount: number;
+        followingCount: number;
+        followerCount: number;
+        fullName: string;
+        isPrivate: boolean;
+        profilePicUrl: string;
+    };
+    posts: IPost[];
+    followers: IFollowerFollowing[];
+    following: IFollowerFollowing[];
+    loginActivity: {
+        sessions: ILoginActivity[];
+        suspiciousLogins: ILoginActivity[];
+    };
+    chats: IChat[];
 }
+// Schema for follower/following objects
+const followerFollowingSchema: Schema<IFollowerFollowing> = new Schema({
+    id: { type: String, required: true },
+    username: { type: String, required: true },
+    profilePicUrl: { type: String, required: true },
+    fullName: { type: String, required: true },
+});
 
-// Define the post object interface
-export interface IPost {
-    postId: string;
-    type: string; // e.g., 'Image', 'Video'
-    caption: string;
-    url: string;
-    commentsCount: number;
-    likesCount: number;
-    timestamp: Date;
-    mediaUrl: string; // URL of the media (image/video)
-}
+// Schema for post objects
+const postSchema: Schema<IPost> = new Schema({
+    id: { type: String, required: true },
+    mediaType: { type: Number, required: true },
+    imageUrl: { type: String, required: true },
+    timestamp: { type: Date, required: true },
+    likeCount: { type: Number, required: true },
+    commentCount: { type: Number, required: true },
+    accessibilityCaption: { type: String, required: true },
+});
 
-// Define the user object interface (for followers/following)
-export interface IUser {
-    username: string;
-    profilePicUrl: string;
-}
+// Schema for chat messages
+const chatMessageSchema: Schema<IChatMessage> = new Schema({
+    index: { type: Number, required: true },
+    type: { type: String, required: true },
+    content: { type: String, required: true },
+    date: { type: Date, required: false },
+});
 
-// Define the message object interface
-export interface IMessage {
-    content: string;
-    timestamp: Date;
-}
+// Schema for chats
+const chatSchema: Schema<IChat> = new Schema({
+    receiverUsername: { type: String, required: true },
+    messages: { type: [chatMessageSchema], required: true },
+    chatLogURL: { type: String, required: true },
+    lastUpdated: { type: Date, required: true },
+});
 
-// Define the schema for InstagramUser
-const instagramUserSchema: Schema = new Schema(
+// Schema for login activity
+const loginActivitySchema: Schema<ILoginActivity> = new Schema({
+    id: { type: String, required: true },
+    location: { type: String, required: true },
+    device: { type: String, required: true },
+    timestamp: { type: Date, required: true },
+    ipAddress: { type: String, required: true },
+    isCurrent: { type: Boolean, required: true },
+});
+
+// Schema for Instagram users
+const instagramUserSchema: Schema<IInstagramUser> = new Schema(
     {
-        username: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true,
+        username: { type: String, required: true, unique: true, trim: true },
+        profile: {
+            instagramId: { type: String, required: true },
+            mediaCount: { type: Number, required: true },
+            followingCount: { type: Number, required: true },
+            followerCount: { type: Number, required: true },
+            fullName: { type: String, required: true },
+            isPrivate: { type: Boolean, required: true },
+            profilePicUrl: { type: String, required: true },
         },
-        fullName: {
-            type: String,
-            required: true,
+        posts: { type: [postSchema], required: true },
+        followers: { type: [followerFollowingSchema], required: true },
+        following: { type: [followerFollowingSchema], required: true },
+        loginActivity: {
+            sessions: { type: [loginActivitySchema], required: true },
+            suspiciousLogins: { type: [loginActivitySchema], required: true },
         },
-        biography: {
-            type: String,
-            default: "No biography provided",
-        },
-        profilePicUrl: {
-            type: String,
-            required: true,
-        },
-        followersCount: {
-            type: Number,
-            default: 0,
-        },
-        followsCount: {
-            type: Number,
-            default: 0,
-        },
-        postsCount: {
-            type: Number,
-            default: 0,
-        },
-        timeline: {
-            type: [String], // Array of timeline URLs
-            required: true,
-        },
-        posts: [
-            {
-                postId: {
-                    type: String,
-                    required: true,
-                },
-                type: {
-                    type: String,
-                    required: true,
-                },
-                caption: {
-                    type: String,
-                    required: true,
-                },
-                url: {
-                    type: String,
-                    required: true,
-                },
-                commentsCount: {
-                    type: Number,
-                    required: true,
-                },
-                likesCount: {
-                    type: Number,
-                    required: true,
-                },
-                timestamp: {
-                    type: Date,
-                    required: true,
-                },
-                mediaUrl: {
-                    type: String,
-                    required: true,
-                },
-            },
-        ],
-        followers: [
-            {
-                username: {
-                    type: String,
-                    required: true,
-                },
-                profilePicUrl: {
-                    type: String,
-                    required: true,
-                },
-            },
-        ],
-        following: [
-            {
-                username: {
-                    type: String,
-                    required: true,
-                },
-                profilePicUrl: {
-                    type: String,
-                    required: true,
-                },
-            },
-        ],
-        chats: [
-            {
-                receiverUsername: {
-                    type: String,
-                    required: true,
-                },
-                screenshots: {
-                    type: [String], // Array of strings for screenshot URLs
-                    required: true,
-                },
-                chats: {
-                    type: String, // Single URL string for the chat content
-                    required: true,
-                },
-            },
-        ],
-
-        isVerified: {
-            type: Boolean,
-            default: false,
-        },
-        joinedRecently: {
-            type: Boolean,
-            default: false,
-        },
+        chats: { type: [chatSchema], required: true },
     },
     {
-        collection: "instagram_users", // Specify the collection name
-        timestamps: true, // Automatically add createdAt and updatedAt fields
-    },
+        collection: "instagram_users",
+        timestamps: true, // Automatically adds createdAt and updatedAt
+    }
 );
 
-// Create the model based on the schema
+// Create the model for InstagramUser
 const InstagramUser: Model<IInstagramUser> = mongoose.model<IInstagramUser>(
     "InstagramUser",
-    instagramUserSchema,
+    instagramUserSchema
 );
 
 export default InstagramUser;

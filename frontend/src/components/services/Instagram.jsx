@@ -1,35 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ExpandableSection from "../utils/Expandable";
+import ImageViewer from "../utils/ImageViewer";
 
-// Reusable components
-const ExpandableSection = ({ title, children, isOpen, onToggle }) => (
-  <Card className="border border-gray-600 bg-gray-800 mt-10">
-    <CardHeader
-      className="flex flex-row justify-between items-center cursor-pointer p-4"
-      onClick={onToggle}
-    >
-      <CardTitle className="text-pink-500">{title}</CardTitle>
-      {isOpen ? <ChevronUp className="text-pink-500" /> : <ChevronDown className="text-pink-500" />}
-    </CardHeader>
-    {isOpen && <CardContent className="p-4">{children}</CardContent>}
-  </Card>
-);
-
-const ImageViewer = ({ image, onClose }) => (
-  <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4" onClick={onClose}>
-    <div className="relative max-w-5xl w-full">
-      <img src={image} alt="Full size media" className="w-full h-auto max-h-[90vh] object-contain rounded-lg" />
-      <button
-        onClick={onClose}
-        className="absolute -top-2 -right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg"
-        aria-label="Close image viewer"
-      >
-        <X className="h-5 w-5" />
-      </button>
-    </div>
-  </div>
-);
 
 const UserCard = ({ user, className }) => (
   <Card className={`flex flex-col items-center bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-all duration-300 ${className}`}>

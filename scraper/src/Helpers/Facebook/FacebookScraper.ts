@@ -34,7 +34,7 @@ export async function scrapeFacebook(
         let resultId;
         // Launch the browser
         context = await chromium.launchPersistentContext("./fb_context",{
-            headless: false,
+            headless: true,
             slowMo: 500,
             args: ["--no-sandbox", "--disable-setuid-sandbox"],
         });

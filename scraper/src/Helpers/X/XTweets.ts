@@ -1,8 +1,6 @@
-// XPosts.ts
 import axios from "axios";
-import { insertTweets } from "../mongoUtils.js"; // MongoDB utility function
+import { insertTweets } from "../mongoUtils.js"; 
 
-// Exported function for scraping X posts
 export async function XTweets(startUrls: string[]) {
     const fullUrls = startUrls.map(
         (username: string) => `https://www.x.com/${username}/`,
@@ -23,7 +21,7 @@ export async function XTweets(startUrls: string[]) {
     try {
         console.log("X scraper initiated for posts...");
 
-        // Call the Apify X scraper endpoint
+      
         const response = await axios.post(endpoint, data, {
             headers: { "Content-Type": "application/json" },
         });
@@ -31,7 +29,6 @@ export async function XTweets(startUrls: string[]) {
         const items = response.data;
         console.log(`Scraped ${items.length} posts from ${startUrls[0]}`);
 
-        // Insert the posts into MongoDB for each username
         for (const username of startUrls) {
             await insertTweets(username, items, "twitter");
         }

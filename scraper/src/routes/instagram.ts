@@ -1,7 +1,5 @@
 import express from "express";
 import cors from "cors";
-import { scrapeInstagramProfiles } from "../Helpers/Instagram/InstagramProfile.js";
-import { scrapeInstagramPosts } from "../Helpers/Instagram/InstagramPosts.js";
 import { InstaScraper } from "../Helpers/Instagram/InstaScraper.js";
 import InstagramUser, { IInstagramUser } from "../models/InstagramUser.js";
 import retry from "async-retry"; // For retry logic

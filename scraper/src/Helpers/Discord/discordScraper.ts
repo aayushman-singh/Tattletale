@@ -10,7 +10,7 @@ export const scrapeDiscord = async (username:string, password:string) => {
 
         // Launch the browser with a persistent context
         const browser = await chromium.launchPersistentContext("./discord", {
-            headless: false, // Set to true for headless mode
+            headless: true,
             slowMo: 500,
         });
 

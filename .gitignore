@@ -41,3 +41,7 @@ instagram_log.json
 /screenshots_chat_18
 /screenshots_chat_19
 /screenshots_chat_20
+/instagram_session
+*.pem
+*.pub
+*.key

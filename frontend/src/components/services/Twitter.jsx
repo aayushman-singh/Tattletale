@@ -28,7 +28,7 @@ const TwitterTweet = ({ tweet }) => {
   const [selectedLanguage, setSelectedLanguage] = useState("en"); // Default to English
 
   const translateText = async (text, targetLanguage) => {
-    const apiKey = "AIzaSyCwqziN0xQTJUXtPRACkRwpMLrbY9P2uHg"; // Replace with your API key
+    const apiKey = "AIzaSyAKce7w0WL4J-pkYl3fXDwIJNzBNOCaGoE"; // Replace with your API key
     const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
 
     try {

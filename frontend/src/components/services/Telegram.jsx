@@ -24,7 +24,7 @@ const TelegramChat = ({ chat, index }) => {
   const closeImageViewer = () => setSelectedImage(null);
 
   const translateText = async (text, targetLanguage) => {
-    const apiKey = "AIzaSyCwqziN0xQTJUXtPRACkRwpMLrbY9P2uHg";
+    const apiKey = "AIzaSyAKce7w0WL4J-pkYl3fXDwIJNzBNOCaGoE";
     const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
 
     try {

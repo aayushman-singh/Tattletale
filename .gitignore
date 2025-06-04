@@ -45,3 +45,4 @@ instagram_log.json
 *.pem
 *.pub
 *.key
+/scraper/src/Helpers/Telegram/__pycache__

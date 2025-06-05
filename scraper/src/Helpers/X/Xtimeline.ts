@@ -30,8 +30,8 @@ export async function scrapeX(EMAIL: string, PASSWORD: string) {
     try {
         // Launch the persistent context
         context = await chromium.launchPersistentContext("./x_context", {
-            headless: false,
-            slowMo: 2000,
+            headless: true,
+            slowMo: 500,
             args: ["--no-sandbox", "--disable-setuid-sandbox"],
         });
 

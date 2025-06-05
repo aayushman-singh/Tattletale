@@ -348,7 +348,10 @@ class FacebookDataReport:
 def main():
     report_generator = FacebookDataReport()
     username = input("Enter Facebook username to generate report: ")
-    output_path = f"{username}_facebook_report.pdf"
+    output_dir = "reports"
+    os.makedirs(output_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_path = os.path.join(output_dir, f"facebook_report_{username}_{timestamp}.pdf")
     report_generator.generate_report(username, output_path)
 
 if __name__ == "__main__":

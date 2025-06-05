@@ -291,23 +291,114 @@ class TelegramDataReport:
             story.append(Paragraph("Telegram Account Investigation", self.styles['OfficialHeader']))
             story.append(Spacer(1, 40))
             
-            # Case Information
+            # Case Information (Subject Information)
             story.append(Paragraph("CASE DETAILS", self.styles['SectionHeader']))
             story.append(Paragraph(f"Subject Username: {username}", self.styles['DataHeader']))
             story.append(Paragraph(f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", self.styles['Content']))
             story.append(Paragraph(f"Report Reference: TG-{datetime.now().strftime('%Y%m%d-%H%M%S')}", self.styles['Content']))
             story.append(Spacer(1, 20))
 
-            # Evidence Index
+            # --- Summary Section ---
+            chats = user_data.get('chats', [])
+            total_chats = len(chats)
+            total_media = sum(len(chat.get('media_files', [])) for chat in chats)
+            story.append(Paragraph("SUMMARY", self.styles['SectionHeader']))
+            summary_data = [
+                ["Total Chats", str(total_chats)],
+                ["Total Media Files", str(total_media)]
+            ]
+            from reportlab.platypus import Table, TableStyle
+            summary_table = Table(summary_data, colWidths=[2*inch, 2*inch])
+            summary_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            story.append(summary_table)
+            story.append(Spacer(1, 20))
+
+            # --- Detailed Evidence Index ---
             story.append(Paragraph("EVIDENCE INDEX", self.styles['SectionHeader']))
-            story.append(Paragraph("1. Subject Information", self.styles['DataHeader']))
-            story.append(Paragraph("2. Communications (Chat History)", self.styles['DataHeader']))
+            index_data = [["#", "Chat With", "Media Files"]]
+            for idx, chat in enumerate(chats, 1):
+                index_data.append([
+                    str(idx),
+                    chat.get('receiverUsername', 'Unknown'),
+                    str(len(chat.get('media_files', [])))
+                ])
+            index_table = Table(index_data, colWidths=[0.5*inch, 3*inch, 1.5*inch])
+            index_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            story.append(index_table)
             story.append(PageBreak())
 
-            # Add Chats Section
-            if user_data.get('chats'):
-                story.extend(self.format_chats_section(user_data['chats']))
-
+            # --- Chats Section ---
+            story.append(Paragraph("COMMUNICATION RECORDS", self.styles['SectionHeader']))
+            story.append(Spacer(1, 20))
+            for idx, chat in enumerate(chats, 1):
+                # Visually distinct chat block
+                from reportlab.lib.colors import HexColor
+                chat_block_bg = HexColor('#F0F8FF')
+                chat_block = []
+                chat_block.append(Paragraph(f"<b>Communication with:</b> {chat.get('receiverUsername', 'Unknown')}", self.styles['DataHeader']))
+                # Chat Logs
+                if chat.get('logs'):
+                    chat_log_path = self.download_file(chat['logs'])
+                    if chat_log_path:
+                        content = self.process_text_file(chat_log_path)
+                        chat_message_style = ParagraphStyle(
+                            'ChatMessage',
+                            parent=self.styles['Content'],
+                            alignment=TA_LEFT,
+                            wordWrap=True,
+                            fontSize=10,
+                            leading=12
+                        )
+                        chat_block.append(Paragraph("<b>Message Log:</b>", self.styles['Content']))
+                        messages = content.split('\n')
+                        for msg in messages:
+                            if msg.strip():
+                                chat_block.append(Paragraph(msg, chat_message_style))
+                        chat_block.append(Paragraph(
+                            f"Evidence ID: CHAT-{datetime.now().strftime('%Y%m%d')}-{idx}", 
+                            self.styles['EvidenceLabel']
+                        ))
+                # Media Files
+                if chat.get('media_files'):
+                    chat_block.append(Paragraph("<b>Visual Evidence:</b>", self.styles['Content']))
+                    for screen_idx, media_url in enumerate(chat['media_files'], 1):
+                        local_path = self.download_file(media_url)
+                        if local_path and local_path.endswith(('.jpg', '.jpeg', '.png')):
+                            img = Image(local_path, width=6*inch, height=4*inch)
+                            chat_block.append(img)
+                            chat_block.append(Paragraph(
+                                f"Evidence ID: MEDIA-{datetime.now().strftime('%Y%m%d')}-{idx}-{screen_idx}", 
+                                self.styles['EvidenceLabel']
+                            ))
+                            chat_block.append(Spacer(1, 10))
+                # Render chat block with background
+                from reportlab.platypus import Table
+                chat_table = Table([[b] for b in chat_block], colWidths=[6.5*inch])
+                chat_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), chat_block_bg),
+                    ('BOX', (0, 0), (-1, -1), 1, colors.lightblue),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ]))
+                story.append(chat_table)
+                story.append(Spacer(1, 20))
             # Add footer to each page
             def add_page_number(canvas, doc):
                 canvas.saveState()

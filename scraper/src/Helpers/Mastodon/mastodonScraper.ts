@@ -65,7 +65,7 @@ export const scrapeMastodon = async (
 
         console.log("Launching browser...");
         browser = await chromium.launchPersistentContext("./mastodon", {
-            headless: false,
+            headless: true,
             slowMo: 500,
             viewport: { width: 1280, height: 720 },
             userAgent:

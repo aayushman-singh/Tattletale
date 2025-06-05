@@ -41,10 +41,8 @@ instagram_log.json
 /screenshots_chat_18
 /screenshots_chat_19
 /screenshots_chat_20
-/instagram_session
-*.pem
-*.pub
+/scraper/src/Helpers/Telegram/__pycache__
+tattletale-backend.pem
 *.key
-/scraper/src/Helpers/Telegram/__pycache__
-/output
-/scraper/src/Helpers/Telegram/__pycache__
+*.pub
+/instagram_session

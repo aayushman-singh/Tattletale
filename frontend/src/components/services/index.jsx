@@ -253,7 +253,38 @@ const Services = () => {
         showAlert("Please enter a Telegram phone number", "error");
         return;
       }
-      username = telegramInput.value;
+      
+      let phoneNumber = telegramInput.value.trim();
+      
+      // Remove spaces, dashes, and other formatting
+      phoneNumber = phoneNumber.replace(/[\s\-\(\)]/g, '');
+      
+      // Handle different input formats
+      if (phoneNumber.startsWith("+91")) {
+        // eslint-disable-next-line no-self-assign
+        phoneNumber = phoneNumber;
+      } else if (phoneNumber.startsWith("91") && phoneNumber.length === 12) {
+        // Starts with 91 but no +
+        phoneNumber = "+" + phoneNumber;
+      } else if (phoneNumber.startsWith("0")) {
+        // Remove leading 0 and add +91
+        phoneNumber = "+91" + phoneNumber.substring(1);
+      } else if (phoneNumber.length === 10) {
+        // 10-digit number, add +91
+        phoneNumber = "+91" + phoneNumber;
+      } else {
+        // Invalid format
+        showAlert("Please enter a valid Indian phone number (10 digits)", "error");
+        return;
+      }
+      
+      // Validate final format (should be +91 followed by 10 digits)
+      const phoneRegex = /^\+91[6-9]\d{9}$/;
+      if (!phoneRegex.test(phoneNumber)) {
+        showAlert("Please enter a valid Indian mobile number", "error");
+        return;
+      }
+      username = phoneNumber;
     } else if (platform === "x") {
       const xInput = document.getElementById("xInput");
       if (!xInput || !xInput.value) {

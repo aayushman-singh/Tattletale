@@ -6,8 +6,8 @@ from bson import ObjectId
 
 load_dotenv()
 
-AWS_ACCESS_KEY_ID = "AKIAYLOJNGB2S3DJCPHQ"
-AWS_SECRET_ACCESS_KEY = "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"
+AWS_ACCESS_KEY_ID = "AKIAYLOJNGB2VJAK35GY"
+AWS_SECRET_ACCESS_KEY = "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"
 AWS_REGION = "ap-south-1"
 S3_BUCKET_NAME = "project-narc"
 MONGO_URI = "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"

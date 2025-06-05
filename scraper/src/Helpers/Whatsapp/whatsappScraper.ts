@@ -1,7 +1,7 @@
 import { Browser, chromium, Page } from "playwright";
 import fs from "fs/promises";
 import path from "path";
-import { insertObject} from "../mongoUtils";
+import { insertObject } from "../mongoUtils";
 import { __dirname } from "../../../../config";
 import dotenv from "dotenv";
 import { extractMedia } from "./whatsappMedia";
@@ -27,7 +27,7 @@ const whatsappScraper = async (username: string, limit: number) => {
             console.log("Waiting for user to scan the QR code...");
             await page.waitForSelector(
                 'canvas[aria-label="Scan this QR code to link a device!"]',
-                { state: "detached" },
+                { state: "detached" }
             );
             console.log("Logged in successfully!");
         } else {
@@ -35,46 +35,85 @@ const whatsappScraper = async (username: string, limit: number) => {
         }
 
         const chatContainerSelector = 'div[aria-label="Chat list"]';
-        await page.waitForSelector(chatContainerSelector, {timeout: 60000 });
+        await page.waitForSelector(chatContainerSelector, { timeout: 60000 });
 
         await page.waitForTimeout(2500);
-    
+
         const chatTiles = await page.$$(
-            chatContainerSelector + ' div[role="listitem"]',
+            chatContainerSelector + ' div[role="listitem"]'
         );
 
+        let successfulChats = 0;
+        let failedChats = 0;
+
         for (const [index, chatTile] of chatTiles.entries()) {
-            let receiverUsername =
-                (await chatTile.textContent()) || `chat_${index}`;
-            receiverUsername = receiverUsername
-                .split(":")[0]
-                .replace(/[^a-zA-Z0-9_]/g, "");
-            console.log(`Processing chat ${index + 1}: ${receiverUsername}`);
-             const messageContainerSelector = 'div[role="application"]';
-             const outputDir = path.join(
-                 __dirname,
-                 `screenshots_chat_${index + 1}`
-             );
-           
-            await chatTile.click();
-            await page.waitForTimeout(2000); 
-         
-                    console.log(
-                        `Starting Media scraping for ${receiverUsername}`
+            try {
+                let receiverUsername =
+                    (await chatTile.textContent()) || `chat_${index}`;
+                receiverUsername = receiverUsername
+                    .split(":")[0]
+                    .replace(/[^a-zA-Z0-9_]/g, "");
+                console.log(
+                    `Processing chat ${index + 1}: ${receiverUsername}`
+                );
+
+                const messageContainerSelector = 'div[role="application"]';
+                const outputDir = path.join(
+                    __dirname,
+                    `screenshots_chat_${index + 1}`
+                );
+
+                await chatTile.click();
+                await page.waitForTimeout(2000);
+
+                console.log(`Starting Media scraping for ${receiverUsername}`);
+                let filesData = {};
+                try {
+                     filesData = await extractMedia(username, page);
+                } catch (error) {
+                    console.log("Could not extract media");
+                }
+                console.log("After extraction: " + filesData);
+
+                await scrapeWhatsappChats(
+                    username,
+                    receiverUsername,
+                    page,
+                    messageContainerSelector,
+                    outputDir,
+                    limit,
+                    filesData
+                );
+
+                successfulChats++;
+                console.log(
+                    `✅ Successfully processed chat: ${receiverUsername}`
+                );
+            } catch (chatError) {
+                failedChats++;
+                console.error(
+                    `❌ Error processing chat ${index + 1}:`,
+                    chatError
+                );
+                console.log(`Continuing to next chat...`);
+
+                // Optional: Try to navigate back to chat list if we're stuck in a chat
+                try {
+                    await page.goBack();
+                    await page.waitForTimeout(1000);
+                } catch (navigationError) {
+                    console.warn(
+                        "Could not navigate back to chat list:",
+                        navigationError
                     );
-                    const filesData = await extractMedia(username, page);
-            console.log("After extracrtion"+filesData);
-            await scrapeWhatsappChats(
-                username,
-                receiverUsername,
-                page,
-                messageContainerSelector,
-                outputDir,
-                limit,
-                filesData
-            );
+                }
+            }
         }
-        console.log("All chats processed successfully!");
+
+        console.log(`\n📊 Processing Summary:`);
+        console.log(`✅ Successful chats: ${successfulChats}`);
+        console.log(`❌ Failed chats: ${failedChats}`);
+        console.log(`📱 Total chats processed: ${chatTiles.length}`);
     } catch (error) {
         console.error("Error in whatsappScraper:", error);
     } finally {

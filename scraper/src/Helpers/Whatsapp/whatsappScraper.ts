@@ -15,7 +15,7 @@ const whatsappScraper = async (username: string, limit: number) => {
 
     try {
         const browser = await chromium.launchPersistentContext("./user-data", {
-            headless: false,
+            headless: true,
         });
         page = await browser.newPage();
 

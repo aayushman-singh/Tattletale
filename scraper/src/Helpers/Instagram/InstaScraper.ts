@@ -27,8 +27,8 @@ export const InstaScraper = async (username: string, password: string) => {
     const context: BrowserContext = await chromium.launchPersistentContext(
         "./instagram_session",
         {
-            headless: false,
-            slowMo: 1000,
+            headless: true,
+            slowMo: 500,
             args: ["--enable-http2", "--tls-min-v1.2"],
         }
     );

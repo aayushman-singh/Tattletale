@@ -36,7 +36,7 @@ Setup and Installation
 Prerequisites
 Before you begin, ensure you have the following installed:
 
-- Node.js: Version 22.11.0. You can download it from the official website: Node.js.
+- Node.js: Version 22.10.0. You can download it from the official website: Node.js.
 
 npm: The Node Package Manager (npm) comes bundled with Node.js. Make sure it's updated by running:    
 ```bash
@@ -59,6 +59,7 @@ It’s a good practice to create a virtual environment to manage dependencies. R
 
 1.  Create a virtual environment:
 ```bash
+cd tattletale
 python -m venv venv  
 
 ```
@@ -74,24 +75,30 @@ pip install -r requirements.txt
   
 ```
 
-
-
 ## Usage
 
 Step 1: Clone the Repository
 First, clone the repository to your local machine:
 ```bash
-  git clone https://github.com/aayushman-singh/project-NARC.git
+  git clone https://github.com/aayushman-singh/tattletale.git
 ```
 Go to the project directory
 
 ```bash
-  cd project-NARC
+  cd tattletale
 ```
 
 Install dependencies
 
 ```bash
+  npm install
+```
+```bash
+  cd frontend
+  npm install
+```
+```bash
+  cd backend
   npm install
 ```
 

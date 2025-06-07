@@ -293,9 +293,6 @@ uritools==4.0.3
 urllib3==2.2.3
 userpath==1.9.2
 uvicorn==0.32.0
-virtualenv==20.27.1
--e git+https://github.com/aayushman-singh/wagtail.git@1e7be62e42b91db490c975ac58c1d8bb9bf35f8b#egg=wagtail
-wagtail-font-awesome-svg==1.0.1
 watchfiles==0.24.0
 wcmatch==8.5.2
 wcwidth==0.2.13

@@ -11,9 +11,10 @@ import {
   Coins,
   X,
 } from "phosphor-react";
+import { FaGoogle, FaDiscord as DiscordLogo } from "react-icons/fa";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import "./style.css";
-
+import { SocialIcon } from 'react-social-icons';
 
 import FacebookData from "./FacebookSection";
 import RenderInstagramData from "../services/Instagram";
@@ -22,13 +23,18 @@ import WhatsAppChatsViewer from "./WhatsappSection";
 import TelegramChatsDisplay from "./TelegramSection";
 import XTweetsDisplay from "./TwitterSection"
 import InstagramUsersViewer from "./InstagramSection"
+import DiscordChatsDisplay from "./disocrdSection";
+import MastodonPostsDisplay from "./mastodonSection";
 const PastData = () => {
   const [activeSection, setActiveSection] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [instagramData, setInstagramData] = useState(null);
   const [telegramData, setTelegramData] = useState(null);
- 
+  const [timelineData, setTimelineData] = useState(null);
+  const [mastodonData, setMastodonData] = useState(null);
+   const [googleData, setGoogleData] = useState(null);
+    const [youtubeData, setYoutubeData] = useState(null);
   const [alert, setAlert] = useState({
     visible: false,
     message: "",
@@ -37,6 +43,10 @@ const PastData = () => {
   const [whatsappData, setWhatsappData] = useState(null);
   const [xData, setXData] = useState(null);
   const [facebookData, setFacebookData] = useState(null);
+    const [googleDriveData, setGoogleDriveData] = useState(null);
+  
+    const [discordData, setDiscordData] = useState(null);
+
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
   const handleSectionClick = (section) => {
@@ -57,6 +67,12 @@ const PastData = () => {
       x: 3003,
       telegram: 3005,
       instagram: 3001,
+      drive: 3009,
+      google: 3007,
+      youtube: 3008,
+      discord: 3011,
+      timeline: 3010,
+      mastodon: 3012
     };
 
     const port = platformConfig[platform];
@@ -105,6 +121,27 @@ const PastData = () => {
         case "instagram":
           setInstagramData(data);
           break;
+        case "gmail":
+          setGmailData(data);
+          break;
+        case "drive":
+          setGoogleDriveData(data);
+          break;
+        case "google":
+          setGoogleData(data);
+          break;
+        case "youtube":
+          setYoutubeData(data);
+          break;
+        case "discord":
+          setDiscordData(data);
+          break;
+        case "timeline":
+          setTimelineData(data);
+          break;
+        case "mastodon":
+          setMastodonData(data);
+
         default:
           console.error("Unknown platform");
       }
@@ -118,11 +155,11 @@ const PastData = () => {
     }
   };
 
- 
 
- 
-  
-  
+
+
+
+
 
   // const renderDropdown = (platform) => (
   //   <select
@@ -144,17 +181,15 @@ const PastData = () => {
     <div className="min-h-screen bg-gray-900 text-white p-8 pt-20 relative">
       {alert.visible && (
         <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform ${
-            alert.visible
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform ${alert.visible
               ? "translate-x-0 opacity-100"
               : "translate-x-full opacity-0"
-          } ${
-            alert.type === "success"
+            } ${alert.type === "success"
               ? "bg-green-50 text-green-800 border-l-4 border-green-500"
               : alert.type === "error"
                 ? "bg-red-50 text-red-800 border-l-4 border-red-500"
                 : "bg-blue-50 text-blue-800 border-l-4 border-blue-500"
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -286,29 +321,79 @@ const PastData = () => {
             Telegram
           </span>
         </button>
+        <button
+          onClick={() => handleSectionClick("google")}
+          className="flex items-center space-x-2 mb-4 md:mb-0"
+        >
+          <FaGoogle
+            size={32}
+            color={activeSection === "google" ? "#4285F4" : "#ccc"}
+          />
+          <span
+            className={`text-lg ${activeSection === "google" ? "text-blue-500" : "text-gray-400"
+              }`}
+          >
+            Google
+          </span>
+        </button>
 
         <button
           onClick={() => handleSectionClick("whatsapp")}
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-2 mb-4 md:mb-0"
         >
           <WhatsappLogo
             size={32}
             color={activeSection === "whatsapp" ? "#25D366" : "#ccc"}
           />
           <span
-            className={`text-lg ${activeSection === "whatsapp" ? "text-green-500" : "text-gray-400"}`}
+            className={`text-lg ${activeSection === "whatsapp" ? "text-green-500" : "text-gray-400"
+              }`}
           >
             WhatsApp
           </span>
         </button>
+
+        <button
+          onClick={() => handleSectionClick("discord")}
+          className="flex items-center space-x-2 mb-4 md:mb-0"
+        >
+          <DiscordLogo
+            size={32}
+            color={activeSection === "discord" ? "#5865F2" : "#ccc"}
+          />
+          <span
+            className={`text-lg ${activeSection === "discord" ? "text-blue-400" : "text-gray-400"
+              }`}
+          >
+            Discord
+          </span>
+        </button>
+
+        <button
+          onClick={() => handleSectionClick("mastodon")}
+          className="flex items-center space-x-2 mb-4 md:mb-0"
+        >
+          <SocialIcon
+            network="mastodon"
+            style={{ height: 32, width: 32 }}
+            bgColor={activeSection === "mastodon" ? "#6364FF" : "#ccc"}
+          />
+          <span
+            className={`text-lg ${activeSection === "mastodon" ? "text-blue-400" : "text-gray-400"
+              }`}
+          >
+            Mastodon
+          </span>
+        </button>
+
       </div>
 
       {activeSection === "instagram" && (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold text-pink-500">Instagram</h2>
-         
+
           <div className="flex space-x-4 mt-4">
-           
+
             <button
               onClick={() => handleShowDetails("instagram")}
               className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
@@ -318,7 +403,7 @@ const PastData = () => {
           </div>
           {showDetails && instagramData && (
             <div className="mt-8">
-              <InstagramUsersViewer apiData = {instagramData}/>
+              <InstagramUsersViewer apiData={instagramData} />
 
               <div className="flex mt-12 space-x-2">
                 <button className="flex items-center space-x-2 bg-green-200 text-green-700 px-4 py-2 rounded-md hover:bg-green-300 transition-colors">
@@ -348,9 +433,9 @@ const PastData = () => {
       {activeSection === "whatsapp" && (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold text-green-500">WhatsApp</h2>
-         
+
           <div className="flex space-x-4 mt-4">
-            
+
 
             <button
               onClick={() => handleShowDetails("whatsapp")}
@@ -361,12 +446,12 @@ const PastData = () => {
             </button>
           </div>
           {whatsappData && showDetails && (
-  <div className="mt-6">
-    <h3 className="text-xl font-bold text-white">User Chats</h3>
-    <WhatsAppChatsViewer apiData={whatsappData} />
+            <div className="mt-6">
+              <h3 className="text-xl font-bold text-white">User Chats</h3>
+              <WhatsAppChatsViewer apiData={whatsappData} />
 
-  </div>
-)}
+            </div>
+          )}
 
 
         </div>
@@ -376,11 +461,11 @@ const PastData = () => {
           <h2 className="text-2xl font-bold text-blue-500">
             X (formerly Twitter)
           </h2>
-         
-        
-        
+
+
+
           <div className="flex space-x-4 mt-4">
-           
+
             <button
               onClick={() => handleShowDetails("x")}
               className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
@@ -389,14 +474,14 @@ const PastData = () => {
             </button>
           </div>
           {showDetails && (
-  <div className="mt-6">
-    <h3 className="text-xl font-bold text-blue-400 mb-4">Tweets</h3>
-   
-      <XTweetsDisplay apiData={xData} />
-   
-    
-  </div>
-)}
+            <div className="mt-6">
+              <h3 className="text-xl font-bold text-blue-400 mb-4">Tweets</h3>
+
+              <XTweetsDisplay apiData={xData} />
+
+
+            </div>
+          )}
 
 
         </div>
@@ -405,9 +490,9 @@ const PastData = () => {
       {activeSection === "telegram" && (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold text-blue-400">Telegram</h2>
-         
+
           <div className="flex space-x-4 mt-4">
-           
+
             <button
               onClick={() => handleShowDetails("telegram")}
               className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
@@ -426,32 +511,81 @@ const PastData = () => {
         </div>
       )}
 
-{activeSection === "facebook" && (
-  <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-    <h2 className="text-2xl font-bold text-blue-600">Facebook</h2>
-    
-   
-    <div className="flex space-x-4 mt-4">
-     
-      <button
-        onClick={() => handleShowDetails("facebook")}
-        className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
-      >
-        Show Details
-      </button>
-    </div>
-    <div className="mt-8">
-      {facebookData ? (
-        <div>
-          <FacebookDataViewer apiData={facebookData} />;
-        </div>
-      ) : (
-        <p className="text-gray-400">No Facebook data loaded yet.</p>
-      )}
-    </div>
-  </div>
-)}
+      {activeSection === "facebook" && (
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-blue-600">Facebook</h2>
 
+
+          <div className="flex space-x-4 mt-4">
+
+            <button
+              onClick={() => handleShowDetails("facebook")}
+              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+            >
+              Show Details
+            </button>
+          </div>
+          <div className="mt-8">
+            {facebookData ? (
+              <div>
+                <FacebookDataViewer apiData={facebookData} />;
+              </div>
+            ) : (
+              <p className="text-gray-400">No Facebook data loaded yet.</p>
+            )}
+          </div>
+        </div>
+      )}
+   {activeSection === "discord" && (
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-blue-600">Discord</h2>
+
+
+          <div className="flex space-x-4 mt-4">
+
+            <button
+              onClick={() => handleShowDetails("discord")}
+              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+            >
+              Show Details
+            </button>
+          </div>
+          <div className="mt-8">
+            {discordData ? (
+              <div>
+                <DiscordChatsDisplay apiData={discordData} />
+              </div>
+            ) : (
+              <p className="text-gray-400">No Discord data loaded yet.</p>
+            )}
+          </div>
+        </div>
+      )}
+      {activeSection === "mastodon" && (
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-blue-600">Discord</h2>
+
+
+          <div className="flex space-x-4 mt-4">
+
+            <button
+              onClick={() => handleShowDetails("mastodon")}
+              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+            >
+              Show Details
+            </button>
+          </div>
+          <div className="mt-8">
+            {mastodonData ? (
+              <div>
+                <MastodonPostsDisplay apiData={mastodonData} />
+              </div>
+            ) : (
+              <p className="text-gray-400">No Mastodon data loaded yet.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

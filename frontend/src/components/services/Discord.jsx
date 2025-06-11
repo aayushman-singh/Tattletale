@@ -51,7 +51,7 @@ const DiscordChat = ({ chat }) => {
   };
 
   const translateText = async (text, targetLanguage) => {
-    const apiKey = "AIzaSyCwqziN0xQTJUXtPRACkRwpMLrbY9P2uHg";
+    const apiKey = "AIzaSyAKce7w0WL4J-pkYl3fXDwIJNzBNOCaGoE";
     const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
     try {
       const response = await axios.post(url, {

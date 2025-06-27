@@ -21,16 +21,18 @@ import { FaGoogle, FaDiscord as DiscordLogo } from "react-icons/fa";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import "./style.css";
 import { SocialIcon } from 'react-social-icons';
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FacebookData from "./FacebookSection";
 import RenderInstagramData from "../services/Instagram";
 import FacebookDataViewer from "./FacebookSection";
-import WhatsAppChatsViewer from "./WhatsappSection";
+import WhatsAppChatsViewer from "./WhatsAppSection";
 import TelegramChatsDisplay from "./TelegramSection";
 import XTweetsDisplay from "./TwitterSection"
 import InstagramUsersViewer from "./InstagramSection"
 import DiscordChatsDisplay from "./disocrdSection";
 import MastodonPostsDisplay from "./mastodonSection";
+import DriveDisplay from "./driveSection";
+import GoogleDriveDisplay from "./driveSection";
 import GoogleUsersDisplay from "./googleSection";
 import GmailOutUsers from "./gmailout";
 import GmailInUsers from "./gmailIn";
@@ -56,9 +58,10 @@ const PastData = () => {
   const [xData, setXData] = useState(null);
   const [facebookData, setFacebookData] = useState(null);
     const [googleDriveData, setGoogleDriveData] = useState(null);
+  const [email, setEmail] = useState("");
 
     const [discordData, setDiscordData] = useState(null);
-
+ 
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
   const handleSectionClick = (section) => {
@@ -502,6 +505,198 @@ const PastData = () => {
 
         </div>
       )}
+         {activeSection === "google" && (
+              <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold text-blue-400 mb-5 text-center">
+                  Google Services
+                </h2>
+                <Tabs defaultValue="search" className="w-full">
+                  <TabsList className="grid w-full grid-cols-5 mb-5">
+                    <TabsTrigger
+                      value="search"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      Google Search
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="youtube"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      YouTube History
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="gmail"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      Gmail
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="drive"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      Google Drive
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="timeline"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      Timeline
+                    </TabsTrigger>
+                  </TabsList>
+      
+      
+      
+                  {/* Google Search Tab */}
+                  <TabsContent value="search" className="space-y-4">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400 mb-4">Google Search</h2>
+                      <div className="mt-4">
+                   
+                       
+                      </div>
+      
+                      <div className=" space-x-4 mt-4">
+     
+                        <button
+                          onClick={() => handleShowDetails("google")}
+                          className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          disabled={isLoading}
+                        >
+                          Show Details
+                        </button>
+                      </div>
+      
+                      {googleData && showDetails && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Search History</h3>
+                          <GoogleInfo data={googleData} />
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+      
+                  {/* YouTube History Tab */}
+                  <TabsContent value="youtube" className="space-y-4">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400 mb-4">YouTube History</h2>
+      
+                      <div className="mt-4">
+                    
+                     
+                        <button
+                          onClick={() => handleShowDetails("youtube")}
+                          className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          disabled={isLoading}
+                        >
+                          Show Details
+                        </button>
+                      </div>
+      
+                      {youtubeData && showDetails && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">YouTube History</h3>
+                          <GoogleInfo data={youtubeData} />
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+      
+                  {/* Gmail Tab */}
+                  <TabsContent value="gmail">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400">Gmail</h2>
+                      <div className="mt-4 ">
+                       
+                     
+                        <button
+                          onClick={() => handleGmailShowDetails("gmailIn")}
+                          className="bg-blue-500 text-white px-6 py-2 gap-6 rounded-md hover:bg-blue-600"
+                        >
+                          Show Gmail Inbox
+                        </button>
+                        <button
+                          onClick={() => handleGmailShowDetails("gmailOut")}
+                          className="bg-blue-500 text-white px-6 py-2 gap-8 rounded-md hover:bg-blue-600"
+                        >
+                          Show Gmail Sent
+                        </button>
+      
+                      </div>
+                      {gmailInData && gmailInData.emails && Array.isArray(gmailInData.emails) && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Chats</h3>
+                          <GmailInUsers users={[gmailInData]} />
+                        </div>
+                      )}
+                      {gmailOutData && gmailOutData.emails && Array.isArray(gmailOutData.emails) && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Chats</h3>
+                          <GmailOutUsers users={[gmailOutData]} />
+                        </div>
+                      )}
+      
+      
+      
+                    </div>
+                  </TabsContent>
+                  {/* Google Drive Tab */}
+                  {/* timeline */}
+                  {/* Google Drive Tab */}
+                  <TabsContent value="drive">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400">Google Drive</h2>
+                      <div className="mt-4">
+                      
+                      
+                        <button
+                          onClick={() => {
+                            console.log("Email:", email); // Debugging
+                            handleShowDetails("drive");
+                          }}
+                          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+                        >
+                          Show Details
+                        </button>
+                      </div>
+                      {googleDriveData && showDetails && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Google Drive Data</h3>
+                         <GoogleDriveDisplay 
+          apiData={Array.isArray(googleDriveData) ? googleDriveData : [googleDriveData]} 
+        />
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="timeline" className="space-y-4">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400 mb-4">Timeline</h2>
+                      <div className="mt-4">
+                       
+                        <button
+                          onClick={() => handleShowDetails("timeline")}
+                          className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          disabled={isLoading}
+                        >
+                          Show Details
+                        </button>
+                      </div>
+      
+                      {timelineData && showDetails && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">
+                            Timeline Data
+                          </h3>
+                          <TimelineDataViewer timelineData={timelineData} />
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+      
+                </Tabs>
+              </div>
+            )}
+      
       {activeSection === "x" && (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold text-blue-500">

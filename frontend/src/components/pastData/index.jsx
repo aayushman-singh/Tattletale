@@ -11,6 +11,12 @@ import {
   Coins,
   X,
 } from "phosphor-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { format, parse } from "date-fns";
+import { CalendarIcon } from 'lucide-react';
 import { FaGoogle, FaDiscord as DiscordLogo } from "react-icons/fa";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import "./style.css";
@@ -25,9 +31,15 @@ import XTweetsDisplay from "./TwitterSection"
 import InstagramUsersViewer from "./InstagramSection"
 import DiscordChatsDisplay from "./disocrdSection";
 import MastodonPostsDisplay from "./mastodonSection";
+import GoogleUsersDisplay from "./googleSection";
+import GmailOutUsers from "./gmailout";
+import GmailInUsers from "./gmailIn";
 const PastData = () => {
   const [activeSection, setActiveSection] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+    const [gmailInData, setGmailInData] = useState(null);
+    const [gmailOutData, setGmailOutData] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [instagramData, setInstagramData] = useState(null);
   const [telegramData, setTelegramData] = useState(null);
@@ -44,7 +56,7 @@ const PastData = () => {
   const [xData, setXData] = useState(null);
   const [facebookData, setFacebookData] = useState(null);
     const [googleDriveData, setGoogleDriveData] = useState(null);
-  
+
     const [discordData, setDiscordData] = useState(null);
 
   const [showFollowers, setShowFollowers] = useState(false);
@@ -157,25 +169,59 @@ const PastData = () => {
 
 
 
+ const handleGmailShowDetails = async (type) => {
+    const port = 3006; // Fixed port for Gmail
+    const platformConfig = {
+      gmailIn: "/gmailIn/users/",
+      gmailOut: "/gmailOut/users/",
+    };
+
+    // Validate email input
+    
 
 
 
+    // Determine the correct endpoint based on the type
+    const endpoint = platformConfig[type];
+    if (!endpoint) {
+      console.error(`Unsupported Gmail type: ${type}`);
+      showAlert("Invalid Gmail type selected", "error");
+      return;
+    }
 
-  // const renderDropdown = (platform) => (
-  //   <select
-  //     id={`${platform}Dropdown`}
-  //     className="w-full p-3 mt-4 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-  //   >
-  //     <option value="1">1</option>
-  //     <option value="3">3</option>
-  //     <option value="5">5</option>
-  //     <option value="10">10</option>
-  //     <option value="20">20</option>
-  //     <option value="50">50</option>
-  //     <option value="100">100</option>
-  //     <option value="200">200</option>
-  //   </select>
-  // );
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:${port}${endpoint}`
+      );
+
+      if (!response.ok) {
+        const errorDetails = await response.text();
+        console.error(`Failed to fetch Gmail ${type} data:`, errorDetails);
+        throw new Error(`Failed to fetch Gmail ${type} data: ${errorDetails}`);
+      }
+
+      const data = await response.json();
+
+      // Update state based on the Gmail type
+      if (type === "gmailIn") {
+        setGmailInData(data);
+      } else if (type === "gmailOut") {
+        setGmailOutData(data);
+      }
+
+      setShowDetails(true);
+      showAlert(`${type} data fetched successfully`, "success");
+    } catch (error) {
+      console.error(`Error fetching ${type} data:`, error);
+      showAlert("Failed to fetch Gmail data. Please try again.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8 pt-20 relative">
@@ -536,6 +582,212 @@ const PastData = () => {
           </div>
         </div>
       )}
+       {activeSection === "google" && (
+              <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold text-blue-400 mb-5 text-center">
+                  Google Services
+                </h2>
+                <Tabs defaultValue="search" className="w-full">
+                  <TabsList className="grid w-full grid-cols-5 mb-5">
+                    <TabsTrigger
+                      value="search"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      Google Search
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="youtube"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      YouTube History
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="gmail"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      Gmail
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="drive"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      Google Drive
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="timeline"
+                      className="text-white bg-gray-700 hover:bg-gray-600"
+                    >
+                      Timeline
+                    </TabsTrigger>
+                  </TabsList>
+      
+      
+      
+                  {/* Google Search Tab */}
+                  <TabsContent value="search" className="space-y-4">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400 mb-4">Google Search</h2>
+                      <div className="mt-4">
+                        <label className="text-gray-400 text-sm">Google Search Email</label>
+                       
+                      </div>
+      
+                   
+      
+                 
+      
+                      <div className="flex space-x-4 mt-4">
+                    
+                        <button
+                          onClick={() => handleShowDetails("google")}
+                          className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          disabled={isLoading}
+                        >
+                          Show Details
+                        </button>
+                      </div>
+      
+                      {googleData && showDetails && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Search History</h3>
+                          <GoogleUsersDisplay apiData={googleData} />
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+      
+                  {/* YouTube History Tab */}
+                  <TabsContent value="youtube" className="space-y-4">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400 mb-4">YouTube History</h2>
+      
+                      <div className="mt-4">
+                        <label className="text-gray-400 text-sm">YouTube Email</label>
+                    
+                      </div>
+      
+                    
+      
+      
+      
+                      <div className="flex space-x-4 mt-4">
+                        <button
+                          onClick={() => handleShowDetails("youtube")}
+                          className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          disabled={isLoading}
+                        >
+                          Show Details
+                        </button>
+                      </div>
+      
+                      {youtubeData && showDetails && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">YouTube History</h3>
+                          <GoogleInfo data={youtubeData} />
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+      
+                  {/* Gmail Tab */}
+                  <TabsContent value="gmail">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400">Gmail</h2>
+                      <div className="mt-4">
+                        <label className="text-gray-400 text-sm">Email Address</label>
+      
+      
+                      </div>
+                      <div className="flex space-x-4 mt-4">
+                        <button
+                          onClick={() => handleGmailShowDetails("gmailIn")}
+                          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+                        >
+                          Show Gmail Inbox
+                        </button>
+                        <button
+                          onClick={() => handleGmailShowDetails("gmailOut")}
+                          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+                        >
+                          Show Gmail Sent
+                        </button>
+      
+                      </div>
+                      {gmailInData && Array.isArray(gmailInData) && gmailInData.length > 0 && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Chats</h3>
+                          <GmailInUsers users={gmailInData} />
+                        </div>
+                      )}
+                    {gmailOutData && Array.isArray(gmailOutData) && gmailOutData.length > 0 && (
+  <div className="mt-6">
+    <h3 className="text-xl font-semibold text-blue-300 mb-4">Chats</h3>
+    <GmailOutUsers users={gmailOutData} />
+  </div>
+)}
+      
+      
+      
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="drive">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400">Google Drive</h2>
+                      <div className="mt-4">
+                        <label className="text-gray-400 text-sm">Email Address</label>
+                      </div>
+                      <div className="flex space-x-4 mt-4">
+                        <button
+                          onClick={() => {
+                            console.log("Email:", email); // Debugging
+                            handleShowDetails("drive");
+                          }}
+                          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+                        >
+                          Show Details
+                        </button>
+                      </div>
+                      {googleDriveData && showDetails && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Google Drive Data</h3>
+                          <GoogleDriveUsers users={[googleDriveData]} />
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="timeline" className="space-y-4">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold text-blue-400 mb-4">Timeline</h2>
+                      <div className="mt-4">
+                        <label className="text-gray-400 text-sm">Google Account Email</label>
+                      </div>
+      
+      
+      
+                      <div className="flex space-x-4 mt-4">
+                        <button
+                          onClick={() => handleShowDetails("timeline")}
+                          className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          disabled={isLoading}
+                        >
+                          Show Details
+                        </button>
+                      </div>
+      
+                      {timelineData && showDetails && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold text-blue-300 mb-4">
+                            Timeline Data
+                          </h3>
+                          <TimelineDataViewer timelineData={timelineData} />
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+      
+                </Tabs>
+              </div>
+            )}
    {activeSection === "discord" && (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold text-blue-600">Discord</h2>

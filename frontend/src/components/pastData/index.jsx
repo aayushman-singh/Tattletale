@@ -35,6 +35,8 @@ import GoogleDriveDisplay from "./driveSection";
 import GoogleUsersDisplay from "./googleSection";
 import GmailOutUsers from "./gmailout";
 import GmailInUsers from "./gmailIn";
+import GoogleDriveUsers from "./gdrive";
+import TimelineDataViewer from "./timeline";
 const PastData = () => {
   const [activeSection, setActiveSection] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -753,7 +755,7 @@ const PastData = () => {
                       {googleDriveData && showDetails && (
                         <div className="mt-6">
                           <h3 className="text-xl font-semibold text-blue-300 mb-4">Google Drive Data</h3>
-                          <GoogleDriveUsers users={[googleDriveData]} />
+                          <GoogleDriveUsers users={googleDriveData} />
                         </div>
                       )}
                     </div>
@@ -777,14 +779,14 @@ const PastData = () => {
                         </button>
                       </div>
       
-                      {timelineData && showDetails && (
-                        <div className="mt-6">
-                          <h3 className="text-xl font-semibold text-blue-300 mb-4">
-                            Timeline Data
-                          </h3>
-                          <TimelineDataViewer timelineData={timelineData} />
-                        </div>
-                      )}
+           {timelineData && timelineData.length > 0 && showDetails && (
+  <div className="mt-6 space-y-8">
+    <h3 className="text-xl font-semibold text-blue-300 mb-4">Timeline Data</h3>
+    {timelineData.map((user, index) => (
+      <TimelineDataViewer key={index} timelineData={user} />
+    ))}
+  </div>
+)}
                     </div>
                   </TabsContent>
       

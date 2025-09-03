@@ -11,6 +11,7 @@ import tempfile
 import shutil
 from urllib.parse import urlparse
 import time
+from reportlab.platypus import Table, TableStyle
 
 class WhatsAppDataReport:
     def __init__(self):
@@ -260,6 +261,16 @@ class WhatsAppDataReport:
 
         return story
 
+    def get_url_and_label(self, item):
+        """Return (url, label) for a media/files/link item, robust to string or dict."""
+        if isinstance(item, dict):
+            url = item.get('url', '')
+            label = item.get('filename', url)
+        else:
+            url = str(item)
+            label = url
+        return url, label
+
     def generate_report(self, username, output_path):
         """Generate the complete report."""
         try:
@@ -280,33 +291,149 @@ class WhatsAppDataReport:
 
             story = []
 
-            # Official Header Page
+            # --- Cover/Header Page ---
             story.append(Paragraph("CONFIDENTIAL", self.styles['CaseTitle']))
             story.append(Spacer(1, 30))
             story.append(Paragraph("Digital Evidence Report", self.styles['OfficialHeader']))
             story.append(Spacer(1, 20))
             story.append(Paragraph("WhatsApp Account Investigation", self.styles['OfficialHeader']))
             story.append(Spacer(1, 40))
-            
-            # Case Information
+
+            # --- Subject Information ---
             story.append(Paragraph("CASE DETAILS", self.styles['SectionHeader']))
             story.append(Paragraph(f"Subject Username: {username}", self.styles['DataHeader']))
+            last_updated = user_data.get('lastUpdated')
+            if last_updated:
+                story.append(Paragraph(f"Last Updated: {last_updated}", self.styles['Content']))
             story.append(Paragraph(f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", self.styles['Content']))
             story.append(Paragraph(f"Report Reference: WA-{datetime.now().strftime('%Y%m%d-%H%M%S')}", self.styles['Content']))
+            story.append(Spacer(1, 20))
+
+            # --- Summary Section ---
+            chats = user_data.get('chats', [])
+            total_chats = len(chats)
+            total_messages = sum(len(chat.get('messages', [])) for chat in chats)
+            total_screenshots = sum(len(chat.get('screenshots', [])) for chat in chats)
+            media = user_data.get('media', {})
+            files = user_data.get('files', {})
+            total_media = len(media.get('media', []))
+            total_docs = len(media.get('docs', []))
+            total_links = len(media.get('links', []))
+            total_files_media = len(files.get('media', []))
+            total_files_docs = len(files.get('docs', []))
+            total_files_links = len(files.get('links', []))
+            story.append(Paragraph("SUMMARY", self.styles['SectionHeader']))
+            summary_data = [
+                ["Total Chats", str(total_chats)],
+                ["Total Messages", str(total_messages)],
+                ["Total Screenshots", str(total_screenshots)],
+                ["Media Files (media)", str(total_media)],
+                ["Documents (media)", str(total_docs)],
+                ["Links (media)", str(total_links)],
+                ["Media Files (files)", str(total_files_media)],
+                ["Documents (files)", str(total_files_docs)],
+                ["Links (files)", str(total_files_links)],
+            ]
+            summary_table = Table(summary_data, colWidths=[2.5*inch, 2*inch])
+            summary_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            story.append(summary_table)
+            story.append(Spacer(1, 20))
+
+            # --- Evidence Index ---
+            story.append(Paragraph("EVIDENCE INDEX", self.styles['SectionHeader']))
+            index_data = [["#", "Chat With", "#Messages", "#Screenshots"]]
+            for idx, chat in enumerate(chats, 1):
+                index_data.append([
+                    str(idx),
+                    chat.get('receiverUsername', 'Unknown'),
+                    str(len(chat.get('messages', []))),
+                    str(len(chat.get('screenshots', [])))
+                ])
+            index_table = Table(index_data, colWidths=[0.5*inch, 2.5*inch, 1*inch, 1*inch])
+            index_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            story.append(index_table)
             story.append(PageBreak())
 
-            # Evidence Index
-            story.append(Paragraph("1. Subject Information", self.styles['DataHeader']))
-            story.append(Paragraph("2. Visual Evidence (Screenshots)", self.styles['DataHeader']))
-            story.append(Paragraph("3. Communications (Chat History)", self.styles['DataHeader']))
+            # --- Media/Files Section ---
+            story.append(Paragraph("MEDIA & FILES", self.styles['SectionHeader']))
+            def add_media_list(title, items):
+                if items:
+                    story.append(Paragraph(title, self.styles['DataHeader']))
+                    for i, item in enumerate(items, 1):
+                        url, label = self.get_url_and_label(item)
+                        if url:
+                            story.append(Paragraph(
+                                f"• <link href='{url}'><font color='blue'><u>{label}</u></font></link>",
+                                self.styles['Content']
+                            ))
+            add_media_list("Media Files (media)", media.get('media', []))
+            add_media_list("Documents (media)", media.get('docs', []))
+            add_media_list("Links (media)", media.get('links', []))
+            add_media_list("Media Files (files)", files.get('media', []))
+            add_media_list("Documents (files)", files.get('docs', []))
+            add_media_list("Links (files)", files.get('links', []))
+            story.append(PageBreak())
 
-            # Add Chats Section
-            if user_data.get('chats'):
-            # First add screenshots
-             story.extend(self.format_screenshots_section(user_data['chats']))
-            # Then add chat logs
-            story.extend(self.format_chat_section(user_data['chats']))
-
+            # --- Chats Section ---
+            story.append(Paragraph("COMMUNICATION RECORDS", self.styles['SectionHeader']))
+            story.append(Spacer(1, 20))
+            for idx, chat in enumerate(chats, 1):
+                from reportlab.lib.colors import HexColor
+                chat_block_bg = HexColor('#F0F8FF')
+                chat_block = []
+                chat_block.append(Paragraph(f"<b>Communication with:</b> {chat.get('receiverUsername', 'Unknown')}", self.styles['DataHeader']))
+                # Messages as Paragraphs (not a table)
+                messages = chat.get('messages', [])
+                if messages:
+                    chat_block.append(Paragraph("<b>Messages:</b>", self.styles['Content']))
+                    for msg in messages:
+                        msg_text = f"<b>{msg.get('type', '')}</b>: {msg.get('message', '')}"
+                        if msg.get('timestamp'):
+                            msg_text += f" <font size=8 color='grey'>[{msg['timestamp']}]</font>"
+                        if msg.get('chatLogURL'):
+                            msg_text += f" <link href='{msg['chatLogURL']}'><font color='blue'><u>[Log]</u></font></link>"
+                        chat_block.append(Paragraph(msg_text, self.styles['ChatContent']))
+                # Screenshots
+                screenshots = chat.get('screenshots', [])
+                if screenshots:
+                    chat_block.append(Paragraph("<b>Visual Evidence:</b>", self.styles['Content']))
+                    for screen_idx, screenshot_url in enumerate(screenshots, 1):
+                        local_path = self.download_file(screenshot_url)
+                        if local_path and local_path.endswith(('.jpg', '.jpeg', '.png')):
+                            img = Image(local_path, width=6*inch, height=4*inch)
+                            chat_block.append(img)
+                            chat_block.append(Paragraph(
+                                f"Evidence ID: SCRN-{datetime.now().strftime('%Y%m%d')}-{idx}-{screen_idx}",
+                                self.styles['EvidenceLabel']
+                            ))
+                            chat_block.append(Spacer(1, 10))
+                # Render chat block with background
+                chat_table = Table([[b] for b in chat_block], colWidths=[6.5*inch])
+                chat_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), chat_block_bg),
+                    ('BOX', (0, 0), (-1, -1), 1, colors.lightblue),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ]))
+                story.append(chat_table)
+                story.append(Spacer(1, 20))
             # Add footer to each page
             def add_page_number(canvas, doc):
                 canvas.saveState()

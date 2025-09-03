@@ -1,8 +1,8 @@
 from pymongo import MongoClient
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak
 from reportlab.lib.units import inch
 from datetime import datetime
 import os
@@ -11,7 +11,6 @@ import tempfile
 import shutil
 from urllib.parse import urlparse
 import time
-from reportlab.lib.pagesizes import A4
 
 # MongoDB Configuration
 MONGO_URI=YOUR_MONGO_URI_HERE
@@ -30,39 +29,28 @@ class FacebookDataReport:
         except Exception as e:
             print(f"Error connecting to MongoDB: {str(e)}")
             raise
-        
         self.styles = getSampleStyleSheet()
         self._init_styles()
 
     def _init_styles(self):
-        """Initialize custom styles for the PDF."""
-        # Title Style
         self.styles.add(ParagraphStyle(
-            name='CaseTitle',
+            name='NIATitle',
             parent=self.styles['Heading1'],
-            fontSize=28,
-            spaceAfter=30,
-            textColor=colors.HexColor('#000000'),
-            alignment=1,  # Center alignment
-            fontName='Helvetica-Bold'
-        ))
-        
-        # Official Header Style
-        self.styles.add(ParagraphStyle(
-            name='OfficialHeader',
-            parent=self.styles['Heading2'],
-            fontSize=16,
-            spaceAfter=20,
-            textColor=colors.HexColor('#000000'),
-            borderWidth=2,
-            borderColor=colors.HexColor('#000000'),
-            borderPadding=15,
-            backColor=colors.HexColor('#F5F5F5'),
+            fontSize=32,
+            spaceAfter=40,
+            textColor=colors.HexColor('#002060'),
             alignment=1,
             fontName='Helvetica-Bold'
         ))
-        
-        # Section Headers
+        self.styles.add(ParagraphStyle(
+            name='NIAHeader',
+            parent=self.styles['Heading2'],
+            fontSize=18,
+            spaceAfter=20,
+            textColor=colors.HexColor('#002060'),
+            alignment=1,
+            fontName='Helvetica-Bold'
+        ))
         self.styles.add(ParagraphStyle(
             name='SectionHeader',
             parent=self.styles['Heading2'],
@@ -75,8 +63,6 @@ class FacebookDataReport:
             backColor=colors.HexColor('#E8E8E8'),
             fontName='Helvetica-Bold'
         ))
-        
-        # Data Headers
         self.styles.add(ParagraphStyle(
             name='DataHeader',
             parent=self.styles['Heading3'],
@@ -85,8 +71,6 @@ class FacebookDataReport:
             textColor=colors.HexColor('#000000'),
             fontName='Helvetica-Bold'
         ))
-        
-        # Content Style
         self.styles.add(ParagraphStyle(
             name='Content',
             parent=self.styles['Normal'],
@@ -95,8 +79,6 @@ class FacebookDataReport:
             textColor=colors.HexColor('#000000'),
             fontName='Helvetica'
         ))
-        
-        # Evidence Label Style
         self.styles.add(ParagraphStyle(
             name='EvidenceLabel',
             parent=self.styles['Normal'],
@@ -104,243 +86,273 @@ class FacebookDataReport:
             textColor=colors.HexColor('#666666'),
             fontName='Helvetica-Oblique'
         ))
+        self.styles.add(ParagraphStyle(
+            name='Footer',
+            parent=self.styles['Normal'],
+            fontSize=9,
+            textColor=colors.HexColor('#888888'),
+            alignment=1,
+            fontName='Helvetica-Oblique'
+        ))
 
     def download_file(self, url):
-        """Download a file from URL and return the local path."""
         try:
             response = requests.get(url, stream=True)
             response.raise_for_status()
-            
             filename = os.path.basename(urlparse(url).path)
             if not filename:
                 filename = f"file_{int(time.time())}"
-            
             content_type = response.headers.get('content-type', '')
             if 'image' in content_type or url.endswith(('.png', '.jpg', '.jpeg')):
                 if not filename.endswith(('.jpg', '.png', '.jpeg')):
                     filename += '.png'
-            elif 'text' in content_type:
-                if not filename.endswith('.txt'):
-                    filename += '.txt'
-            
             local_path = os.path.join(self.temp_dir, filename)
-            
             with open(local_path, 'wb') as f:
                 shutil.copyfileobj(response.raw, f)
-            
             return local_path
         except Exception as e:
             print(f"Error downloading file from {url}: {str(e)}")
             return None
 
-    def process_text_file(self, file_path):
-        """Process and read content from a text file."""
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return f.read()
-        except Exception as e:
-            print(f"Error reading text file {file_path}: {str(e)}")
-            return "Error reading file content"
-
-    def format_friends_section(self, friends):
-        """Format friends section for the report."""
-        story = []
-        story.append(Paragraph("KNOWN ASSOCIATES", self.styles['SectionHeader']))
+    def add_cover_page(self, story, username):
+        story.append(Paragraph("National Investigation Agency (NIA)", self.styles['NIATitle']))
         story.append(Spacer(1, 20))
+        story.append(Paragraph("Social Media User Data Report", self.styles['NIAHeader']))
+        story.append(Spacer(1, 40))
+        story.append(Paragraph(f"Platform: Facebook", self.styles['Content']))
+        story.append(Paragraph(f"Subject Username: <b>{username}</b>", self.styles['Content']))
+        story.append(Paragraph(f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", self.styles['Content']))
+        story.append(Spacer(1, 60))
+        story.append(Paragraph("<i>Confidential: For Official Use Only</i>", self.styles['Footer']))
+        story.append(PageBreak())
 
-        for friend in friends:
-            story.append(Paragraph(f"Associate #{friend['index']}", self.styles['DataHeader']))
-            story.append(Paragraph(f"Name: {friend['userName']}", self.styles['Content']))
-            story.append(Paragraph(f"Profile: {friend['profileUrl']}", self.styles['Content']))
-            
+    def format_profile_section(self, username, profile_url):
+        story = []
+        story.append(Paragraph("PROFILE INFORMATION", self.styles['SectionHeader']))
+        story.append(Spacer(1, 20))
+        story.append(Paragraph(f"Username: {username}", self.styles['DataHeader']))
+        if profile_url:
+            local_path = self.download_file(profile_url)
+            if local_path and local_path.endswith(('.jpg', '.jpeg', '.png')):
+                img = Image(local_path, width=2*inch, height=2*inch)
+                story.append(img)
+                story.append(Paragraph(
+                    f"Evidence ID: PROFILE-{datetime.now().strftime('%Y%m%d')}", 
+                    self.styles['EvidenceLabel']
+                ))
+            else:
+                story.append(Paragraph(
+                    "Image could not be retrieved due to access restrictions.",
+                    self.styles['EvidenceLabel']
+                ))
+        return story
+
+    def format_friends_section(self, friends_list):
+        story = []
+        story.append(Paragraph("FRIENDS LIST", self.styles['SectionHeader']))
+        story.append(Spacer(1, 20))
+        if not friends_list:
+            story.append(Paragraph("No friends data available", self.styles['Content']))
+            return story
+        for friend in friends_list:
+            story.append(Paragraph(f"Friend #{friend.get('index', '-')}", self.styles['DataHeader']))
+            story.append(Paragraph(f"Name: {friend.get('userName', '-')}", self.styles['Content']))
+            story.append(Paragraph(f"Profile URL: {friend.get('profileUrl', '-')}", self.styles['Content']))
             if friend.get('profilePicUrl'):
                 local_path = self.download_file(friend['profilePicUrl'])
                 if local_path and local_path.endswith(('.jpg', '.jpeg', '.png')):
                     img = Image(local_path, width=2*inch, height=2*inch)
                     story.append(img)
                     story.append(Paragraph(
-                        f"Evidence ID: ASSOC-{datetime.now().strftime('%Y%m%d')}-{friend['index']}", 
+                        f"Evidence ID: FRIEND-{datetime.now().strftime('%Y%m%d')}-{friend.get('index', '-')}", 
                         self.styles['EvidenceLabel']
                     ))
-            
+                else:
+                    story.append(Paragraph(
+                        "Image could not be retrieved due to access restrictions.",
+                        self.styles['EvidenceLabel']
+                    ))
             story.append(Spacer(1, 20))
-
         return story
 
     def format_posts_section(self, posts):
-        """Format posts section with new post structure."""
         story = []
-        story.append(Paragraph("DIGITAL CONTENT", self.styles['SectionHeader']))
+        story.append(Paragraph("POSTS", self.styles['SectionHeader']))
         story.append(Spacer(1, 20))
-
-        # Sort posts by their numerical order
-        post_keys = sorted(posts.keys(), key=lambda x: int(x.split('_')[1]))
-        
-        for post_key in post_keys:
-            post_data = posts[post_key]
-            post_number = post_key.split('_')[1]
-            
-            story.append(Paragraph(f"Post Evidence #{post_number}", self.styles['DataHeader']))
-            
-            # Handle PNG URL
-            if post_data.get('png'):
-                local_path = self.download_file(post_data['png'])
-                if local_path:
-                    try:
-                        img = Image(local_path, width=6*inch, height=4*inch)
-                        story.append(img)
-                        story.append(Paragraph(
-                            f"Evidence ID: POST-{datetime.now().strftime('%Y%m%d')}-{post_number}", 
-                            self.styles['EvidenceLabel']
-                        ))
-                    except Exception as e:
-                        story.append(Paragraph(f"Error displaying image: {str(e)}", self.styles['Content']))
-            
-            story.append(Spacer(1, 30))
-
-        return story
-
-    def format_chats_section(self, chats):
-        """Format chats section for the report."""
-        story = []
-        story.append(Paragraph("COMMUNICATION RECORDS", self.styles['SectionHeader']))
-        story.append(Spacer(1, 20))
-
-        for idx, chat in enumerate(chats, 1):
-            story.append(Paragraph(f"Communication with: {chat['receiverUsername']}", self.styles['DataHeader']))
-            
-            if chat.get('chats'):
-                chat_log_path = self.download_file(chat['chats'])
-                if chat_log_path:
-                    content = self.process_text_file(chat_log_path)
-                    story.append(Paragraph("Message Log:", self.styles['Content']))
-                    story.append(Paragraph(content, self.styles['Content']))
+        if not posts:
+            story.append(Paragraph("No posts data available", self.styles['Content']))
+            return story
+        for post in posts:
+            story.append(Paragraph(f"Post #{post.get('postIndex', '-')}", self.styles['DataHeader']))
+            story.append(Paragraph(f"Timestamp: {post.get('timestamp', '-')}", self.styles['Content']))
+            if post.get('s3Url'):
+                local_path = self.download_file(post['s3Url'])
+                if local_path and local_path.endswith(('.jpg', '.jpeg', '.png')):
+                    img = Image(local_path, width=6*inch, height=4*inch)
+                    story.append(img)
                     story.append(Paragraph(
-                        f"Evidence ID: CHAT-{datetime.now().strftime('%Y%m%d')}-{idx}", 
+                        f"Evidence ID: POST-{datetime.now().strftime('%Y%m%d')}-{post.get('postIndex', '-')}", 
                         self.styles['EvidenceLabel']
                     ))
-            
-            if chat.get('screenshots'):
-                story.append(Paragraph("Visual Evidence:", self.styles['Content']))
-                for screen_idx, screenshot_url in enumerate(chat['screenshots'], 1):
-                    local_path = self.download_file(screenshot_url)
-                    if local_path and local_path.endswith(('.jpg', '.jpeg', '.png')):
-                        img = Image(local_path, width=6*inch, height=4*inch)
-                        story.append(img)
-                        story.append(Paragraph(
-                            f"Evidence ID: SCRN-{datetime.now().strftime('%Y%m%d')}-{idx}-{screen_idx}", 
-                            self.styles['EvidenceLabel']
-                        ))
-                        story.append(Spacer(1, 10))
-            
-            story.append(PageBreak())
-
+                else:
+                    story.append(Paragraph(
+                        "Image could not be retrieved due to access restrictions.",
+                        self.styles['EvidenceLabel']
+                    ))
+            story.append(Spacer(1, 20))
         return story
 
+    def format_timelines_section(self, timelines):
+        story = []
+        story.append(Paragraph("TIMELINES", self.styles['SectionHeader']))
+        story.append(Spacer(1, 20))
+        if not timelines:
+            story.append(Paragraph("No timeline data available", self.styles['Content']))
+            return story
+        for key, url in timelines.items():
+            story.append(Paragraph(f"Timeline: {key}", self.styles['DataHeader']))
+            story.append(Paragraph(f"URL: {url}", self.styles['Content']))
+            story.append(Spacer(1, 10))
+        return story
+
+    def format_chats_section(self, chats_section):
+        story = []
+        story.append(Paragraph("CHATS / MESSAGES", self.styles['SectionHeader']))
+        story.append(Spacer(1, 20))
+        if not chats_section:
+            story.append(Paragraph("No chat/message data available", self.styles['Content']))
+            return story
+        for idx, chat in enumerate(chats_section, 1):
+            story.append(Paragraph(f"Chat #{idx}", self.styles['DataHeader']))
+            story.append(Paragraph(f"Receiver Username: {chat.get('receiverUsername', '-')}", self.styles['Content']))
+            if chat.get('lastUpdated'):
+                story.append(Paragraph(f"Last Updated: {chat['lastUpdated']}", self.styles['Content']))
+            if chat.get('chatLogURL'):
+                story.append(Paragraph(f"Chat Log URL: {chat['chatLogURL']}", self.styles['Content']))
+            if chat.get('media'):
+                story.append(Paragraph(f"Media: {chat['media']}", self.styles['Content']))
+            # Messages array
+            if chat.get('messages'):
+                story.append(Paragraph("Messages:", self.styles['Content']))
+                for m_idx, msg in enumerate(chat['messages'], 1):
+                    story.append(Paragraph(f"{m_idx}. {msg}", self.styles['Content']))
+            # Screenshots
+            if chat.get('screenshots'):
+                story.append(Paragraph("Screenshots:", self.styles['Content']))
+                for s_idx, screenshot_url in enumerate(chat['screenshots'], 1):
+                    local_path = self.download_file(screenshot_url)
+                    if local_path and local_path.endswith(('.jpg', '.jpeg', '.png')):
+                        img = Image(local_path, width=4*inch, height=3*inch)
+                        story.append(img)
+                        story.append(Paragraph(
+                            f"Evidence ID: CHAT-SHOT-{datetime.now().strftime('%Y%m%d')}-{idx}-{s_idx}",
+                            self.styles['EvidenceLabel']
+                        ))
+                    else:
+                        story.append(Paragraph(
+                            "Image could not be retrieved due to access restrictions.",
+                            self.styles['EvidenceLabel']
+                        ))
+            story.append(Spacer(1, 20))
+        return story
+
+    def extract_actual_structure(self, user_data):
+        # Extract profile and timelines from chats
+        profile_url = None
+        timelines = {}
+        chats_section = []
+        if 'chats' in user_data:
+            for chat in user_data['chats']:
+                # Profile
+                if 'profile' in chat:
+                    profile_url = chat['profile']
+                # Timelines
+                for k, v in chat.items():
+                    if k.startswith('timeline'):
+                        timelines[k] = v
+                # Chats/Messages
+                if 'receiverUsername' in chat:
+                    chats_section.append({
+                        'receiverUsername': chat.get('receiverUsername'),
+                        'chatLogURL': chat.get('chatLogURL'),
+                        'messages': chat.get('messages', []),
+                        'screenshots': chat.get('screenshots', []),
+                        'lastUpdated': chat.get('lastUpdated'),
+                        'media': chat.get('media')
+                    })
+        # Extract friends
+        friends_list = user_data.get('friends_list', [])
+        # Extract posts
+        posts = []
+        for k, v in user_data.items():
+            if k.startswith('post_') and isinstance(v, dict):
+                post_obj = v.copy()
+                post_obj['postIndex'] = int(k.split('_')[1]) if '_' in k and k.split('_')[1].isdigit() else 0
+                posts.append(post_obj)
+        posts.sort(key=lambda x: x.get('postIndex', 0))
+        username = user_data.get('username', '-')
+        return username, profile_url, friends_list, posts, timelines, chats_section
+
     def generate_report(self, username, output_path):
-        """Generate the complete report."""
         try:
             user_data = self.collection.find_one({"username": username})
             if not user_data:
                 raise ValueError(f"No data found for username: {username}")
-
             os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else '.', exist_ok=True)
-
             doc = SimpleDocTemplate(
                 output_path,
-                pagesize=A4,
-                rightMargin=50,
-                leftMargin=50,
-                topMargin=50,
-                bottomMargin=50
+                pagesize=landscape(A4),
+                rightMargin=30,
+                leftMargin=30,
+                topMargin=30,
+                bottomMargin=30
             )
-
             story = []
-
-            # Official Header Page
-            story.append(Paragraph("CONFIDENTIAL", self.styles['CaseTitle']))
-            story.append(Spacer(1, 30))
-            story.append(Paragraph("Digital Evidence Report", self.styles['OfficialHeader']))
-            story.append(Spacer(1, 20))
-            story.append(Paragraph("Facebook Account Investigation", self.styles['OfficialHeader']))
-            story.append(Spacer(1, 40))
-            
-            # Case Information
-            story.append(Paragraph("CASE DETAILS", self.styles['SectionHeader']))
-            story.append(Paragraph(f"Subject Username: {username}", self.styles['DataHeader']))
-            story.append(Paragraph(f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", self.styles['Content']))
-            story.append(Paragraph(f"Report Reference: FB-{datetime.now().strftime('%Y%m%d-%H%M%S')}", self.styles['Content']))
-            story.append(Spacer(1, 20))
-
-            # Profile Picture
-            if user_data.get('profile'):
-                story.append(Paragraph("SUBJECT PROFILE IMAGE", self.styles['SectionHeader']))
-                local_path = self.download_file(user_data['profile'])
-                if local_path and local_path.endswith(('.jpg', '.jpeg', '.png')):
-                    img = Image(local_path, width=3*inch, height=3*inch)
-                    story.append(img)
-                    story.append(Paragraph(f"Evidence ID: PRF-{datetime.now().strftime('%Y%m%d')}-01", 
-                                        self.styles['EvidenceLabel']))
-            
+            # Add cover/title page
+            self.add_cover_page(story, username)
+            # Extract all details
+            username, profile_url, friends_list, posts, timelines, chats_section = self.extract_actual_structure(user_data)
+            # Add profile section
+            story.extend(self.format_profile_section(username, profile_url))
             story.append(PageBreak())
-
-            # Evidence Index
-            story.append(Paragraph("EVIDENCE INDEX", self.styles['SectionHeader']))
-            story.append(Paragraph("1. Profile Information", self.styles['DataHeader']))
-            story.append(Paragraph("2. Known Associates (Friends List)", self.styles['DataHeader']))
-            story.append(Paragraph("3. Timeline Activity (Posts)", self.styles['DataHeader']))
-            story.append(Paragraph("4. Communications (Chat History)", self.styles['DataHeader']))
+            # Add friends section
+            story.extend(self.format_friends_section(friends_list))
             story.append(PageBreak())
-
-            # Add Friends Section
-            if user_data.get('friends_list'):
-                story.extend(self.format_friends_section(user_data['friends_list']))
-                story.append(PageBreak())
-
-            # Add Posts Section with new format
-            post_keys = [k for k in user_data.keys() if k.startswith('post_')]
-            if post_keys:
-                posts_data = {k: user_data[k] for k in post_keys}
-                story.extend(self.format_posts_section(posts_data))
-                story.append(PageBreak())
-
-            # Add Chats Section
-            if user_data.get('chats'):
-                story.extend(self.format_chats_section(user_data['chats']))
-
-            # Add footer to each page
+            # Add posts section
+            story.extend(self.format_posts_section(posts))
+            story.append(PageBreak())
+            # Add timelines section
+            story.extend(self.format_timelines_section(timelines))
+            story.append(PageBreak())
+            # Add chats/messages section
+            story.extend(self.format_chats_section(chats_section))
+            # Build the PDF with page numbers
             def add_page_number(canvas, doc):
-                canvas.saveState()
-                canvas.setFont('Helvetica', 9)
                 page_num = canvas.getPageNumber()
-                text = f"Page {page_num} | CONFIDENTIAL | Case Reference: FB-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-                canvas.drawString(doc.leftMargin, doc.bottomMargin - 20, text)
+                text = f"Page {page_num} | National Investigation Agency (NIA) - Confidential"
+                canvas.saveState()
+                canvas.setFont('Helvetica-Oblique', 9)
+                canvas.setFillColor(colors.HexColor('#888888'))
+                canvas.drawCentredString(420, 20, text)
                 canvas.restoreState()
-
-            doc.build(story, onFirstPage=add_page_number, onLaterPages=add_page_number)
+            doc.build(story, onLaterPages=add_page_number, onFirstPage=add_page_number)
+            shutil.rmtree(self.temp_dir)
             print(f"Report generated successfully: {output_path}")
-
+            return True
         except Exception as e:
             print(f"Error generating report: {str(e)}")
-            raise
-        finally:
-            try:
+            if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
-            except Exception as e:
-                print(f"Error cleaning up temporary files: {str(e)}")
+            return False
 
 def main():
-    try:
-        report_generator = FacebookDataReport()
-        username = input("Enter username to generate report for: ")
-        output_dir = "reports"
-        output_path = os.path.join(output_dir, f"facebook_report_{username}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
-        report_generator.generate_report(username, output_path)
-    except Exception as e:
-        print(f"Error in main: {str(e)}")
-    finally:
-        if 'report_generator' in locals():
-            report_generator.client.close()
+    report_generator = FacebookDataReport()
+    username = input("Enter Facebook username to generate report: ")
+    output_dir = "reports"
+    os.makedirs(output_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_path = os.path.join(output_dir, f"facebook_report_{username}_{timestamp}.pdf")
+    report_generator.generate_report(username, output_path)
 
 if __name__ == "__main__":
-    main()
+    main() 

@@ -1,149 +1,153 @@
+# Tattletale
 
-# Tattletale 
+Social media feed parser built for investigators — automates capture, documentation, and OSINT enrichment across Instagram, Twitter/X, WhatsApp, Telegram, Facebook, Discord, Mastodon, YouTube, and Google Drive. **Smart India Hackathon '24 winner. Deployed by the National Investigation Agency (NIA), Government of India.**
 
+[![License](https://img.shields.io/badge/License-MIT-c8693d?style=flat)](LICENSE) [![SIH '24](https://img.shields.io/badge/SIH%20'24-Winner-1f6feb?style=flat)](https://www.sih.gov.in/) [![Deployed](https://img.shields.io/badge/Deployed-NIA-3a8a5f?style=flat)](#recognition)
 
+---
 
-Tattletale is a social media feed parser designed to assist investigators by automating the process of capturing and documenting relevant information from platforms like Instagram, Twitter, WhatsApp, and Telegram. By minimizing human error, it ensures accurate evidence collection and simplifies the review process.
+## Why
 
+Manual evidence capture is slow and error-prone. Investigators spend hours screenshotting posts, transcribing handles, and chasing cross-platform identities by hand. Tattletale automates the loop — point it at a target, get a structured report with timeline, location signals, contact graph, and OSINT enrichment ready for case files.
 
+This is the production fork. It is the same codebase that runs in the NIA deployment, published for educational purposes with all live credentials, sessions, and cookie jars rewritten to obvious `YOUR_*` placeholders across the entire git history.
 
+## Status
 
-
-
-
+| Aspect | State |
+| --- | --- |
+| Production deployment | Private NIA fork, hardened |
+| Public repo | Educational reference — runnable with your own credentials |
+| Credentials in history | Scrubbed to placeholders via `git filter-repo` |
+| Live cookie sessions | Removed from history, replaced with `session.example.json` |
+| Personal scrape outputs (PDFs) | Removed from history |
 
 ## Features
 
-- Automated Data Extraction: Scrapes data such as posts, messages, and contact lists from platforms like Instagram, Twitter, WhatsApp, and Telegram.
-- Cross-Platform Compatibility: Available as a web app and a standalone tool for Windows and Android devices.
-- Advanced Search and Filtering: Enables investigators to quickly find specific data points with OSINT (Open Source Intelligence) integration.
-- Secure Data Handling: Data is encrypted and can be uploaded to Google Drive or Blockchain for secure storage.
-- AI/ML Integration: Assists in analyzing and visualizing data for actionable insights
-## flowchart
-<img src="./Readme Section Flowchart.png" alt="Flowchart"/>
+- **9-platform scraping** — Instagram, Twitter/X, WhatsApp, Telegram, Facebook, Discord, Mastodon, YouTube, Google Drive
+- **OSINT integration** — Maigret enrichment across 2,500+ sites
+- **Timeline + location capture** — geo + temporal tagging where the platform exposes it
+- **Cross-identity correlation** — connect handles across platforms
+- **Per-case report generation** — PDF + structured JSON outputs ready for chain of custody
+- **Secure storage** — encrypted at rest, optional Google Drive upload
+- **AI/ML analysis** — entity extraction, summarization, visualization
+- **Multi-surface** — web dashboard, mobile app, standalone Windows scraper
 
-## Tech Stack
+## Flowchart
 
-**Backend:** [Node](https://nodejs.org/en), [Python 3.10.15](https://www.python.org/downloads/release/python-31015/), [Express](https://expressjs.com/), [MongoDB](https://www.mongodb.com/try), [Puppeteer](https://pptr.dev/), [Mongoose](https://mongoosejs.com/docs/), [bcrypt](https://www.npmjs.com/package/bcrypt), [JWT](hatgpt.com)
+<img src="./Readme Section Flowchart.png" alt="Tattletale architecture flowchart"/>
 
-**Frontend:** [React](https://react.dev/), [Flutter](https://flutter.dev/?gad_source=1), [Tailwind](https://tailwindcss.com/)
+## Stack
 
-**Web Scraper** [Typescript](https://www.typescriptlang.org/), [Crawlee](https://crawlee.dev/), [Playwright](https://playwright.dev/)
-## Installation
+**Backend** — Node.js · Python 3.10.15 · Express · MongoDB · Mongoose · bcrypt · JWT
+**Scraping** — TypeScript · Crawlee · Playwright · Telethon · Puppeteer
+**Frontend** — React · Tailwind CSS
+**Mobile** — Flutter · Dart
+**OSINT** — Maigret integration
+**Storage** — MongoDB · AWS S3 · Google Drive (optional)
 
+## Setup
 
-Setup and Installation
-Prerequisites
-Before you begin, ensure you have the following installed:
+### Prerequisites
 
-- Node.js: Version 22.10.0. You can download it from the official website: Node.js.
+| Tool | Version |
+| --- | --- |
+| Node.js | 22.11.0 |
+| Python | 3.10.15 |
+| npm | latest |
+| pip | latest |
 
-npm: The Node Package Manager (npm) comes bundled with Node.js. Make sure it's updated by running:    
-```bash
-  npm install -g npm@latest
-```
-- Python: Version 3.10.15
-Download and install Python 3.10.15 from the official Python website.
-During installation, ensure the "Add Python to PATH" option is selected.
-
-pip: Python Package Installer 
-
-pip is the default package manager for Python and comes bundled with Python. Ensure it’s updated to the latest version by running:
-
-```bash
-python -m pip install --upgrade pip 
-```
-
-Virtual Environment (Optional but Recommended)
-It’s a good practice to create a virtual environment to manage dependencies. Run the following commands:
-
-1.  Create a virtual environment:
-```bash
-cd tattletale
-python -m venv venv  
-
-```
-2.  Activate the virtual environment:
-```bash
-.\venv\Scripts\activate  
-```
-- Installing Dependencies
-Run the following command to install the required dependencies listed in the requirements.txt file:
+### Install
 
 ```bash
-pip install -r requirements.txt  
-  
+git clone https://github.com/aayushman-singh/Tattletale.git
+cd Tattletale
+
+# Python
+python -m venv venv
+# Windows:  .\venv\Scripts\activate
+# Unix/Mac: source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Node (root + subprojects)
+npm install
+cd scraper && npm install && cd ..
+cd frontend && npm install && cd ..
+cd backend && npm install && cd ..
 ```
 
-## Usage
+### Credentials
 
-Step 1: Clone the Repository
-First, clone the repository to your local machine:
-```bash
-  git clone https://github.com/aayushman-singh/tattletale.git
-```
-Go to the project directory
-
-```bash
-  cd tattletale
-```
-
-Install dependencies
-
-```bash
-  npm install
-```
-```bash
-  cd frontend
-  npm install
-```
-```bash
-  cd backend
-  npm install
-```
-
-Start the server
+This repo ships with **example/shim files** showing the expected format. Copy, fill, rename:
 
 ```bash
-  npm run start:all
+cp .env.example .env
+cp google.example.json google.json
+cp session.example.json session.json   # only if you want Playwright cookie-jar mode
 ```
 
-## Scripts
+| Shim file | Represents | How to get the real one |
+| --- | --- | --- |
+| `.env.example` | All API keys + secrets | Per-service signup (AWS, MongoDB, Telegram API, etc.) |
+| `google.example.json` | Google OAuth web client config | `console.cloud.google.com` → APIs & Services → Credentials |
+| `session.example.json` | Playwright cookie jar | Run the platform's headed login flow once |
 
-You can start individual services using the following commands:
+**Telegram session files** — see [SESSIONS.md](SESSIONS.md). Generate per-phone `.session` files via the Telethon login flow. **Never commit them.**
 
-- Python script server:
+### Run
+
 ```bash
-  npm run start:script  
+# Backend API
+cd backend && npm run dev
+
+# Scraper (separate terminal)
+cd scraper && npm run dev
+
+# Frontend (separate terminal)
+cd frontend && npm run dev
+```
+
+## Project structure
 
 ```
-- Authentication server:
-```bash
-  npm run start:auth  
-
+Tattletale/
+├── backend/                Node.js + Express API
+├── scraper/                TypeScript scrapers (Crawlee + Playwright)
+│   └── src/Helpers/        Per-platform helpers (Telegram, WhatsApp, etc.)
+├── frontend/               React + Tailwind dashboard
+├── mobileApp/              Flutter Android/iOS client
+├── mobileScraper/          Flutter scraper variant
+├── docker/                 Container definitions
+├── *.example               Credential shims (copy → rename → fill)
+├── SESSIONS.md             Session file generation + safety
+├── config.ts               TypeScript config loader
+├── requirements.txt        Python deps
+└── package.json            Root deps
 ```
-- Maigret service:
-```bash
-  npm run start:maigret  
 
-```
-- Instagram scraper:
-```bash
-  npm run start:instagram  
+## Security notes
 
-```
-- X scraper:
-```bash
-  npm run start:x  
+- **No live credentials in history.** All `.env`, `google.json`, `session.json`, OAuth tokens, and OAuth client configs across every commit have been rewritten to `YOUR_*` placeholders.
+- **Binary session journals + PDF scrape reports were deleted from history**, not just removed at HEAD.
+- **`.gitignore` excludes** every sensitive pattern by default: `*.session`, `*.env`, `*_token.json`, `*.log`, scrape outputs.
+- If you fork this repo, replace every example credential with your own. Do not ship the example values to production.
+- For a leaked-secret incident response checklist, see [SESSIONS.md](SESSIONS.md#if-a-session-leaks).
 
-```
-- Facebook scraper:
-```bash
-  npm run start:facebook
+## Recognition
 
-```
-- Facebook scraper:
-```bash
-  npm run start:frontend
+- **Smart India Hackathon 2024 — Winner**, National Investigation Agency track
+- Deployed by the **National Investigation Agency**, Government of India
 
-```
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+## Author
+
+Built by [Aayushman Singh](https://aayushman.dev) — engineer building autonomous coding agents, decentralized storage, and surveillance-grade software.
+
+- Portfolio — [aayushman.dev](https://aayushman.dev)
+- GitHub — [@aayushman-singh](https://github.com/aayushman-singh)
+- X — [@aayushman2703](https://x.com/aayushman2703)
+- LinkedIn — [in/aayushman-singh-zz](https://www.linkedin.com/in/aayushman-singh-zz/)

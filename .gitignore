@@ -1,1 +1,81 @@
-# Example log file - real entries scrubbed for privacy.
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+/.aws
+
+# Build outputs
+/.next/
+/dist/
+/build/
+/out/
+/output/
+/storage/
+
+# Python
+/venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.DS_Store
+/.vscode
+/.vercel
+.idea/
+
+# Secrets — NEVER commit. See *.example files for the format.
+*.session
+*.session-journal
+session_*.session*
+*.env
+.env
+.env.*
+!.env.example
+token.json
+drive_token.json
+google.json
+session.json
+client_secret_*.json
+*_token.json
+service-account.json
+
+# Logs
+*.log
+server.log
+followers_log.txt
+following_log.txt
+
+# Personal data / scrape outputs
+*.png
+*.jpg
+*.jpeg
+*.pdf
+/scraper/storage/
+/scraper/src/storage/
+/scraper/__pycache__
+/scraper/.vercel
+/scraper/.actor
+/scraper/storage
+/frontend/maigret/reports/
+/mobileApp/linux/
+
+# WhatsApp scraper artifacts
+/scraper/src/Helpers/Whatsapp/screenshots_chat_*
+
+# User-data dirs from Playwright
+/user-data
+/discord
+/mastodon
+/scraper/fb_context
+
+# Test outputs
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/tests
+/tests-examples
+
+# Internal helper artifacts
+_filter_callback.py

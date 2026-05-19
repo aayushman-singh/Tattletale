@@ -22,12 +22,9 @@ The investigator's job shifts from *capturing* to *reading*.
 
 ## Why this is on GitHub
 
-This is the same codebase the NIA runs. That is unusual — surveillance-grade software almost never gets open-sourced, and the few times it does, the public version is a hollowed-out demo. This one is not.
+There are two versions of Tattletale. The **production version** runs at the NIA — that one is closed, hardened, on private infrastructure. This repo is the **hackathon-winning version** — the codebase that won Smart India Hackathon 2024 (NIA track) and earned the contract that led to the production deployment.
 
-It is public for two reasons:
-
-1. **Teaching.** Most OSINT tutorials stop at one platform and a screenshot. The hard part — session management, rate limits, cross-platform identity correlation, chain-of-custody-grade output — is rarely shown end-to-end. This repo shows it.
-2. **Transparency.** Tools that scrape people deserve to be auditable. If you want to know what the government's investigators can see, read the source.
+It is public because the hackathon version did its job and is no longer the one in the field. Open-sourcing it now is for learning: most OSINT tutorials stop at one platform and a screenshot. The hard parts — session management, rate limits, cross-platform identity correlation, chain-of-custody-grade output — are rarely shown end-to-end. This repo shows them.
 
 What was stripped: live credentials, session cookies, real targets' scrape outputs. What was kept: every line of working logic.
 

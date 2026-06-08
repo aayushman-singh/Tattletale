@@ -1,0 +1,18 @@
+[
+  {
+    "seq": 1,
+    "step": "normalize",
+    "artifact": "report.json",
+    "sha256": "d0136ccd6b09253c401a575070398db4e90e1bb75ac6192c2abda9d946294ab9",
+    "prevHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "entryHash": "d969c2c5f63af9080df3e67a60c379e99b60fd2e87dbcfc0f6b1849aa0c2050d"
+  },
+  {
+    "seq": 2,
+    "step": "render-pdf",
+    "artifact": "report.pdf",
+    "sha256": "fd34b093f5145220445a57058e5e63245de87775b2353d067710fb43997e64a6",
+    "prevHash": "d969c2c5f63af9080df3e67a60c379e99b60fd2e87dbcfc0f6b1849aa0c2050d",
+    "entryHash": "6227699c3486d7b0a728e853dc8a53dc1eb4c07208faee758945accb0b0c05d6"
+  }
+]

@@ -12,5 +12,5 @@ ENV NODE_ENV=production
 ENV PORT=5001
 EXPOSE 5001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
-  CMD wget -qO- http://localhost:5001/api/users >/dev/null 2>&1 || exit 1
+  CMD wget -qO- http://localhost:5001/health >/dev/null 2>&1 || exit 1
 CMD ["node", "server.js"]

@@ -27,9 +27,9 @@ import jwt from 'jsonwebtoken';
 import app from '../server.js';
 import User from '../models/userModel.js';
 
-// JWT secret is hardcoded as "1234" in utils/generateToken.js and
+// JWT secret comes from process.env.JWT_SECRET (set in setup.js for tests).
 // middlewares/authMiddleware.js. Tests forge tokens with the same value.
-const JWT_SECRET = '1234';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const validUser = {
   name: 'Ada Lovelace',

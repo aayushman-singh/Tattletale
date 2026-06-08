@@ -38,6 +38,35 @@ What was stripped: live credentials, session cookies, real targets' scrape outpu
 | Live cookie sessions | Removed from history, replaced with `session.example.json` |
 | Personal scrape outputs (PDFs) | Removed from history |
 
+## Try it — replay demo (no logins, no live scraping)
+
+The live scraper needs nine platform logins and a headed browser, so you can't
+just click "run" on a public deploy. Instead the app ships a **replay mode**: a
+recruiter opens the **`/demo`** route, clicks **Run demo case**, and watches the
+full pipeline — scrape → normalize → **SHA‑256 hash** → append‑only custody log →
+report — execute against **synthetic** target profiles, then downloads the real
+generated **PDF + JSON + chain‑of‑custody manifest**.
+
+```bash
+# One-command local full stack (backend + frontend + mongo):
+docker compose up --build      # then open http://localhost:8080/demo
+
+# Or regenerate a case bundle from the CLI (offline, no DB):
+cd scraper && npm run start:replay -- ana_rivera_dev
+# -> output/golden/ana_rivera_dev/generated/{report.json,report.pdf,manifest.json,custody-log.json}
+```
+
+The custody log is a genuine hash chain (each entry binds the artifact's SHA‑256
+to the previous entry's hash), so the downloadable manifest's **root hash** is
+recomputable and tamper‑evident — change any artifact byte and the root changes.
+It demonstrates the *mechanism* of chain‑of‑custody on data that harms no real
+person. It is **not** court‑grade: the manifest itself isn't cryptographically
+signed and there's no external trust anchor (timestamping authority / HSM) —
+those are the next steps to make it evidentiary, and are out of scope for a demo.
+
+> The golden fixtures under `output/golden/` are 100% invented. No real scraped
+> media ships in this repo.
+
 ## Features
 
 - **9-platform scraping** — Instagram, X/Twitter, WhatsApp, Telegram, Facebook, Discord, Mastodon, YouTube, Google Drive
@@ -211,7 +240,7 @@ Tattletale/
 │   └── src/Helpers/        Per-platform helpers (Telegram, WhatsApp, etc.)
 ├── frontend/               React + Tailwind dashboard
 ├── mobileApp/              Flutter Android/iOS client
-├── mobileScraper/          Flutter scraper variant
+├── mobileScraper/          Appium + WebdriverIO prototype (see note below)
 ├── docker/                 Container definitions
 ├── *.example               Credential shims (copy → rename → fill)
 ├── SESSIONS.md             Session file generation + safety
@@ -219,6 +248,12 @@ Tattletale/
 ├── requirements.txt        Python deps
 └── package.json            Root deps
 ```
+
+> **`mobileScraper/` is a prototype.** It drives a real Android Instagram app via
+> Appium + WebdriverIO against an `emulator-5554` device, used to explore mobile
+> data capture where the web path is blocked. It needs the Android SDK + a running
+> emulator and is **not** wired into the main pipeline or CI. Credentials come from
+> `IG_USERNAME` / `IG_PASSWORD` (throwaway test account only). Treat it as a spike.
 
 ## How this repo was sanitized
 

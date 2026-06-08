@@ -5,6 +5,7 @@
  * This means the backend test suite needs NO external mongod and NO network
  * access beyond the one-time mongodb-memory-server binary download.
  */
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 

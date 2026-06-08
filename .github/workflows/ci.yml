@@ -6,6 +6,20 @@ on:
   pull_request:
 
 jobs:
+  secret-scan:
+    name: secret-scan (gitleaks, working tree)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Scan the committed FILES (not git history). History still contains the
+      # pre-sanitisation secrets and is the maintainer's rotation/scrub problem
+      # (see DECISIONS.md); this gate fails the build if a secret ever lands in
+      # tracked files again. Blocking on purpose.
+      - name: gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz gitleaks
+          ./gitleaks detect --no-git --source . --redact --exit-code 1
+
   backend:
     name: backend (Node 22)
     runs-on: ubuntu-latest
@@ -18,12 +32,12 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm install
       - name: Run tests
         run: npm test
 
   frontend:
-    name: frontend
+    name: frontend (Node 22)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,12 +48,14 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm install
       - name: Run tests
         run: npm test
+      - name: Build
+        run: npm run build
 
-  scraper-typecheck:
-    name: scraper-typecheck
+  scraper:
+    name: scraper (Node 22)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,16 +66,44 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm ci || npm install
-      - name: Type-check
-        run: npx tsc --noEmit || true
+        run: npm install
+      # Real, blocking: the replay + config-helper test suites (node:test via tsx).
+      - name: Run tests
+        run: npm test
 
-  python-lint:
-    name: python-lint
+  scraper-typecheck:
+    name: scraper-typecheck (non-blocking)
+    runs-on: ubuntu-latest
+    # Honest non-blocking: the legacy scraper routes have known pre-existing TS
+    # errors. This surfaces the typecheck status in the UI without faking green
+    # via `|| true`. Tighten to blocking as the routes are cleaned up.
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: scraper
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Type-check
+        run: npm run typecheck
+
+  python:
+    name: python (lint + compile)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Install ruff
         run: pip install ruff
-      - name: Lint
-        run: ruff check frontend/pdf_conv scraper/src/routes || true
+      # Blocking but scoped to real breakage (syntax / undefined names / bad
+      # f-strings) — not style nits — so this gate means "the code can run".
+      - name: Lint (errors only)
+        run: ruff check --select E9,F63,F7,F82 frontend/pdf_conv scraper/src/routes
+      - name: Compile smoke
+        run: python -m compileall -q frontend/pdf_conv scraper/src/routes

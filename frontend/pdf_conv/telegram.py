@@ -18,8 +18,8 @@ from reportlab.platypus.paragraph import Paragraph
 
 # MongoDB connection setup
 MONGO_URI = os.environ["MONGO_CLUSTER_URI"]
-DATABASE_NAME=YOUR_DATABASE_NAME_HERE
-COLLECTION_NAME=YOUR_COLLECTION_NAME_HERE
+DATABASE_NAME="telegramDB"
+COLLECTION_NAME="telegram_users"
 
 class TelegramDataReport:
     def __init__(self):

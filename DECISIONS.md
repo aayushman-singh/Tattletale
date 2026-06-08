@@ -61,6 +61,23 @@ Codex (gpt-5.5, xhigh) returned 8 findings. Disposition:
 7. **`REPLAY_MODE` advertised but unimplemented** → resolved by Phase D (replay-mode actually built).
 8. **No tests for the config helper** → ✅ added `scraper/src/Helpers/__tests__/mongoUri.test.ts`.
 
+## D6 — Final codex review (`codex/20260608-203853-final.md`, verdict was NO-GO)
+
+Codex flagged the cumulative branch. Disposition:
+- **JWT secret hardcoded `1234`** (generateToken.js, authMiddleware.js) → ✅ moved to `process.env.JWT_SECRET`, fails loud if unset; tests set it in setup.
+- **CI fake-green (`|| true`)** → ✅ removed; `npm install` (no lockfiles); scraper now runs its real `npm test`; typecheck is an honest `continue-on-error` job; python gate is errors-only ruff + `compileall`; added a **gitleaks** secret-scan job (blocking, working-tree).
+- **Committed codex review leaked secrets in diff `-` lines** → ✅ scrubbed all `codex/*.md` to findings-only + redacted.
+- **Python shim NameErrors** (`YOUR_DATABASE_NAME_HERE`) → ✅ concrete db/collection names; `compileall` passes.
+- **`x.ts` missing dotenv** → ✅ added (it was the only route lacking it; the other 11 already load config).
+- **Docker healthcheck hit protected `/api/users`** → ✅ added public `/health`, healthcheck points there.
+- **Broken scraper scripts** (`start:dev` undefined, capitalised `src/Instagram.ts`) → ✅ pointed at real route files; `start` runs the replay demo.
+- **Signup 500 on missing fields** → ✅ added validation → 400.
+- **`REPLAY_MODE` contract lie** → ✅ `.env.example` reworded (replay is CLI-driven, the var is only a log marker).
+- **Custody not court-grade** → ✅ README reworded: demonstrates the mechanism (tamper-evident root hash), explicitly not signed/anchored.
+- **Replay demo "disconnected"** → false positive: codex reviewed a diff that excluded `frontend/public/demo/*`; those static files ARE committed and ship in `dist/demo/` (verified by `npm run build`).
+- **Login crash if OAuth provider removed in demo mode** → false positive: no component uses `useGoogleLogin`/`@react-oauth` hooks (grepped), so conditionally omitting the provider is safe.
+- **Deferred (documented for the user, scope/time):** broader backend hardening (rate limiting, centralised error handler, CORS policy); removing `HANDOFF.md`/`STATE.md`/`DECISIONS.md` from the public repo (they are session artifacts — keep private before a public push); the `production fork at NIA` framing is the author's deliberate choice (see README).
+
 ## D4 — Deploy / build constraints (this environment)
 
 - `vercel` CLI and `docker` are not installed, and `java` is absent → live Vercel deploy, local docker-compose boot, and APK signing **cannot be executed here**. All corresponding artifacts (vercel.json, Dockerfiles, docker-compose.yml, CI, replay-mode code, ADRs) are authored and committed so the user can run them in one step. These are documented as blocked-on-user in SESSION_SUMMARY.md.

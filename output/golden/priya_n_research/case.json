@@ -6,7 +6,11 @@
     "displayName": "Priya N.",
     "summary": "Fictional academic researcher persona used to demonstrate the Tattletale replay pipeline.",
     "firstSeen": "2018-01-22",
-    "tags": ["researcher", "academia", "synthetic-demo"]
+    "tags": [
+      "researcher",
+      "academia",
+      "synthetic-demo"
+    ]
   },
   "platforms": [
     {
@@ -68,26 +72,6 @@
           "comments": 18
         }
       ]
-    }
-  ],
-  "crossPlatformMatches": [
-    {
-      "username": "priya_n_research",
-      "platforms": ["x"],
-      "confidence": "high",
-      "evidence": "Primary research account; links preprint and dataset cross-referenced on Mastodon."
-    },
-    {
-      "username": "priya_n",
-      "platforms": ["mastodon"],
-      "confidence": "high",
-      "evidence": "Same display name, posts the dataset announced on X within 24h."
-    },
-    {
-      "username": "priya.reads",
-      "platforms": ["instagram"],
-      "confidence": "low",
-      "evidence": "Shared first name and conference timing; topic overlap is weak (lifestyle vs research)."
     }
   ]
 }

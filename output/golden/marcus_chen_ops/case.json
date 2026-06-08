@@ -6,7 +6,11 @@
     "displayName": "Marcus Chen",
     "summary": "Fictional DevOps/SRE persona used to demonstrate the Tattletale replay pipeline.",
     "firstSeen": "2019-08-01",
-    "tags": ["sre", "devops", "synthetic-demo"]
+    "tags": [
+      "sre",
+      "devops",
+      "synthetic-demo"
+    ]
   },
   "platforms": [
     {
@@ -75,20 +79,6 @@
           "comments": 0
         }
       ]
-    }
-  ],
-  "crossPlatformMatches": [
-    {
-      "username": "marcus_chen_ops",
-      "platforms": ["x", "youtube"],
-      "confidence": "high",
-      "evidence": "YouTube channel links the X account in description; identical persona name and SRE focus."
-    },
-    {
-      "username": "marcus_ops",
-      "platforms": ["telegram"],
-      "confidence": "medium",
-      "evidence": "Channel cross-posts the same dotfiles and incident notes referenced on X."
     }
   ]
 }

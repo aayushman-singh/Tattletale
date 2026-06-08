@@ -3,7 +3,7 @@
   "synthetic": true,
   "notice": "100% synthetic data. This person does not exist. No real account was scraped.",
   "handle": "ana_rivera_dev",
-  "generatedAt": "2026-06-08T16:18:14.639Z",
+  "generatedAt": "2026-06-08T18:06:02.186Z",
   "target": {
     "handle": "ana_rivera_dev",
     "displayName": "Ana Rivera",
@@ -580,5 +580,337 @@
         "cohesion": 0.761
       }
     ]
+  },
+  "brief": {
+    "text": "Ana Rivera (@ana_rivera_dev) presents 2 distinct identities across 4 platforms (instagram, x, mastodon, facebook). The correlation engine links 3 accounts as one person with high cohesion, and flags 1 same-named account as a likely different individual. Activity totals 14 sampled posts and 16,151 followers, concentrated in the evening (peak around 19:00 UTC). Posts appear in English and Spanish. The mapped network spans 11 contacts, 4 of whom appear on more than one platform. First observed 2021-03-14. Themes: developer, open-source, synthetic-demo.",
+    "generator": "extractive",
+    "validated": true,
+    "facts": {
+      "handle": "ana_rivera_dev",
+      "displayName": "Ana Rivera",
+      "platformCount": 4,
+      "platforms": [
+        "instagram",
+        "x",
+        "mastodon",
+        "facebook"
+      ],
+      "totalFollowers": 16151,
+      "totalPosts": 14,
+      "identityCount": 2,
+      "primaryIdentityAccounts": 3,
+      "primaryCohesionBand": "high",
+      "flaggedNamesakes": 1,
+      "peakHourUtc": 19,
+      "activityWindow": "evening",
+      "languages": [
+        "English",
+        "Spanish"
+      ],
+      "topTags": [
+        "developer",
+        "open-source",
+        "synthetic-demo"
+      ],
+      "firstSeen": "2021-03-14",
+      "contactCount": 11,
+      "crossPlatformContacts": 4
+    }
+  },
+  "network": {
+    "nodes": [
+      {
+        "id": "self:facebook",
+        "kind": "self",
+        "label": "facebook",
+        "platform": "facebook",
+        "cluster": 0,
+        "crossPlatform": false,
+        "degree": 2,
+        "x": 500,
+        "y": 250
+      },
+      {
+        "id": "self:instagram",
+        "kind": "self",
+        "label": "instagram",
+        "platform": "instagram",
+        "cluster": 1,
+        "crossPlatform": false,
+        "degree": 5,
+        "x": 570,
+        "y": 320
+      },
+      {
+        "id": "self:mastodon",
+        "kind": "self",
+        "label": "mastodon",
+        "platform": "mastodon",
+        "cluster": 1,
+        "crossPlatform": false,
+        "degree": 4,
+        "x": 500,
+        "y": 390
+      },
+      {
+        "id": "self:x",
+        "kind": "self",
+        "label": "x",
+        "platform": "x",
+        "cluster": 1,
+        "crossPlatform": false,
+        "degree": 6,
+        "x": 430,
+        "y": 320
+      },
+      {
+        "id": "c_compiler_cat",
+        "kind": "contact",
+        "label": "compiler_cat",
+        "platform": "mastodon",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 2,
+        "x": 500,
+        "y": 95
+      },
+      {
+        "id": "c_dev_sam",
+        "kind": "contact",
+        "label": "dev_sam",
+        "platform": "instagram",
+        "cluster": -1,
+        "crossPlatform": true,
+        "degree": 2,
+        "x": 595,
+        "y": 198
+      },
+      {
+        "id": "c_grace_hw",
+        "kind": "contact",
+        "label": "grace_hw",
+        "platform": "mastodon",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 746,
+        "y": 227
+      },
+      {
+        "id": "c_lena_codes",
+        "kind": "contact",
+        "label": "lena_codes",
+        "platform": "mastodon",
+        "cluster": -1,
+        "crossPlatform": true,
+        "degree": 2,
+        "x": 673,
+        "y": 341
+      },
+      {
+        "id": "c_madrid_foodies",
+        "kind": "contact",
+        "label": "madrid_foodies",
+        "platform": "facebook",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 704,
+        "y": 467
+      },
+      {
+        "id": "c_marco_builds",
+        "kind": "contact",
+        "label": "marco_builds",
+        "platform": "x",
+        "cluster": -1,
+        "crossPlatform": true,
+        "degree": 3,
+        "x": 549,
+        "y": 460
+      },
+      {
+        "id": "c_oss_weekly",
+        "kind": "contact",
+        "label": "oss_weekly",
+        "platform": "x",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 424,
+        "y": 536
+      },
+      {
+        "id": "c_pyconf",
+        "kind": "contact",
+        "label": "pyconf",
+        "platform": "x",
+        "cluster": -1,
+        "crossPlatform": true,
+        "degree": 2,
+        "x": 368,
+        "y": 415
+      },
+      {
+        "id": "c_recetas_abuela",
+        "kind": "contact",
+        "label": "recetas_abuela",
+        "platform": "facebook",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 233,
+        "y": 352
+      },
+      {
+        "id": "c_rustlang_news",
+        "kind": "contact",
+        "label": "rustlang_news",
+        "platform": "x",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 254,
+        "y": 227
+      },
+      {
+        "id": "c_tiny_tools_club",
+        "kind": "contact",
+        "label": "tiny_tools_club",
+        "platform": "instagram",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 354,
+        "y": 131
+      }
+    ],
+    "links": [
+      {
+        "source": "self:instagram",
+        "target": "c_dev_sam",
+        "type": "mutual",
+        "timestamp": "2024-10-05T19:30:00Z",
+        "t": 1728156600000
+      },
+      {
+        "source": "self:instagram",
+        "target": "c_pyconf",
+        "type": "follow",
+        "timestamp": "2024-10-08T18:45:00Z",
+        "t": 1728413100000
+      },
+      {
+        "source": "self:mastodon",
+        "target": "c_compiler_cat",
+        "type": "mutual",
+        "timestamp": "2024-10-10T20:20:00Z",
+        "t": 1728591600000
+      },
+      {
+        "source": "self:x",
+        "target": "c_rustlang_news",
+        "type": "follow",
+        "timestamp": "2024-10-12T19:55:00Z",
+        "t": 1728762900000
+      },
+      {
+        "source": "self:x",
+        "target": "c_marco_builds",
+        "type": "mutual",
+        "timestamp": "2024-10-15T20:40:00Z",
+        "t": 1729024800000
+      },
+      {
+        "source": "self:mastodon",
+        "target": "c_lena_codes",
+        "type": "mutual",
+        "timestamp": "2024-10-18T20:05:00Z",
+        "t": 1729281900000
+      },
+      {
+        "source": "self:x",
+        "target": "c_pyconf",
+        "type": "mention",
+        "timestamp": "2024-10-19T21:05:00Z",
+        "t": 1729371900000
+      },
+      {
+        "source": "self:facebook",
+        "target": "c_recetas_abuela",
+        "type": "mutual",
+        "timestamp": "2024-10-20T12:30:00Z",
+        "t": 1729427400000
+      },
+      {
+        "source": "self:x",
+        "target": "c_dev_sam",
+        "type": "reply",
+        "timestamp": "2024-10-22T20:10:00Z",
+        "t": 1729627800000
+      },
+      {
+        "source": "self:x",
+        "target": "c_oss_weekly",
+        "type": "follow",
+        "timestamp": "2024-10-25T20:50:00Z",
+        "t": 1729889400000
+      },
+      {
+        "source": "self:instagram",
+        "target": "c_tiny_tools_club",
+        "type": "mutual",
+        "timestamp": "2024-10-28T18:30:00Z",
+        "t": 1730140200000
+      },
+      {
+        "source": "self:instagram",
+        "target": "c_marco_builds",
+        "type": "message",
+        "timestamp": "2024-11-01T21:15:00Z",
+        "t": 1730495700000
+      },
+      {
+        "source": "self:mastodon",
+        "target": "c_grace_hw",
+        "type": "follow",
+        "timestamp": "2024-11-02T21:40:00Z",
+        "t": 1730583600000
+      },
+      {
+        "source": "self:instagram",
+        "target": "c_lena_codes",
+        "type": "follow",
+        "timestamp": "2024-11-03T19:25:00Z",
+        "t": 1730661900000
+      },
+      {
+        "source": "self:facebook",
+        "target": "c_madrid_foodies",
+        "type": "follow",
+        "timestamp": "2024-11-04T13:10:00Z",
+        "t": 1730725800000
+      },
+      {
+        "source": "self:x",
+        "target": "c_marco_builds",
+        "type": "reply",
+        "timestamp": "2024-11-08T20:15:00Z",
+        "t": 1731096900000
+      },
+      {
+        "source": "self:mastodon",
+        "target": "c_compiler_cat",
+        "type": "reply",
+        "timestamp": "2024-11-11T20:35:00Z",
+        "t": 1731357300000
+      }
+    ],
+    "timeRange": {
+      "startMs": 1728156600000,
+      "endMs": 1731357300000
+    },
+    "contactCount": 11,
+    "crossPlatformContacts": 4
   }
 }

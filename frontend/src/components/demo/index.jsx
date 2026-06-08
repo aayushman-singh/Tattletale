@@ -15,8 +15,11 @@ import {
   Loader2,
   Share2,
   KeyRound,
+  Sparkles,
+  Network,
 } from "lucide-react";
 import IdentityGraph from "./IdentityGraph";
+import NetworkGraph from "./NetworkGraph";
 
 // Replay-mode demo. Pure static: it fetches the pre-generated synthetic bundle
 // from /demo/*.json (served by Vite from frontend/public/demo) and renders the
@@ -25,10 +28,10 @@ import IdentityGraph from "./IdentityGraph";
 
 const PIPELINE_STEPS = [
   { key: "scrape", label: "Scrape (replayed)", icon: Search, blurb: "Load synthetic multi-platform findings from the golden fixture." },
-  { key: "normalize", label: "Normalize", icon: Wand2, blurb: "Fold per-platform data into one normalized case report." },
   { key: "correlate", label: "Correlate identities", icon: Share2, blurb: "Link probable same-person accounts from handle, style, timing & vocabulary." },
+  { key: "network", label: "Map network", icon: Network, blurb: "Build the cross-platform interaction graph over time." },
+  { key: "brief", label: "Brief", icon: Sparkles, blurb: "Summarize the case in one paragraph — validated against the facts." },
   { key: "hash", label: "Hash + sign", icon: Hash, blurb: "SHA-256 every artifact; Ed25519-seal the root hash." },
-  { key: "custody", label: "Chain of custody", icon: ListChecks, blurb: "Append each hash to a tamper-evident hash chain." },
   { key: "report", label: "Report", icon: FileText, blurb: "Emit report, correlation, manifest, custody-log, PDF." },
 ];
 
@@ -217,6 +220,32 @@ const DemoCase = () => {
               </CardContent>
             </Card>
 
+            {/* Intelligence brief */}
+            {report.brief && (
+              <Card className="bg-blue-950/30 border-blue-500/40">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5 text-blue-300" />
+                    <h3 className="text-lg font-bold text-white">Intelligence brief</h3>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full border border-blue-500/40 text-blue-300">
+                      {report.brief.generator}
+                    </span>
+                    {report.brief.validated && (
+                      <span className="text-[11px] px-2 py-0.5 rounded-full border border-green-500/40 text-green-300 inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> fact-validated
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-100 leading-relaxed">{report.brief.text}</p>
+                  <p className="text-gray-500 text-xs mt-3">
+                    The summarizer is shown only structured facts; every name and number in this
+                    paragraph is checked against those facts before it ships — a hallucinated place
+                    or statistic fails the build, it never reaches the report.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Findings */}
             <div>
               <h3 className="text-xl font-bold text-white mb-4">Per-platform findings</h3>
@@ -292,6 +321,24 @@ const DemoCase = () => {
                   attribution.
                 </p>
                 <IdentityGraph correlation={correlation} />
+              </div>
+            )}
+
+            {/* Cross-platform interaction network with a time scrubber */}
+            {report.network?.nodes?.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
+                  <Network className="w-5 h-5 text-blue-400" /> Cross-platform network
+                </h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  Who the target interacts with across platforms, grouped by the resolved identity.
+                  Larger amber nodes are contacts reached on more than one platform. Drag the scrubber
+                  (or press play) to watch the network form over the {Math.round(
+                    (report.network.timeRange.endMs - report.network.timeRange.startMs) / 86400000,
+                  )}
+                  -day observed window.
+                </p>
+                <NetworkGraph network={report.network} />
               </div>
             )}
 

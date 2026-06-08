@@ -75,5 +75,39 @@
         { "id": "fb_003", "timestamp": "2024-11-10T13:05:00Z", "caption": "Domingo de asado con los primos. Nada como cocinar para la gente que quieres.", "likes": 73, "comments": 12 }
       ]
     }
-  ]
+  ],
+  "network": {
+    "contacts": [
+      { "id": "c_dev_sam", "handle": "dev_sam", "displayName": "Sam", "platform": "instagram" },
+      { "id": "c_compiler_cat", "handle": "compiler_cat", "displayName": "Compiler Cat", "platform": "mastodon" },
+      { "id": "c_pyconf", "handle": "pyconf", "displayName": "PyConf", "platform": "x" },
+      { "id": "c_rustlang_news", "handle": "rustlang_news", "displayName": "Rust News", "platform": "x" },
+      { "id": "c_marco_builds", "handle": "marco_builds", "displayName": "Marco", "platform": "x" },
+      { "id": "c_lena_codes", "handle": "lena_codes", "displayName": "Lena", "platform": "mastodon" },
+      { "id": "c_oss_weekly", "handle": "oss_weekly", "displayName": "OSS Weekly", "platform": "x" },
+      { "id": "c_tiny_tools_club", "handle": "tiny_tools_club", "displayName": "Tiny Tools", "platform": "instagram" },
+      { "id": "c_grace_hw", "handle": "grace_hw", "displayName": "Grace", "platform": "mastodon" },
+      { "id": "c_recetas_abuela", "handle": "recetas_abuela", "displayName": "Recetas", "platform": "facebook" },
+      { "id": "c_madrid_foodies", "handle": "madrid_foodies", "displayName": "Madrid Foodies", "platform": "facebook" }
+    ],
+    "interactions": [
+      { "from": "instagram", "to": "c_dev_sam", "type": "mutual", "timestamp": "2024-10-05T19:30:00Z" },
+      { "from": "x", "to": "c_dev_sam", "type": "reply", "timestamp": "2024-10-22T20:10:00Z" },
+      { "from": "instagram", "to": "c_pyconf", "type": "follow", "timestamp": "2024-10-08T18:45:00Z" },
+      { "from": "x", "to": "c_pyconf", "type": "mention", "timestamp": "2024-10-19T21:05:00Z" },
+      { "from": "mastodon", "to": "c_compiler_cat", "type": "mutual", "timestamp": "2024-10-10T20:20:00Z" },
+      { "from": "x", "to": "c_rustlang_news", "type": "follow", "timestamp": "2024-10-12T19:55:00Z" },
+      { "from": "x", "to": "c_marco_builds", "type": "mutual", "timestamp": "2024-10-15T20:40:00Z" },
+      { "from": "instagram", "to": "c_marco_builds", "type": "message", "timestamp": "2024-11-01T21:15:00Z" },
+      { "from": "mastodon", "to": "c_lena_codes", "type": "mutual", "timestamp": "2024-10-18T20:05:00Z" },
+      { "from": "instagram", "to": "c_lena_codes", "type": "follow", "timestamp": "2024-11-03T19:25:00Z" },
+      { "from": "x", "to": "c_oss_weekly", "type": "follow", "timestamp": "2024-10-25T20:50:00Z" },
+      { "from": "instagram", "to": "c_tiny_tools_club", "type": "mutual", "timestamp": "2024-10-28T18:30:00Z" },
+      { "from": "mastodon", "to": "c_grace_hw", "type": "follow", "timestamp": "2024-11-02T21:40:00Z" },
+      { "from": "x", "to": "c_marco_builds", "type": "reply", "timestamp": "2024-11-08T20:15:00Z" },
+      { "from": "mastodon", "to": "c_compiler_cat", "type": "reply", "timestamp": "2024-11-11T20:35:00Z" },
+      { "from": "facebook", "to": "c_recetas_abuela", "type": "mutual", "timestamp": "2024-10-20T12:30:00Z" },
+      { "from": "facebook", "to": "c_madrid_foodies", "type": "follow", "timestamp": "2024-11-04T13:10:00Z" }
+    ]
+  }
 }

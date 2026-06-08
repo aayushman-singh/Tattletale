@@ -1,5 +1,7 @@
-// Pure transform: golden fixture -> normalized case report. No I/O, no clock.
-// The timestamp is injected so the assembled report is deterministic for tests.
+// Transform: golden fixture -> normalized case report. No I/O, no clock. The
+// timestamp is injected so the assembled report is deterministic for tests. The
+// only async step is the brief, which may call an LLM when a key is configured;
+// the keyless default path is fully deterministic.
 
 import type {
     CaseReport,
@@ -9,6 +11,8 @@ import type {
     PlatformFinding,
 } from "./types.js";
 import { correlate } from "./correlation.js";
+import { buildNetworkGraph } from "./network.js";
+import { generateBrief } from "./brief.js";
 
 // Derive the cross-platform matches from the correlation engine output, so the
 // report's headline "same person across N platforms" claims are *computed*, not
@@ -43,7 +47,7 @@ function deriveMatches(correlation: CorrelationResult): GoldenCrossMatch[] {
         });
 }
 
-export function assembleReport(golden: GoldenCase, generatedAt: string): CaseReport {
+export async function assembleReport(golden: GoldenCase, generatedAt: string): Promise<CaseReport> {
     if (!golden.synthetic) {
         // Replay mode only ever operates on data explicitly marked synthetic.
         // If a fixture isn't flagged, fail loudly rather than risk surfacing
@@ -72,6 +76,12 @@ export function assembleReport(golden: GoldenCase, generatedAt: string): CaseRep
     // hand-written crossPlatformMatches that used to live in the fixture).
     const correlation = correlate(golden.platforms);
 
+    // Cross-platform interaction graph, grouped by the resolved identities.
+    const network = buildNetworkGraph(golden.network, correlation);
+
+    // LLM-summarized (or extractive) intelligence brief — fact-bounded + validated.
+    const brief = await generateBrief({ target: golden.target, findings, correlation, network });
+
     return {
         mode: "replay",
         synthetic: true,
@@ -83,6 +93,8 @@ export function assembleReport(golden: GoldenCase, generatedAt: string): CaseRep
         findings,
         crossPlatformMatches: deriveMatches(correlation),
         correlation,
+        brief,
+        network,
     };
 }
 

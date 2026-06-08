@@ -42,7 +42,7 @@ export async function runReplay(
     const golden = loadGoldenCase(handle);
 
     // 2. normalize + correlate: fixture -> case report (incl. identity graph).
-    const report = assembleReport(golden, generatedAt);
+    const report = await assembleReport(golden, generatedAt);
     const reportJson = serializeReport(report);
     const reportBytes = Buffer.from(reportJson, "utf8");
     const reportSha = sha256(reportBytes);

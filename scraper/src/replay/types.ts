@@ -38,6 +38,27 @@ export interface GoldenTarget {
     tags: string[];
 }
 
+// ---- Network / interaction graph (fixture-supplied) ----
+
+export interface GoldenContact {
+    id: string;
+    handle: string;
+    displayName: string;
+    platform: string;
+}
+
+export interface GoldenInteraction {
+    from: string; // a target account's platform, e.g. "instagram"
+    to: string; // GoldenContact.id
+    type: "follow" | "mutual" | "message" | "mention" | "reply";
+    timestamp: string;
+}
+
+export interface GoldenNetwork {
+    contacts: GoldenContact[];
+    interactions: GoldenInteraction[];
+}
+
 export interface GoldenCase {
     synthetic: true;
     notice: string;
@@ -47,6 +68,8 @@ export interface GoldenCase {
     // platform data, so fixtures no longer need to assert them. Kept optional
     // for backward compatibility with older fixtures.
     crossPlatformMatches?: GoldenCrossMatch[];
+    // Optional cross-platform interaction graph for the network view.
+    network?: GoldenNetwork;
 }
 
 // ---- Normalized report ----
@@ -77,6 +100,72 @@ export interface CaseReport {
     findings: PlatformFinding[];
     crossPlatformMatches: GoldenCrossMatch[];
     correlation: CorrelationResult;
+    brief: IntelligenceBrief;
+    network: NetworkGraph;
+}
+
+// ---- LLM-summarized intelligence brief ----
+
+// The ONLY structured facts any summarizer (extractive or LLM) is allowed to see.
+// Nothing else from the case may enter a brief — this is the anti-hallucination
+// boundary: a fact not here cannot be asserted.
+export interface BriefFacts {
+    handle: string;
+    displayName: string;
+    platformCount: number;
+    platforms: string[];
+    totalFollowers: number;
+    totalPosts: number;
+    identityCount: number;
+    primaryIdentityAccounts: number;
+    primaryCohesionBand: "high" | "medium" | "low";
+    flaggedNamesakes: number;
+    peakHourUtc: number;
+    activityWindow: string; // derived bucket: night/morning/afternoon/evening
+    languages: string[]; // detected from post captions
+    topTags: string[];
+    firstSeen: string;
+    contactCount: number;
+    crossPlatformContacts: number;
+}
+
+export interface IntelligenceBrief {
+    text: string;
+    generator: "extractive" | "gemini";
+    // Always true on a written brief: the text passed the no-hallucination guard
+    // (every name/number traces back to BriefFacts). Generation throws otherwise.
+    validated: true;
+    facts: BriefFacts;
+}
+
+// ---- Cross-platform network graph (normalized) ----
+
+export interface NetworkNode {
+    id: string; // "self:<platform>" for the target's accounts, else contact id
+    kind: "self" | "contact";
+    label: string;
+    platform: string;
+    cluster: number; // identity cluster for self nodes, -1 for contacts
+    crossPlatform: boolean; // a contact reached from >1 of the target's platforms
+    degree: number;
+    x: number; // deterministic layout coords
+    y: number;
+}
+
+export interface NetworkLink {
+    source: string;
+    target: string;
+    type: string;
+    timestamp: string;
+    t: number; // epoch ms — drives the time scrubber
+}
+
+export interface NetworkGraph {
+    nodes: NetworkNode[];
+    links: NetworkLink[];
+    timeRange: { startMs: number; endMs: number };
+    contactCount: number;
+    crossPlatformContacts: number;
 }
 
 // ---- Cross-identity correlation ----

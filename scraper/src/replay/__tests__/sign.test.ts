@@ -37,6 +37,13 @@ test("block declares its ephemeral demo mode and a key id", () => {
     assert.equal(block.keyId.length, 16);
 });
 
+test("verification rejects a block with a wrong declared scheme even if bytes match", () => {
+    const block = sealRootHash(ROOT);
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    assert.equal(verifySeal(ROOT, { ...block, algorithm: "RSA" } as any), false);
+    assert.equal(verifySeal(ROOT, { ...block, signedField: "somethingElse" } as any), false);
+});
+
 test("pinning an expected key rejects a re-seal with a different key", () => {
     const examiner = generateSigningKey();
     const trusted = sealRootHash(ROOT, examiner);

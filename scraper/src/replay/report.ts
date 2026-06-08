@@ -15,7 +15,7 @@ import { correlate } from "./correlation.js";
 // hand-written. Every identity cluster spanning >1 account becomes a match whose
 // evidence is the engine's own rationale for the strongest link in the cluster.
 function deriveMatches(correlation: CorrelationResult): GoldenCrossMatch[] {
-    const band = (s: number): "high" | "medium" | "low" =>
+    const toBand = (s: number): "high" | "medium" | "low" =>
         s >= 0.62 ? "high" : s >= 0.4 ? "medium" : "low";
     return correlation.identities
         .filter((id) => id.accountIndices.length > 1)
@@ -37,7 +37,7 @@ function deriveMatches(correlation: CorrelationResult): GoldenCrossMatch[] {
             return {
                 username: handle,
                 platforms: id.platforms,
-                confidence: band(cohesion),
+                band: toBand(cohesion),
                 evidence: intra[0]?.rationale ?? "linked by correlation engine",
             };
         });

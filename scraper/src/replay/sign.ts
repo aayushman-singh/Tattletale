@@ -25,10 +25,12 @@ import {
 export interface SignatureBlock {
     algorithm: "Ed25519";
     signedField: "rootHash";
-    // "demo-ephemeral": key minted at sealing time, no external trust anchor — so
-    // this proves internal integrity + that ONE key signed it, NOT custody
-    // attribution. A real deployment uses "hsm" with a pinned, examiner-bound key.
-    mode: "demo-ephemeral" | "hsm";
+    // "demo-ephemeral" is the ONLY mode this code produces: key minted at sealing
+    // time, no external trust anchor — so this proves internal integrity + that
+    // ONE key signed it, NOT custody attribution. A real deployment would add an
+    // "hsm" mode with a pinned, examiner-bound key; that is designed (ADR-0004),
+    // not built, so the type does not advertise a mode the code can't emit.
+    mode: "demo-ephemeral";
     keyId: string; // sha256(publicKeyPem)[:16] — lets a verifier pin an expected key
     publicKeyPem: string;
     signature: string; // base64 detached signature over the rootHash bytes
@@ -81,6 +83,9 @@ export function verifySeal(
     expectedPublicKeyPem?: string,
 ): boolean {
     try {
+        // Reject a block whose declared scheme isn't exactly what we verify —
+        // matching bytes must not validate a semantically wrong seal.
+        if (block.algorithm !== "Ed25519" || block.signedField !== "rootHash") return false;
         if (expectedPublicKeyPem) {
             const norm = (p: string): string =>
                 createPublicKey(p).export({ type: "spki", format: "pem" }).toString().trim();

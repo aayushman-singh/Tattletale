@@ -25,7 +25,8 @@ export interface GoldenPlatform {
 export interface GoldenCrossMatch {
     username: string;
     platforms: string[];
-    confidence: "high" | "medium" | "low";
+    // Qualitative band of the heuristic link score (not a probability).
+    band: "high" | "medium" | "low";
     evidence: string;
 }
 

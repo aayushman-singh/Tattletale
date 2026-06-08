@@ -3,7 +3,7 @@
   "synthetic": true,
   "notice": "100% synthetic data. This person does not exist. No real account was scraped.",
   "handle": "ana_rivera_dev",
-  "generatedAt": "2026-06-08T16:10:48.650Z",
+  "generatedAt": "2026-06-08T16:18:14.639Z",
   "target": {
     "handle": "ana_rivera_dev",
     "displayName": "Ana Rivera",
@@ -184,7 +184,7 @@
         "mastodon",
         "x"
       ],
-      "confidence": "high",
+      "band": "high",
       "evidence": "username similarity (ana_rivera_dev ↔ ana_rivera_dev); writing-style fingerprint (punctuation, casing, function words); shared distinctive terms: \"bug\", \"spent\", \"always\", \"tonight\""
     }
   ],

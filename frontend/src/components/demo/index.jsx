@@ -304,9 +304,9 @@ const DemoCase = () => {
                     <CardContent className="p-4 flex flex-wrap items-center gap-3">
                       <span className="font-mono text-blue-300">@{m.username}</span>
                       <span
-                        className={`text-xs px-2 py-0.5 rounded border ${confColor[m.confidence]}`}
+                        className={`text-xs px-2 py-0.5 rounded border ${confColor[m.band]}`}
                       >
-                        {m.confidence}
+                        {m.band}
                       </span>
                       <span className="text-gray-400 text-sm">{m.platforms.join(" · ")}</span>
                       <span className="text-gray-500 text-xs basis-full">{m.evidence}</span>

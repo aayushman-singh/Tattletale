@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // Identity correlation graph. Renders the engine's output (scraper/src/replay/
 // correlation.ts): account nodes laid out by the engine's deterministic
@@ -13,6 +13,9 @@ const platformGlyph = (p) => (p ? p[0].toUpperCase() : "?");
 
 export default function IdentityGraph({ correlation }) {
   const [selected, setSelected] = useState(null);
+  // Edge indices are only valid for the current correlation; reset on change so a
+  // stale index can't point at the wrong edge if a new graph is supplied.
+  useEffect(() => setSelected(null), [correlation]);
   if (!correlation?.nodes?.length) return null;
 
   const { nodes, edges, identities } = correlation;

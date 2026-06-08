@@ -13,7 +13,10 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
+  Share2,
+  KeyRound,
 } from "lucide-react";
+import IdentityGraph from "./IdentityGraph";
 
 // Replay-mode demo. Pure static: it fetches the pre-generated synthetic bundle
 // from /demo/*.json (served by Vite from frontend/public/demo) and renders the
@@ -23,9 +26,10 @@ import {
 const PIPELINE_STEPS = [
   { key: "scrape", label: "Scrape (replayed)", icon: Search, blurb: "Load synthetic multi-platform findings from the golden fixture." },
   { key: "normalize", label: "Normalize", icon: Wand2, blurb: "Fold per-platform data into one normalized case report." },
-  { key: "hash", label: "Hash", icon: Hash, blurb: "SHA-256 every artifact (report.json, report.pdf)." },
+  { key: "correlate", label: "Correlate identities", icon: Share2, blurb: "Link probable same-person accounts from handle, style, timing & vocabulary." },
+  { key: "hash", label: "Hash + sign", icon: Hash, blurb: "SHA-256 every artifact; Ed25519-seal the root hash." },
   { key: "custody", label: "Chain of custody", icon: ListChecks, blurb: "Append each hash to a tamper-evident hash chain." },
-  { key: "report", label: "Report", icon: FileText, blurb: "Emit report.json, manifest.json, custody-log.json, report.pdf." },
+  { key: "report", label: "Report", icon: FileText, blurb: "Emit report, correlation, manifest, custody-log, PDF." },
 ];
 
 const confColor = {
@@ -43,6 +47,7 @@ const DemoCase = () => {
   const [report, setReport] = useState(null);
   const [manifest, setManifest] = useState(null);
   const [custody, setCustody] = useState(null);
+  const [correlation, setCorrelation] = useState(null);
   const [activeStep, setActiveStep] = useState(-1);
   const [error, setError] = useState(null);
 
@@ -54,24 +59,22 @@ const DemoCase = () => {
     try {
       // Fetch the pre-generated static bundle. These files were produced by the
       // real replay CLI (scraper/src/replay) and committed under public/demo.
-      const [r, m, c] = await Promise.all([
-        fetch("/demo/report.json").then((res) => {
-          if (!res.ok) throw new Error(`report.json -> HTTP ${res.status}`);
+      const fetchJson = (path) =>
+        fetch(path).then((res) => {
+          if (!res.ok) throw new Error(`${path} -> HTTP ${res.status}`);
           return res.json();
-        }),
-        fetch("/demo/manifest.json").then((res) => {
-          if (!res.ok) throw new Error(`manifest.json -> HTTP ${res.status}`);
-          return res.json();
-        }),
-        fetch("/demo/custody-log.json").then((res) => {
-          if (!res.ok) throw new Error(`custody-log.json -> HTTP ${res.status}`);
-          return res.json();
-        }),
+        });
+      const [r, m, c, corr] = await Promise.all([
+        fetchJson("/demo/report.json"),
+        fetchJson("/demo/manifest.json"),
+        fetchJson("/demo/custody-log.json"),
+        fetchJson("/demo/correlation.json"),
       ]);
 
       setReport(r);
       setManifest(m);
       setCustody(c);
+      setCorrelation(corr);
 
       // Animate the pipeline reveal step by step for a sense of the flow.
       for (let i = 0; i < PIPELINE_STEPS.length; i++) {
@@ -143,7 +146,7 @@ const DemoCase = () => {
 
         {/* Pipeline steps */}
         {(state === "running" || state === "done") && (
-          <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-12">
+          <div className="grid sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-12">
             {PIPELINE_STEPS.map((step, i) => {
               const Icon = step.icon;
               const reached = i <= activeStep;
@@ -275,9 +278,26 @@ const DemoCase = () => {
               </div>
             </div>
 
-            {/* Cross-platform matches */}
+            {/* Cross-identity correlation graph */}
+            {correlation && (
+              <div>
+                <h3 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
+                  <Share2 className="w-5 h-5 text-blue-400" /> Cross-identity correlation
+                </h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  Each account is scored against every other on handle, display name, writing-style
+                  fingerprint, posting-time profile and shared vocabulary. Strong links collapse into
+                  one identity; a same-named account with different behaviour is{" "}
+                  <span className="text-amber-300">flagged but kept separate</span> — avoiding false
+                  attribution.
+                </p>
+                <IdentityGraph correlation={correlation} />
+              </div>
+            )}
+
+            {/* Computed matches (textual summary derived from the engine) */}
             <div>
-              <h3 className="text-xl font-bold text-white mb-4">Cross-platform identity matches</h3>
+              <h3 className="text-xl font-bold text-white mb-4">Computed identity matches</h3>
               <div className="space-y-2">
                 {report.crossPlatformMatches.map((m, i) => (
                   <Card key={i} className="bg-gray-800/60 border-gray-700">
@@ -293,6 +313,9 @@ const DemoCase = () => {
                     </CardContent>
                   </Card>
                 ))}
+                {report.crossPlatformMatches.length === 0 && (
+                  <p className="text-gray-500 text-sm">No accounts met the merge threshold.</p>
+                )}
               </div>
             </div>
 
@@ -334,6 +357,16 @@ const DemoCase = () => {
                       {manifest?.rootHash}
                     </div>
                   </div>
+                  {manifest?.seal && (
+                    <div className="pt-3 border-t border-gray-800">
+                      <div className="text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+                        <KeyRound className="w-3.5 h-3.5 text-blue-400" />
+                        {manifest.seal.algorithm} SIGNATURE over the root hash
+                      </div>
+                      <Mono>{manifest.seal.signature}</Mono>
+                      <p className="text-gray-500 text-xs mt-2">{manifest.seal.note}</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -350,6 +383,11 @@ const DemoCase = () => {
                 <a href="/demo/report.json" download>
                   <Button variant="outline" className="border-gray-600 text-white bg-gray-800">
                     <Download className="w-4 h-4 mr-2" /> report.json
+                  </Button>
+                </a>
+                <a href="/demo/correlation.json" download>
+                  <Button variant="outline" className="border-gray-600 text-white bg-gray-800">
+                    <Download className="w-4 h-4 mr-2" /> correlation.json
                   </Button>
                 </a>
                 <a href="/demo/manifest.json" download>

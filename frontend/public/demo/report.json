@@ -1,0 +1,120 @@
+{
+  "mode": "replay",
+  "synthetic": true,
+  "notice": "100% synthetic data. This person does not exist. No real account was scraped.",
+  "handle": "ana_rivera_dev",
+  "generatedAt": "2026-06-08T14:58:27.564Z",
+  "target": {
+    "handle": "ana_rivera_dev",
+    "displayName": "Ana Rivera",
+    "summary": "Fictional software developer persona used to demonstrate the Tattletale replay pipeline.",
+    "firstSeen": "2021-03-14",
+    "tags": [
+      "developer",
+      "open-source",
+      "synthetic-demo"
+    ]
+  },
+  "platformCount": 3,
+  "findings": [
+    {
+      "platform": "instagram",
+      "username": "ana_rivera_dev",
+      "url": "https://instagram.com/ana_rivera_dev",
+      "displayName": "Ana Rivera",
+      "bio": "Building tiny tools. Coffee, Python, and bad puns. she/her.",
+      "verified": false,
+      "metrics": {
+        "followers": 4821,
+        "following": 612,
+        "posts": 137
+      },
+      "samplePosts": [
+        {
+          "id": "ig_001",
+          "timestamp": "2024-11-02T18:22:00Z",
+          "caption": "Shipped a CLI that renames 10k files in 200ms. Rust go brrr.",
+          "likes": 312,
+          "comments": 24
+        },
+        {
+          "id": "ig_002",
+          "timestamp": "2024-10-19T09:05:00Z",
+          "caption": "Conference badge collection growing. PyCon was unreal this year.",
+          "likes": 198,
+          "comments": 11
+        }
+      ]
+    },
+    {
+      "platform": "x",
+      "username": "ana_rivera_dev",
+      "url": "https://x.com/ana_rivera_dev",
+      "displayName": "Ana Rivera",
+      "bio": "dev. I make small things that do one thing well. opinions are load-bearing.",
+      "verified": false,
+      "metrics": {
+        "followers": 9140,
+        "following": 388,
+        "posts": 2204
+      },
+      "samplePosts": [
+        {
+          "id": "x_001",
+          "timestamp": "2024-11-04T14:11:00Z",
+          "caption": "Hot take: most retries are just fallbacks wearing a trench coat.",
+          "likes": 540,
+          "comments": 63
+        },
+        {
+          "id": "x_002",
+          "timestamp": "2024-10-28T20:47:00Z",
+          "caption": "Spent 3 hours on a bug. It was a missing await. It is always a missing await.",
+          "likes": 1203,
+          "comments": 89
+        }
+      ]
+    },
+    {
+      "platform": "mastodon",
+      "username": "ana_rivera",
+      "url": "https://hachyderm.io/@ana_rivera",
+      "displayName": "Ana Rivera",
+      "bio": "Federated and proud. Toots about compilers and gardening.",
+      "verified": false,
+      "metrics": {
+        "followers": 1320,
+        "following": 540,
+        "posts": 410
+      },
+      "samplePosts": [
+        {
+          "id": "mas_001",
+          "timestamp": "2024-11-01T07:30:00Z",
+          "caption": "Migrated my blog to a static generator I wrote on a flight. 0 dependencies.",
+          "likes": 87,
+          "comments": 14
+        }
+      ]
+    }
+  ],
+  "crossPlatformMatches": [
+    {
+      "username": "ana_rivera_dev",
+      "platforms": [
+        "instagram",
+        "x"
+      ],
+      "confidence": "high",
+      "evidence": "Identical handle, matching display name and self-described developer bio."
+    },
+    {
+      "username": "ana_rivera",
+      "platforms": [
+        "mastodon"
+      ],
+      "confidence": "medium",
+      "evidence": "Same display name and overlapping topics (compilers, tooling); handle shortened."
+    }
+  ]
+}

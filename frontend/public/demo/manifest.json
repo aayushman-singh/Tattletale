@@ -1,0 +1,17 @@
+{
+  "mode": "replay",
+  "handle": "ana_rivera_dev",
+  "generatedAt": "2026-06-08T14:58:27.564Z",
+  "artifacts": [
+    {
+      "path": "report.json",
+      "sha256": "d0136ccd6b09253c401a575070398db4e90e1bb75ac6192c2abda9d946294ab9"
+    },
+    {
+      "path": "report.pdf",
+      "sha256": "fd34b093f5145220445a57058e5e63245de87775b2353d067710fb43997e64a6"
+    }
+  ],
+  "custodyEntries": 2,
+  "rootHash": "6227699c3486d7b0a728e853dc8a53dc1eb4c07208faee758945accb0b0c05d6"
+}

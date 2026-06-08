@@ -1,0 +1,93 @@
+{
+  "synthetic": true,
+  "notice": "100% synthetic data. This person does not exist. No real account was scraped.",
+  "target": {
+    "handle": "priya_n_research",
+    "displayName": "Priya N.",
+    "summary": "Fictional academic researcher persona used to demonstrate the Tattletale replay pipeline.",
+    "firstSeen": "2018-01-22",
+    "tags": ["researcher", "academia", "synthetic-demo"]
+  },
+  "platforms": [
+    {
+      "platform": "x",
+      "username": "priya_n_research",
+      "url": "https://x.com/priya_n_research",
+      "displayName": "Priya N.",
+      "bio": "Researcher in network science. Threads on papers you should have read. Views my own.",
+      "verified": false,
+      "followers": 15630,
+      "following": 902,
+      "postCount": 3340,
+      "posts": [
+        {
+          "id": "x_201",
+          "timestamp": "2024-11-05T10:30:00Z",
+          "caption": "New preprint: cross-platform identity linkage degrades gracefully under handle noise. Thread below.",
+          "likes": 980,
+          "comments": 77
+        }
+      ]
+    },
+    {
+      "platform": "mastodon",
+      "username": "priya_n",
+      "url": "https://fediscience.org/@priya_n",
+      "displayName": "Priya N.",
+      "bio": "Network science. Open data. Occasionally tea reviews.",
+      "verified": false,
+      "followers": 2810,
+      "following": 1100,
+      "postCount": 1450,
+      "posts": [
+        {
+          "id": "mas_201",
+          "timestamp": "2024-11-04T13:00:00Z",
+          "caption": "Posted the dataset and notebooks for the preprint. Reproducibility or it didn't happen.",
+          "likes": 145,
+          "comments": 31
+        }
+      ]
+    },
+    {
+      "platform": "instagram",
+      "username": "priya.reads",
+      "url": "https://instagram.com/priya.reads",
+      "displayName": "Priya | reads & research",
+      "bio": "Books, tea, the occasional conference selfie.",
+      "verified": false,
+      "followers": 1980,
+      "following": 410,
+      "postCount": 64,
+      "posts": [
+        {
+          "id": "ig_201",
+          "timestamp": "2024-10-15T19:00:00Z",
+          "caption": "Conference week. Running on adrenaline and oolong.",
+          "likes": 220,
+          "comments": 18
+        }
+      ]
+    }
+  ],
+  "crossPlatformMatches": [
+    {
+      "username": "priya_n_research",
+      "platforms": ["x"],
+      "confidence": "high",
+      "evidence": "Primary research account; links preprint and dataset cross-referenced on Mastodon."
+    },
+    {
+      "username": "priya_n",
+      "platforms": ["mastodon"],
+      "confidence": "high",
+      "evidence": "Same display name, posts the dataset announced on X within 24h."
+    },
+    {
+      "username": "priya.reads",
+      "platforms": ["instagram"],
+      "confidence": "low",
+      "evidence": "Shared first name and conference timing; topic overlap is weak (lifestyle vs research)."
+    }
+  ]
+}

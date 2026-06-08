@@ -12,6 +12,8 @@ import { loadGoldenCase } from "./fixtures.js";
 import { assembleReport, serializeReport } from "./report.js";
 import { renderPdf } from "./pdf.js";
 import { buildCustodyChain, sha256 } from "./custody.js";
+import { sealRootHash } from "./sign.js";
+import type { KeyPair } from "./sign.js";
 import type { Manifest } from "./types.js";
 
 export interface ReplayResult {
@@ -34,58 +36,69 @@ export async function runReplay(
     handle: string,
     outDir: string,
     generatedAt: string,
+    signingKey?: KeyPair,
 ): Promise<ReplayResult> {
     // 1. scrape (replayed): load the synthetic fixture, throwing if missing.
     const golden = loadGoldenCase(handle);
 
-    // 2. normalize: fixture -> case report.
+    // 2. normalize + correlate: fixture -> case report (incl. identity graph).
     const report = assembleReport(golden, generatedAt);
     const reportJson = serializeReport(report);
     const reportBytes = Buffer.from(reportJson, "utf8");
     const reportSha = sha256(reportBytes);
 
-    // 3. render the PDF over the normalized report + (to-be-computed) custody.
-    //    We build a provisional custody chain first so the PDF can show it; the
-    //    PDF bytes then become their own custody entry. To keep the PDF's
-    //    embedded hashes consistent with the final log, the PDF lists the
-    //    report + manifest entries (everything known before the PDF exists),
-    //    and the PDF itself is the final entry sealing the root hash.
+    // 3. correlation artifact: the identity graph is custody-logged in its own
+    //    right, so the *analysis* (not just the raw findings) is tamper-evident.
+    const correlationJson = JSON.stringify(report.correlation, null, 2) + "\n";
+    const correlationBytes = Buffer.from(correlationJson, "utf8");
+    const correlationSha = sha256(correlationBytes);
+
+    // 4. render the PDF over the normalized report + provisional custody chain.
     const preChain = buildCustodyChain([
         { step: "normalize", artifact: "report.json", sha256: reportSha },
+        { step: "correlate", artifact: "correlation.json", sha256: correlationSha },
     ]);
 
     const pdfBytes = await renderPdf(report, preChain.entries, preChain.rootHash);
     const pdfSha = sha256(pdfBytes);
 
-    // 4. final custody chain: report.json then report.pdf. Root hash seals both.
+    // 5. final custody chain: report -> correlation -> pdf. Root hash seals all.
     const finalChain = buildCustodyChain([
         { step: "normalize", artifact: "report.json", sha256: reportSha },
+        { step: "correlate", artifact: "correlation.json", sha256: correlationSha },
         { step: "render-pdf", artifact: "report.pdf", sha256: pdfSha },
     ]);
 
-    // 5. manifest commits to every artifact + the root hash.
+    // 6. seal the root hash with an Ed25519 signature (attribution + integrity).
+    const seal = sealRootHash(finalChain.rootHash, signingKey);
+
+    // 7. manifest commits to every artifact + the signed root hash.
     const manifest: Manifest = {
         mode: "replay",
         handle,
         generatedAt,
         artifacts: [
             { path: "report.json", sha256: reportSha },
+            { path: "correlation.json", sha256: correlationSha },
             { path: "report.pdf", sha256: pdfSha },
         ],
         custodyEntries: finalChain.entries.length,
         rootHash: finalChain.rootHash,
+        seal,
     };
     const manifestJson = JSON.stringify(manifest, null, 2) + "\n";
     const custodyLogJson = JSON.stringify(finalChain.entries, null, 2) + "\n";
 
-    // 6. write everything.
+    // 8. write everything.
     mkdirSync(outDir, { recursive: true });
     const reportPath = join(outDir, "report.json");
+    const correlationPath = join(outDir, "correlation.json");
     const pdfPath = join(outDir, "report.pdf");
     const manifestPath = join(outDir, "manifest.json");
     const custodyLogPath = join(outDir, "custody-log.json");
 
     writeFileSync(reportPath, reportBytes);
+    writeFileSync(correlationPath, correlationBytes);
     writeFileSync(pdfPath, pdfBytes);
     writeFileSync(custodyLogPath, custodyLogJson, "utf8");
     writeFileSync(manifestPath, manifestJson, "utf8");
@@ -96,6 +109,7 @@ export async function runReplay(
         rootHash: finalChain.rootHash,
         artifacts: [
             { path: reportPath, sha256: reportSha, bytes: reportBytes.length },
+            { path: correlationPath, sha256: correlationSha, bytes: correlationBytes.length },
             { path: pdfPath, sha256: pdfSha, bytes: pdfBytes.length },
         ],
         reportPath,

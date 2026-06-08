@@ -5,6 +5,7 @@ import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runReplay } from "../runReplay.js";
+import { verifySeal } from "../sign.js";
 
 const FIXED_TS = "2026-06-08T12:00:00.000Z";
 const HANDLE = "ana_rivera_dev";
@@ -66,13 +67,33 @@ test("manifest root hash matches the run result and artifacts are non-empty", as
         const r = await runReplay(HANDLE, out, FIXED_TS);
         const manifest = JSON.parse(readFileSync(r.manifestPath, "utf8"));
         assert.equal(manifest.rootHash, r.rootHash);
-        assert.equal(manifest.artifacts.length, 2);
+        // report.json, correlation.json, report.pdf
+        assert.equal(manifest.artifacts.length, 3);
 
         const custody = JSON.parse(readFileSync(r.custodyLogPath, "utf8"));
-        assert.equal(custody.length, 2);
+        assert.equal(custody.length, 3);
         assert.equal(custody[custody.length - 1].entryHash, r.rootHash);
 
         assert.ok(statSync(r.pdfPath).size > 1000, "pdf should be a real document");
+    } finally {
+        rmSync(out, { recursive: true, force: true });
+    }
+});
+
+test("manifest carries a valid Ed25519 seal over the root hash; tampering breaks it", async () => {
+    const out = tmp();
+    try {
+        const r = await runReplay(HANDLE, out, FIXED_TS);
+        const manifest = JSON.parse(readFileSync(r.manifestPath, "utf8"));
+        assert.equal(manifest.seal.algorithm, "Ed25519");
+        assert.ok(verifySeal(manifest.rootHash, manifest.seal), "seal must verify");
+        // A tampered root hash must fail verification against the same signature.
+        const tampered = manifest.rootHash.replace(/.$/, (c: string) => (c === "0" ? "1" : "0"));
+        assert.equal(verifySeal(tampered, manifest.seal), false, "tamper must break the seal");
+        // correlation.json was written and is non-trivial.
+        const corr = JSON.parse(readFileSync(join(out, "correlation.json"), "utf8"));
+        assert.ok(Array.isArray(corr.nodes) && corr.nodes.length >= 2);
+        assert.ok(Array.isArray(corr.identities) && corr.identities.length >= 1);
     } finally {
         rmSync(out, { recursive: true, force: true });
     }

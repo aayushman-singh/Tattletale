@@ -101,3 +101,13 @@ _filter_callback.py
 # Build output (per-package)
 /scraper/dist/
 /backend/dist/
+
+# Docs assets (committed screenshots)
+!/docs/assets/**
+
+# Playwright MCP scratch
+.playwright-mcp/
+/frontend/.playwright-mcp/
+demo-fullpage.png
+graph-only.png
+!/docs/assets/*.png

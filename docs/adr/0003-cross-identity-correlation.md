@@ -1,6 +1,36 @@
 # 0003 — Cross-identity correlation algorithm
 
-**Status:** Proposed
+**Status:** Accepted — scorer implemented in the replay engine (Phase 2); live-pipeline wiring + perceptual image hashing still designed.
+
+## Update (Phase 2): the scorer is now code
+
+The "step 3 (scoring) is designed, not coded" gap below is **closed for the
+analysis path**. `scraper/src/replay/correlation.ts` implements a deterministic,
+explainable correlation engine and the report now carries a computed
+`correlation` block instead of hand-written `crossPlatformMatches`:
+
+- **Signals scored per account pair:** Jaro-Winkler handle similarity, display-name
+  similarity, bio token Jaccard, a **stylometric fingerprint** (punctuation,
+  casing, lowercase-start habit, non-ASCII/language tell, function-word rates),
+  **posting hour-of-day** cosine, and **shared distinctive vocabulary**.
+- **Weighting reflects forensics:** a shared display name is deliberately *low*
+  weight (namesakes are common); behaviour (style, timing, vocabulary) carries
+  the decision. This is what lets the engine **flag a same-named account as a
+  likely different person** instead of falsely merging it.
+- **Clustering:** union-find over above-threshold edges yields identity clusters;
+  every edge keeps its per-feature contribution breakdown so the UI/PDF can show
+  *why* two handles were (or were not) linked. Output includes a deterministic
+  graph layout, and the correlation artifact is itself folded into the
+  chain-of-custody hash + Ed25519 seal.
+
+Still designed, not coded: **perceptual profile-image hashing**, **link/email/phone
+co-occurrence**, and wiring the scorer into the *live* Mongo-backed pipeline
+(today it runs over the replay fixtures). The original design below stands as the
+target for the live path.
+
+---
+
+**Original status:** Proposed
 
 ## Context
 

@@ -81,3 +81,64 @@ Codex flagged the cumulative branch. Disposition:
 ## D4 — Deploy / build constraints (this environment)
 
 - `vercel` CLI and `docker` are not installed, and `java` is absent → live Vercel deploy, local docker-compose boot, and APK signing **cannot be executed here**. All corresponding artifacts (vercel.json, Dockerfiles, docker-compose.yml, CI, replay-mode code, ADRs) are authored and committed so the user can run them in one step. These are documented as blocked-on-user in SESSION_SUMMARY.md.
+
+---
+
+# PHASE 2 — Forensic value-proposition leap (session be165de2, 2026-06-08)
+
+## D7 — Discovery: candidates scored
+
+The README + ADR-0003 claim a **cross-identity correlation algorithm**, but the
+replay pipeline only reads **pre-baked `crossPlatformMatches`** from each fixture
+— the "algorithm" was a hardcoded assertion + a hand-written `evidence` string.
+That is the credibility gap to close.
+
+Candidates (score = investigator-value / wow-for-hire / feasible-keyless-in-one-session, 1–5):
+
+| # | Candidate | Inv | Wow | Feas | Notes |
+|---|-----------|-----|-----|------|-------|
+| 1 | **Real cross-identity correlation engine** (compute matches from handle/name/bio/stylometry/temporal signals; explainable scores) | 5 | 5 | 5 | Makes ADR-0003 true. Pure deterministic TS. |
+| 2 | **Identity graph viz on /demo** (nodes=accounts, edges=correlation, click→why) | 4 | 5 | 4 | The visible payoff of #1. Engine emits deterministic layout → no physics lib needed. |
+| 3 | **Court-grade signed custody** (Ed25519 sign the root hash; verify; document RFC3161 TSA next) | 5 | 4 | 4 | Closes codex's exact "not court-grade / unsigned" finding. Public key + signature only — no private key committed (gitleaks-safe). |
+| 4 | Temporal anomaly panel (late-night bursts / silence) | 3 | 3 | 5 | Nice secondary; partly subsumed by #1's temporal feature. |
+| 5 | Coercion linguistic flag | 3 | 3 | 2 | Synthetic personas are devs — no coercion signal to flag; would need themed data. |
+| 6 | LLM intelligence brief (Gemini) | 4 | 4 | 2 | Needs an API key + network → breaks the keyless /demo. Deferred. |
+
+## D8 — Decision: ship #1 + #2 + #3
+
+- **#1 Correlation engine** (`scraper/src/replay/correlation.ts`): deterministic,
+  explainable, no network. Six observable feature scorers (handle Jaro-Winkler,
+  display-name, bio Jaccard, stylometric cosine, temporal hour-of-day cosine,
+  shared rare-term overlap), weighted into a 0–1 score + band, union-find identity
+  clustering, and a **seeded deterministic layout** so the graph coordinates are
+  reproducible (and hashable). This REPLACES the hardcoded matches: the report's
+  `crossPlatformMatches` are now derived from the engine, plus a richer
+  `correlation` block (identities, edges with per-feature evidence, layout).
+- **#2 Graph viz**: a new `/demo` panel renders the engine's nodes/edges from the
+  static correlation JSON. Click an edge → the feature breakdown that justifies the
+  link. Keyless, deterministic.
+- **#3 Signed custody**: the manifest gains an Ed25519 signature over the root hash
+  + the signer's public key; `verifyManifest()` + tests (tamper ⇒ verify fails).
+  The private key is generated at signing time and never written to disk or repo
+  (gitleaks-safe); RFC 3161 trusted-timestamp documented as the remaining step.
+
+All three fold into the chain of custody: `correlation.json` and the signature
+become custody-logged artifacts, so the forensic spine covers the analysis, not
+just the raw report.
+
+## D9 — Codex review of Phase 2 (`codex/*-phase2.md`, verdict NO-GO → addressed)
+
+Codex returned 5 blockers + several high/medium. All addressed in code:
+- **PDF claimed the wrong signed root** → PDF now labels its hash "interim root (report + correlation)" and states the FINAL root + Ed25519 signature live in manifest/custody-log (the PDF can't contain a hash of itself).
+- **Ephemeral self-signed seal not attributable** → seal block now declares `mode: "demo-ephemeral"` + a `keyId`; `verifySeal(root, block, expectedPublicKeyPem?)` can PIN an examiner key so a malicious re-seal with a fresh key is rejected. ADR-0004 documents HSM + RFC 3161 as the remaining court-grade step.
+- **Score called "confidence"** → renamed cluster field to `cohesion` (heuristic, not a probability); method string rewritten to say so plainly; singletons get `cohesion: null` (not 1).
+- **Sparse data false-merge** → behavioural features (style/temporal/shared-vocab) are now coverage-gated by post count (0 posts ⇒ 0 contribution), so name+handle alone can't merge two accounts.
+- **Union-find transitive over-merge** → replaced with a complete-linkage guard: a merge only proceeds if every cross-pair between the two clusters clears the edge floor.
+- **`deriveMatches` mislabelled clusters** → now uses each cluster's own primary (most-followed) account, never a globally-found handle.
+- **Misleading "cosine"/"IDF" naming** → method string corrected; `buildIdf` → `buildDocFrequency`.
+- **Input-order-dependent determinism** → accounts canonicalized (sorted by platform+username) before scoring/layout, so cluster ids, layout and root hash are order-independent.
+- **Silent bad timestamps** → `hourHistogram` now throws on an invalid timestamp (no silent feature weakening).
+- **UI legend conflated band with merge state** → graph edge colour/dash are driven by merge state first (green solid = merged, amber dashed = flagged).
+- **Test gaps** → added adversarial tests: empty-posts no-merge, singleton cohesion null, input-order determinism, complete-linkage over-merge guard, invalid-timestamp throw, key-pinned verification. Scraper suite: 30 passing (was 14 at Phase 1 close).
+
+Residual (designed, not coded — documented in ADR-0003/0004): calibrated probability model for the score; perceptual profile-image hashing + link co-occurrence; HSM-held key + RFC 3161 trusted timestamp.

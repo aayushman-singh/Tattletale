@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import mongoose, { Schema, Document } from 'mongoose';
+import { mongoUri } from "../Helpers/mongoUri.js";
 import multer, { FileFilterCallback } from 'multer';
 import fs from 'fs';
 import cors from 'cors';
@@ -251,12 +252,7 @@ app.post('/api/upload/text', upload.array('files'), async (req: MulterRequest, r
     }
 });
 // Database connection and server start
-// Original problematic URL:
-// ***REDACTED***
-
-// Special characters in the password need to be properly encoded
-const password = encodeURIComponent('Lmaoded@11');
-const mongoUrl = `***REDACTED***
+const mongoUrl = mongoUri("logDB");
 
 mongoose.connect(mongoUrl)
     .then(() => {

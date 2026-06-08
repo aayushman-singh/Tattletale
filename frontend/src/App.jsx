@@ -74,7 +74,7 @@ function App() {
     <>
   
       {/* <CursorFollower/> */}
-      <GoogleOAuthProvider clientId="218022995131-pkv99vvugfmhr73ua600lg44q362bbsj.apps.googleusercontent.com">
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID}>
       <Header />
       {/* Full screen height minus header with flex column */}
       <div className="w-full flex-grow flex flex-col  bg-gray-700">

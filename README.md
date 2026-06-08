@@ -49,7 +49,65 @@ What was stripped: live credentials, session cookies, real targets' scrape outpu
 - **AI/ML layer** — entity extraction, summarization, visualization
 - **Multi-surface** — web dashboard, mobile app, standalone Windows scraper
 
-## Flowchart
+## Architecture
+
+The original product flowchart (rendered below) is the high-level picture. The Mermaid diagram traces the **chain-of-custody path** a single artifact actually takes through the code — from a target handle to a court-ready bundle.
+
+```mermaid
+flowchart TD
+    handle["Target handle / phone / email"]
+
+    subgraph scrapers["Per-platform scraper routes (Express)"]
+        ig["instagram.ts"]
+        x["x.ts"]
+        fb["facebook.ts"]
+        dc["discord.ts"]
+        md["mastodon.ts"]
+        yt["youtube.ts"]
+        wa["whatsapp.ts"]
+        tg["telegram.py (Telethon)"]
+        gd["gdrive.ts / gmail.ts / google.ts"]
+    end
+
+    maigret["Maigret 2500-site sweep<br/>(frontend/maigret/server.py)"]
+
+    handle --> scrapers
+    handle --> maigret
+
+    subgraph capture["Capture + retry (async-retry, 3x backoff)"]
+        artifact["Raw artifacts<br/>screenshots · chat logs · JSON"]
+    end
+
+    scrapers --> artifact
+    maigret --> artifact
+
+    s3["AWS S3 bucket<br/>uploadToS3() in mongoUtils.ts"]
+    platdb["Per-platform Mongo<br/>${platform}DB.${platform}_users"]
+    logdb["logDB.logs<br/>(log.ts, append-only activity log)"]
+    tldb["timelineDB.timeline_users<br/>(timeline.ts)"]
+
+    artifact -->|"PutObject"| s3
+    s3 -->|"S3 URL"| platdb
+    artifact --> logdb
+    platdb --> tldb
+
+    subgraph report["Report bundle (reportlab)"]
+        pdf["PDF report<br/>frontend/pdf_conv/*.py"]
+        json["Structured JSON dump"]
+    end
+
+    platdb --> report
+    tldb --> report
+    logdb --> report
+    maigret --> report
+
+    pdf --> bundle["Court-ready output:<br/>PDF + JSON + raw artifacts"]
+    json --> bundle
+```
+
+> **Accuracy note.** The diagram reflects what the hackathon code does today: artifacts are pushed to S3, their URLs and metadata are upserted into per-platform Mongo databases, activity is recorded in `logDB`, and the `pdf_conv` reportlab scripts read those databases to emit the report. The cryptographic **SHA hashing and append-only signing** described in [Sample output](#sample-output) are part of the *designed* chain-of-custody model — the hackathon code persists and logs artifacts but does not yet compute per-artifact content hashes in-tree. See [docs/adr/](docs/adr/) for the reasoning behind session, rate-limit, and correlation decisions.
+
+### Original product flowchart
 
 <img src="./Readme Section Flowchart.png" alt="Tattletale architecture flowchart"/>
 

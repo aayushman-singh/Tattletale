@@ -1,7 +1,7 @@
+import "../../../config.js"; // load .env first (must precede any env read)
 import express, { Request, Response } from 'express';
 import mongoose, { Schema, Document } from 'mongoose';
 import { clusterUri } from "../Helpers/mongoUri.js";
-import "../../../config.js";
 import multer, { FileFilterCallback } from 'multer';
 import fs from 'fs';
 import cors from 'cors';

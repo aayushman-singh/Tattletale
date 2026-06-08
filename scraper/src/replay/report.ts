@@ -1,7 +1,47 @@
 // Pure transform: golden fixture -> normalized case report. No I/O, no clock.
 // The timestamp is injected so the assembled report is deterministic for tests.
 
-import type { CaseReport, GoldenCase, PlatformFinding } from "./types.js";
+import type {
+    CaseReport,
+    CorrelationResult,
+    GoldenCase,
+    GoldenCrossMatch,
+    PlatformFinding,
+} from "./types.js";
+import { correlate } from "./correlation.js";
+
+// Derive the cross-platform matches from the correlation engine output, so the
+// report's headline "same person across N platforms" claims are *computed*, not
+// hand-written. Every identity cluster spanning >1 account becomes a match whose
+// evidence is the engine's own rationale for the strongest link in the cluster.
+function deriveMatches(correlation: CorrelationResult): GoldenCrossMatch[] {
+    const band = (s: number): "high" | "medium" | "low" =>
+        s >= 0.62 ? "high" : s >= 0.4 ? "medium" : "low";
+    return correlation.identities
+        .filter((id) => id.accountIndices.length > 1)
+        .map((id) => {
+            const intra = correlation.edges
+                .filter(
+                    (e) =>
+                        id.accountIndices.includes(e.source) &&
+                        id.accountIndices.includes(e.target),
+                )
+                .sort((a, b) => b.score - a.score);
+            // Label the match with THIS cluster's primary account (most
+            // followers), never a globally-found handle — otherwise a second
+            // identity could be mislabelled under the target's handle.
+            const handle = id.accountIndices
+                .map((i) => correlation.nodes[i])
+                .sort((a, b) => b.followers - a.followers)[0].username;
+            const cohesion = id.cohesion ?? intra[0]?.score ?? 0;
+            return {
+                username: handle,
+                platforms: id.platforms,
+                confidence: band(cohesion),
+                evidence: intra[0]?.rationale ?? "linked by correlation engine",
+            };
+        });
+}
 
 export function assembleReport(golden: GoldenCase, generatedAt: string): CaseReport {
     if (!golden.synthetic) {
@@ -28,6 +68,10 @@ export function assembleReport(golden: GoldenCase, generatedAt: string): CaseRep
         samplePosts: p.posts,
     }));
 
+    // Compute identity correlation from observable signals (replaces the old
+    // hand-written crossPlatformMatches that used to live in the fixture).
+    const correlation = correlate(golden.platforms);
+
     return {
         mode: "replay",
         synthetic: true,
@@ -37,7 +81,8 @@ export function assembleReport(golden: GoldenCase, generatedAt: string): CaseRep
         target: golden.target,
         platformCount: findings.length,
         findings,
-        crossPlatformMatches: golden.crossPlatformMatches,
+        crossPlatformMatches: deriveMatches(correlation),
+        correlation,
     };
 }
 

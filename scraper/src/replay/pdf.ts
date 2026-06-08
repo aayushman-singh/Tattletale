@@ -64,15 +64,33 @@ export function renderPdf(
             doc.moveDown(0.5);
         }
 
-        // Cross-platform matches
+        // Cross-identity correlation (computed)
         doc.moveDown(0.3);
-        doc.fillColor(blue).fontSize(14).text("Cross-platform identity matches");
+        doc.fillColor(blue).fontSize(14).text("Cross-identity correlation");
+        doc.fillColor(gray)
+            .fontSize(8)
+            .text(report.correlation.method);
         doc.moveDown(0.3);
-        for (const m of report.crossPlatformMatches) {
+        for (const id of report.correlation.identities) {
+            const accts = id.accountIndices
+                .map((i) => `@${report.correlation.nodes[i].username} (${report.correlation.nodes[i].platform})`)
+                .join(", ");
+            const span = id.accountIndices.length > 1 ? `${id.accountIndices.length} accounts` : "single account";
+            const cohesion = id.cohesion === null ? "n/a (single account)" : `cohesion ${id.cohesion}`;
             doc.fillColor("#111827")
                 .fontSize(10)
-                .text(`@${m.username}  [${m.confidence.toUpperCase()}]  →  ${m.platforms.join(", ")}`);
-            doc.fillColor(gray).fontSize(9).text(`   ${m.evidence}`);
+                .text(`Identity: ${id.label}  —  ${span}  (${cohesion})`);
+            doc.fillColor(gray).fontSize(9).text(`   ${accts}`);
+        }
+        doc.moveDown(0.4);
+        doc.fillColor("#111827").fontSize(11).text("Strongest links (with evidence):");
+        for (const e of report.correlation.edges.slice(0, 6)) {
+            const a = report.correlation.nodes[e.source];
+            const b = report.correlation.nodes[e.target];
+            doc.fillColor("#111827")
+                .fontSize(9)
+                .text(`  @${a.username} (${a.platform}) ↔ @${b.username} (${b.platform})  —  score ${e.score} [${e.band.toUpperCase()}]`);
+            doc.fillColor(gray).fontSize(8).text(`     ${e.rationale}`);
         }
         doc.moveDown(1);
 
@@ -94,8 +112,18 @@ export function renderPdf(
             doc.moveDown(0.3);
         }
         doc.moveDown(0.5);
-        doc.fillColor("#b91c1c").fontSize(11).text("ROOT HASH (integrity seal):");
+        doc.fillColor("#b91c1c").fontSize(11).text("INTERIM ROOT HASH (report + correlation):");
         doc.fillColor("#111827").fontSize(9).text(rootHash);
+        doc.moveDown(0.4);
+        doc.fillColor(gray)
+            .fontSize(8)
+            .text(
+                "This PDF is hashed AFTER it is rendered, so it cannot contain the final root that " +
+                    "covers itself (that would be circular). The hash above seals the report and " +
+                    "correlation. The FINAL root hash — covering this PDF too — and its Ed25519 " +
+                    "signature live in manifest.json / custody-log.json; verify there with the " +
+                    "embedded public key.",
+            );
 
         doc.end();
     });

@@ -42,7 +42,8 @@
     "typecheck": "tsc --noEmit",
     "start:instagram": "tsx src/routes/instagram.ts",
     "start:facebook": "tsx src/routes/facebook.ts",
-    "start:x": "tsx src/routes/x.ts"
+    "start:x": "tsx src/routes/x.ts",
+    "start:demo": "tsx src/replay/cli.ts ana_rivera_dev --demo"
   },
   "author": "aayushman-singh",
   "license": "MIT"

@@ -13,7 +13,7 @@ import requests
 
 class MastodonDataReport:
     def __init__(self):
-        self.client = MongoClient(os.environ["MONGO_URI"])
+        self.client = MongoClient(os.environ["MONGO_CLUSTER_URI"])
         self.db = self.client['mastodonDB']
         self.collection = self.db['mastodon_users']
         font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'DejaVuSans.ttf')

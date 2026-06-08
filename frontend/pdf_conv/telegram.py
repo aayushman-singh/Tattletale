@@ -17,7 +17,7 @@ from reportlab.lib.enums import TA_LEFT
 from reportlab.platypus.paragraph import Paragraph
 
 # MongoDB connection setup
-MONGO_URI=YOUR_MONGO_URI_HERE
+MONGO_URI = os.environ["MONGO_CLUSTER_URI"]
 DATABASE_NAME=YOUR_DATABASE_NAME_HERE
 COLLECTION_NAME=YOUR_COLLECTION_NAME_HERE
 

@@ -1,4 +1,4 @@
-import { mongoUri } from "../Helpers/mongoUri.js";
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import axios from "axios";
 import qs from "qs";
@@ -31,8 +31,8 @@ let user = '';
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            mongoUri("driveDB"),
-            {
+            clusterUri(),
+            { dbName: "driveDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,

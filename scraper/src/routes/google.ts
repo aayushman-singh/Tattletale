@@ -1,4 +1,4 @@
-import { mongoUri } from "../Helpers/mongoUri.js";
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import { exec, execSync } from "child_process";
 import path from "path";
@@ -13,8 +13,8 @@ const PORT = 3007;
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            mongoUri("googleDB"),
-            {
+            clusterUri(),
+            { dbName: "googleDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,

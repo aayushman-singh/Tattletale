@@ -1,4 +1,4 @@
-import { mongoUri } from "../Helpers/mongoUri.js";
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import { scrapeX } from "../Helpers/X/Xtimeline"; // Adjust the path to your scraper file
 import { XTweets } from "../Helpers/X/XTweets";
@@ -17,8 +17,8 @@ const app = express();
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            mongoUri("twitterDB"),
-            {
+            clusterUri(),
+            { dbName: "twitterDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,

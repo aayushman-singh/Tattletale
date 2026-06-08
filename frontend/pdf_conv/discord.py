@@ -13,7 +13,7 @@ from reportlab.pdfbase import pdfmetrics
 
 class DiscordDataReport:
     def __init__(self):
-        self.MONGO_URI = os.environ["MONGO_URI"]
+        self.MONGO_URI = os.environ["MONGO_CLUSTER_URI"]
         self.DATABASE_NAME = "discordDB"
         self.COLLECTION_NAME = "discord_users"
         try:

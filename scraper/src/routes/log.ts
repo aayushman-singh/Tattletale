@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import mongoose, { Schema, Document } from 'mongoose';
-import { mongoUri } from "../Helpers/mongoUri.js";
+import { clusterUri } from "../Helpers/mongoUri.js";
+import "../../../config.js";
 import multer, { FileFilterCallback } from 'multer';
 import fs from 'fs';
 import cors from 'cors';
@@ -252,9 +253,7 @@ app.post('/api/upload/text', upload.array('files'), async (req: MulterRequest, r
     }
 });
 // Database connection and server start
-const mongoUrl = mongoUri("logDB");
-
-mongoose.connect(mongoUrl)
+mongoose.connect(clusterUri(), { dbName: "logDB" })
     .then(() => {
         app.listen(5002, () => {
             console.log('Server running on port 5002');

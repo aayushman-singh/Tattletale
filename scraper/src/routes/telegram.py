@@ -27,7 +27,7 @@ executor = ThreadPoolExecutor(max_workers=4)
 
 def connect_db():
     try:
-        client = MongoClient(os.environ["MONGO_URI"])
+        client = MongoClient(os.environ["MONGO_CLUSTER_URI"])
         db = client.get_database('telegramDB')
         print("MongoDB connected successfully")
         return db

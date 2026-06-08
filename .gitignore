@@ -97,3 +97,7 @@ _filter_callback.py
 # Static demo bundle served by the frontend (synthetic, no live scrape).
 # Re-include after the global *.pdf ignore so /demo/report.pdf ships.
 !/frontend/public/demo/**
+
+# Build output (per-package)
+/scraper/dist/
+/backend/dist/

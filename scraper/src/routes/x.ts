@@ -1,4 +1,5 @@
 import { clusterUri } from "../Helpers/mongoUri.js";
+import "../../../config.js";
 import express from "express";
 import { scrapeX } from "../Helpers/X/Xtimeline"; // Adjust the path to your scraper file
 import { XTweets } from "../Helpers/X/XTweets";

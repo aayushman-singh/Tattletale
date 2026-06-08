@@ -17,6 +17,9 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(cors());
 app.use(express.json());
 
+// Public health check (used by Docker healthcheck / load balancers).
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
+
 // Routes
 app.use('/api/users', userRoutes);
 

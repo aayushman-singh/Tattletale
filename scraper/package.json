@@ -33,16 +33,16 @@
     "typescript": "~5.3.0"
   },
   "scripts": {
-    "dev": "tsx src/Instagram.ts",
-    "start": "npm run start:dev",
-    "start:Instagram": "tsx src/Instagram.ts",
-    "start:Facebook": "tsx src/Facebook.ts",
-    "start:X": "tsx src/X.ts",
+    "dev": "tsx src/routes/instagram.ts",
+    "start": "npm run start:replay -- ana_rivera_dev",
     "build": "tsc",
     "start:replay": "tsx src/replay/cli.ts",
     "test": "tsx --test src/Helpers/__tests__/*.test.ts src/replay/__tests__/*.test.ts",
     "test:replay": "tsx --test src/replay/__tests__/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "start:instagram": "tsx src/routes/instagram.ts",
+    "start:facebook": "tsx src/routes/facebook.ts",
+    "start:x": "tsx src/routes/x.ts"
   },
   "author": "aayushman-singh",
   "license": "MIT"

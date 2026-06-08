@@ -43,18 +43,37 @@ What was stripped: live credentials, session cookies, real targets' scrape outpu
 The live scraper needs nine platform logins and a headed browser, so you can't
 just click "run" on a public deploy. Instead the app ships a **replay mode**: a
 recruiter opens the **`/demo`** route, clicks **Run demo case**, and watches the
-full pipeline — scrape → normalize → **SHA‑256 hash** → append‑only custody log →
-report — execute against **synthetic** target profiles, then downloads the real
-generated **PDF + JSON + chain‑of‑custody manifest**.
+full pipeline — scrape → normalize → **correlate identities** → **SHA‑256 hash +
+Ed25519 seal** → append‑only custody log → report — execute against **synthetic**
+target profiles, then downloads the real generated **PDF + JSON + chain‑of‑custody
+manifest**.
 
 ```bash
 # One-command local full stack (backend + frontend + mongo):
 docker compose up --build      # then open http://localhost:8080/demo
 
 # Or regenerate a case bundle from the CLI (offline, no DB):
-cd scraper && npm run start:replay -- ana_rivera_dev
-# -> output/golden/ana_rivera_dev/generated/{report.json,report.pdf,manifest.json,custody-log.json}
+cd scraper && npm run start:replay -- ana_rivera_dev --demo
+# -> output/golden/ana_rivera_dev/generated/{report,correlation,manifest,custody-log}.json + report.pdf
 ```
+
+### Cross-identity correlation — "same person, different handles" made real
+
+Given the accounts observed for a target, the engine
+(`scraper/src/replay/correlation.ts`) scores every account pair on **handle**
+(Jaro‑Winkler), **display name**, **bio overlap**, a **writing‑style
+fingerprint** (punctuation, casing, language, function‑word rates), **posting
+hour‑of‑day**, and **shared distinctive vocabulary**, then clusters them into
+identities — with the per‑feature evidence behind every link.
+
+![Identity correlation graph](docs/assets/identity-correlation-graph.png)
+
+The forensically important part is the **negative** result: a same‑named account
+("Ana Rivera", a home cook posting in Spanish at midday) is **flagged but kept
+separate** from the developer "Ana Rivera" (three accounts, posting code at night)
+— because a shared *name* is weak evidence and the *behaviour* doesn't match. The
+engine refuses the false attribution and shows you why. Every score is
+deterministic and explainable; no black box.
 
 The custody log is a genuine hash chain (each entry binds the artifact's SHA‑256
 to the previous entry's hash), so the downloadable manifest's **root hash** is

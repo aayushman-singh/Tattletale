@@ -10,16 +10,16 @@ You are the per-repo orchestrator for `Tattletale`. You are running in a Claude 
 5. **Backend E2E tests required.**
 6. **Use subagents aggressively.**
 7. **No fallbacks** — fail loudly.
-8. **Hardcoded MongoDB Atlas URI with live creds is in ~13 scraper route files.** FIRST priority: strip them, document in `DECISIONS.md` that the user must rotate the cluster password before any push. The string is something like `mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/...`.
+8. **Hardcoded MongoDB Atlas URI with live creds is in ~13 scraper route files.** FIRST priority: strip them, document in `DECISIONS.md` that the user must rotate the cluster password before any push. The string is something like `mongodb+srv://<DB_USER>:<DB_PASS>@cluster0.eivmu.mongodb.net/...`.
 9. **`google.json` exists** at repo root. **NEVER read it, never include it in any context, never `cat` it.** Add to .gitignore if not already (.gitignore has `/google.json` but verify it's not tracked).
 10. **`output/` contains real scraped media** (Telegram MP4s, YouTube assets etc.) — privacy/copyright exposure. Audit + decide to redact, delete, or replace with synthetic.
 11. **End-of-session:** write `SESSION_SUMMARY.md`.
 
 ## Mission
-Tattletale is the SIH '24 winner with strong narrative bones (excellent README, real ops thinking in SESSIONS.md) but the implementation is leaking secrets and ships broken paths. Senior reviewers will see the README, get excited, then notice hardcoded `mongodb+srv://...:Lmaoded@11@...` strings in 13 places and lose trust instantly. Your job: kill every credibility leak, ship a **replay-mode demo** so a recruiter can experience the chain-of-custody pipeline without 9 platform logins, document the architecture properly. Make it look like a tool a forensics unit would actually deploy.
+Tattletale is the SIH '24 winner with strong narrative bones (excellent README, real ops thinking in SESSIONS.md) but the implementation is leaking secrets and ships broken paths. Senior reviewers will see the README, get excited, then notice hardcoded `mongodb+srv://...:<DB_PASS>@...` strings in 13 places and lose trust instantly. Your job: kill every credibility leak, ship a **replay-mode demo** so a recruiter can experience the chain-of-custody pipeline without 9 platform logins, document the architecture properly. Make it look like a tool a forensics unit would actually deploy.
 
 ## Success criteria (observable)
-- Zero hardcoded credentials in any source file (search for `mongodb+srv`, `aayushman2702`, `Lmaoded`, OAuth client IDs in `App.jsx`, `mobileScraper` hardcoded credentials).
+- Zero hardcoded credentials in any source file (search for `mongodb+srv`, `aayushman2702`, `<DB_PASS>`, OAuth client IDs in `App.jsx`, `mobileScraper` hardcoded credentials).
 - Backend tests + frontend Jest tests run in CI (GitHub Actions). Currently 5 frontend tests + 0 others; expand to ~25.
 - Replay-mode demo deployed to Vercel/Netlify — recruiter clicks "Run demo case" → sees full pipeline → downloads real PDF/JSON, no logins.
 - `vercel.json` paths fixed (currently references nonexistent capitalized files).
@@ -49,7 +49,7 @@ SIH '24 winner — multi-platform OSINT scraper for investigators. Ingests a tar
 - **Frontend** — most surface area, 5 Jest tests, hardcoded Google OAuth client.
 - **Scraper** — 9 platform routes in `scraper/src/routes/`. `instagram.ts:33-50` has `scrapeInstagramProfiles` call **commented out** — endpoint is no-op past the retry wrapper. `vercel.json` references `src/Instagram.ts`/`X.ts`/`Facebook.ts` (capitalised) that don't exist (routes are lowercase).
 - **mobileApp** — Flutter scaffold (splash/onboarding/auth screens). Untested if it talks to backend.
-- **mobileScraper** — `src/index.ts` hardcodes username/password (`aayushman3260` / `testing@27`).
+- **mobileScraper** — `src/index.ts` hardcodes username/password (`<test_ig_user>` / `<TEST_PASS>`).
 - **Docs** — README excellent. SESSIONS.md solid. Flowchart PNG present.
 - **Committed scrape artifacts** — `output/Telegram/`, `output/Arsh Goyal _ Youtube/`, etc. contain real media.
 
@@ -62,9 +62,9 @@ SIH '24 winner — multi-platform OSINT scraper for investigators. Ingests a tar
 
 ### Risks
 - **`google.json` exists** — DO NOT READ.
-- **Hardcoded `mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/...` in ~13 scraper route files**. Investigate before any public push.
+- **Hardcoded `mongodb+srv://<DB_USER>:<DB_PASS>@cluster0.eivmu.mongodb.net/...` in ~13 scraper route files**. Investigate before any public push.
 - **`output/` has real scraped media** committed despite `.gitignore /output/`. Possible privacy/copyright exposure.
-- `mobileScraper/src/index.ts` hardcoded `aayushman3260` / `testing@27` — verify throwaway before committing.
+- `mobileScraper/src/index.ts` hardcoded `<test_ig_user>` / `<TEST_PASS>` — verify throwaway before committing.
 - Mobile build on Windows: Flutter fine; Appium for mobileScraper needs Android SDK + emulator. **DO NOT attempt to run mobileScraper.**
 - Scraper code has commented-out core (`instagram.ts:49`) — `npm run start:instagram` won't actually scrape.
 - `vercel.json` references nonexistent files — deploys fail.
@@ -74,7 +74,7 @@ SIH '24 winner — multi-platform OSINT scraper for investigators. Ingests a tar
 ## Plan
 
 ### Phase A — Secret hygiene (S, highest priority)
-1. Grep all source for `mongodb+srv`, `aayushman2702`, `Lmaoded`, `aayushman3260`, `testing@27`, the Google OAuth client ID. List every hit in `DECISIONS.md`.
+1. Grep all source for `mongodb+srv`, `aayushman2702`, `<DB_PASS>`, `<test_ig_user>`, `<TEST_PASS>`, the Google OAuth client ID. List every hit in `DECISIONS.md`.
 2. Replace every hit with `process.env.MONGODB_URI` etc. Add to `.env.example`.
 3. `git filter-repo` cannot run from this session safely — instead, document in `DECISIONS.md` that the user must do a history scrub OR rotate credentials AND accept that history has them. Recommend rotation + a fresh push with squash.
 4. Audit `output/` — list committed media files. Document privacy risk. Replace with synthetic fixtures (3-5 fake profiles, scraped from public test data or generated).

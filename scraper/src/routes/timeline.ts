@@ -1,3 +1,4 @@
+import { mongoUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import { exec, execSync } from "child_process";
 import path from "path";
@@ -12,7 +13,7 @@ const PORT = 3010;
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/timelineDB?retryWrites=true&w=majority",
+            mongoUri("timelineDB"),
             {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,

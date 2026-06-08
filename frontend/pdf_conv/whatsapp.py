@@ -16,7 +16,7 @@ from reportlab.platypus import Table, TableStyle
 class WhatsAppDataReport:
     def __init__(self):
         # MongoDB Configuration
-        self.MONGO_URI = "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+        self.MONGO_URI = os.environ["MONGO_URI"]
         self.DATABASE_NAME = "whatsappDB"
         self.COLLECTION_NAME = "whatsapp_users"
 

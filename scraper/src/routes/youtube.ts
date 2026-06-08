@@ -1,3 +1,4 @@
+import { mongoUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import { exec, execSync } from "child_process";
 import path from "path";
@@ -14,7 +15,7 @@ const PORT = 3008;
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/youtubeDB?retryWrites=true&w=majority",
+            mongoUri("youtubeDB"),
             {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,

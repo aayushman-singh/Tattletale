@@ -13,7 +13,7 @@ from reportlab.pdfbase import pdfmetrics
 
 class GoogleDriveDataReport:
     def __init__(self):
-        self.MONGO_URI = "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+        self.MONGO_URI = os.environ["MONGO_URI"]
         self.DATABASE_NAME = "driveDB"
         self.COLLECTION_NAME = "drive_users"
         try:

@@ -3,8 +3,11 @@ import { loginInstagram } from "./instagram/login.ts";
 import { uploadScreenshotToMongo } from './utils/mongoUtils.ts';
 import { profileScraping } from "./instagram/profile.ts";
 
-let username = 'aayushman3260';
-let password = 'testing@27';
+let username = process.env.IG_USERNAME;
+let password = process.env.IG_PASSWORD;
+if (!username || !password) {
+    throw new Error("IG_USERNAME and IG_PASSWORD must be set (see .env.example). mobileScraper is prototype-only.");
+}
 
 async function startScraper() {
   const driver = await remote({

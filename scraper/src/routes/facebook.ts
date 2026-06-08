@@ -1,3 +1,4 @@
+import { mongoUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import cors from "cors";
 import { Request, Response } from "express";
@@ -12,7 +13,7 @@ const PORT = Number(process.env.PORT) || 3002;
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/facebookDB?retryWrites=true&w=majority",
+            mongoUri("facebookDB"),
             {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,

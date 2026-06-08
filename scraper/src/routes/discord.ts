@@ -1,3 +1,4 @@
+import { mongoUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import cors from "cors";
 import { scrapeDiscord } from "../Helpers/Discord/discordScraper";
@@ -13,7 +14,7 @@ const PORT = 3011; // Discord Scraper Port
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/discordDB?retryWrites=true&w=majority",
+            mongoUri("discordDB"),
             {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,

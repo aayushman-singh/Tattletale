@@ -1,3 +1,4 @@
+import { mongoUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import cors from "cors";
 import { InstaScraper } from "../Helpers/Instagram/InstaScraper.js";
@@ -13,7 +14,7 @@ const PORT = Number(process.env.PORT) || 3001; // Instagram Scraper Port
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/instagramDB?retryWrites=true&w=majority",
+            mongoUri("instagramDB"),
             {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,

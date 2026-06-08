@@ -79,3 +79,8 @@ following_log.txt
 
 # Internal helper artifacts
 _filter_callback.py
+
+# Scrape caches / crawler state (data, not source)
+/scraper/src/Helpers/storage/
+/scraper/instagram_data.json
+*.json.session

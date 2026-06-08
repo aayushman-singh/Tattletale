@@ -1,4 +1,4 @@
-import { mongoUri } from "../Helpers/mongoUri.js";
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import cors from "cors";
 import retry from "async-retry";
@@ -16,8 +16,8 @@ const PORT = Number(process.env.PORT) || 3004; // Whatsapp Scraper Port
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            mongoUri("whatsappDB"),
-            {
+            clusterUri(),
+            { dbName: "whatsappDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,

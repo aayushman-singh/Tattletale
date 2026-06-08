@@ -1,4 +1,4 @@
-import { mongoUri } from "../Helpers/mongoUri.js";
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import cors from "cors";
 import { Request, Response } from "express";
@@ -13,8 +13,8 @@ const PORT = Number(process.env.PORT) || 3002;
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            mongoUri("facebookDB"),
-            {
+            clusterUri(),
+            { dbName: "facebookDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,

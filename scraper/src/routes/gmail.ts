@@ -1,4 +1,4 @@
-import { mongoUri } from "../Helpers/mongoUri.js";
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import axios from "axios";
 import qs from "qs";
@@ -33,8 +33,8 @@ const TOKEN_PATH = path.join(__dirname, "token.json");
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            mongoUri("gmailDB"),
-            {
+            clusterUri(),
+            { dbName: "gmailDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,

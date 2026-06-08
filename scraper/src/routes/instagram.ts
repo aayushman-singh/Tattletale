@@ -1,4 +1,4 @@
-import { mongoUri } from "../Helpers/mongoUri.js";
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import cors from "cors";
 import { InstaScraper } from "../Helpers/Instagram/InstaScraper.js";
@@ -14,8 +14,8 @@ const PORT = Number(process.env.PORT) || 3001; // Instagram Scraper Port
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            mongoUri("instagramDB"),
-            {
+            clusterUri(),
+            { dbName: "instagramDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,
@@ -44,11 +44,18 @@ app.post("/instagram", async (req, res) => {
     try {
         console.log(`Received request to scrape ${startUrls.length} profiles`);
 
+        // NOTE: profile/post bulk scraping (scrapeInstagramProfiles /
+        // scrapeInstagramPosts) is intentionally NOT wired here. Those graphql
+        // helpers were deprecated after Instagram tightened its endpoints; the
+        // working path is the per-username InstaScraper() call below, which
+        // drives a stealth browser session. Re-enabling bulk scraping requires
+        // re-implementing the helpers against the current IG API — tracked as
+        // future work, not a silent no-op (this comment is the explicit record).
         await retry(
             async () => {
                 console.log("Starting profile scraping...");
-           //     await scrapeInstagramProfiles(startUrls);
-                console.log("Profile scraping completed");
+                // await scrapeInstagramProfiles(startUrls); // deprecated — see note above
+                console.log("Profile scraping (bulk) skipped — see note above");
             },
             {
                 retries: 3,

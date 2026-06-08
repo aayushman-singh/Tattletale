@@ -35,7 +35,13 @@ const WEIGHTS = {
 // Edges weaker than this are noise and are dropped from the graph entirely.
 const EDGE_FLOOR = 0.35;
 // At/above this an edge is strong enough to merge two accounts into one identity.
+// Complete-linkage uses the SAME bar: every cross-pair inside a merged cluster
+// must clear MERGE_THRESHOLD (not the weaker floor) — a merely "flaggable" 0.35
+// link must never drag a third account into an identity.
 const MERGE_THRESHOLD = 0.55;
+// A merge must be backed by behavioural evidence on BOTH sides — handle+name
+// agreement alone (a namesake) can't auto-merge, no matter how high.
+const MIN_MERGE_COVERAGE = 2;
 
 const BAND = (score: number): "high" | "medium" | "low" =>
     score >= 0.62 ? "high" : score >= 0.4 ? "medium" : "low";
@@ -384,8 +390,13 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
         for (let k = 0; k < n; k++) if (uf.find(k) === root) m.push(k);
         return m;
     };
+    const coverageOf = (i: number): number => accounts[i].posts.length;
     const mergeCandidates = edges
-        .filter((e) => e.score >= MERGE_THRESHOLD)
+        .filter(
+            (e) =>
+                e.score >= MERGE_THRESHOLD &&
+                Math.min(coverageOf(e.source), coverageOf(e.target)) >= MIN_MERGE_COVERAGE,
+        )
         .sort((a, b) => b.score - a.score || a.source - b.source || a.target - b.target);
     for (const e of mergeCandidates) {
         const ra = uf.find(e.source);
@@ -393,7 +404,8 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
         if (ra === rb) continue;
         const ga = membersOf(ra);
         const gb = membersOf(rb);
-        const consistent = ga.every((x) => gb.every((y) => scoreMatrix[x][y] >= EDGE_FLOOR));
+        // Strict complete-linkage: every cross-pair must itself be merge-strength.
+        const consistent = ga.every((x) => gb.every((y) => scoreMatrix[x][y] >= MERGE_THRESHOLD));
         if (consistent) uf.union(e.source, e.target);
     }
 

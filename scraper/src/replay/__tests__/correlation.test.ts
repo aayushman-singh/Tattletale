@@ -83,22 +83,48 @@ test("input order does not change the result (canonicalized)", () => {
     assert.equal(forward, reversed, "result must be independent of input order");
 });
 
-test("complete-linkage guard blocks transitive over-merge", () => {
-    // A~B strong, B~C strong, but A and C share nothing (different language,
-    // different times, different handles). A and C must NOT end up in one cluster.
-    const A = acc({ platform: "instagram", username: "alex_dev", displayName: "Alex", bio: "dev",
-        posts: [{ id: "a", timestamp: "2024-11-02T20:00:00Z", caption: "shipping a tiny CLI tool tonight", likes: 1, comments: 0 }] });
-    const B = acc({ platform: "x", username: "alex_dev", displayName: "Alex", bio: "dev",
-        posts: [{ id: "b", timestamp: "2024-11-02T20:00:00Z", caption: "shipping a tiny CLI tool tonight", likes: 1, comments: 0 }] });
-    const C = acc({ platform: "facebook", username: "zoltan_kovacs", displayName: "Zoltán Kovács", bio: "főzés",
-        posts: [{ id: "c", timestamp: "2024-11-02T08:00:00Z", caption: "máma főztem egy jó gulyást a családnak", likes: 1, comments: 0 }] });
-    const r = correlate([A, B, C]);
-    const clusterIdOf = (u: string): number => {
-        const id = r.identities.find((c) => c.accountIndices.some((i) => r.nodes[i].username === u));
-        if (!id) throw new Error(`no cluster for ${u}`);
-        return id.id;
+// Helper: build N posts at a fixed evening hour sharing a vocabulary, so two
+// accounts using the same set correlate strongly.
+const devPosts = (tag: string) => [
+    { id: `${tag}1`, timestamp: "2024-11-02T20:00:00Z", caption: "shipping a tiny CLI tool tonight, missing await again", likes: 1, comments: 0 },
+    { id: `${tag}2`, timestamp: "2024-11-05T21:00:00Z", caption: "the compiler caught the bug, ship small ship often", likes: 1, comments: 0 },
+];
+
+test("cluster invariant: every pair inside a merged identity is >= merge threshold", () => {
+    const accounts = [
+        acc({ platform: "instagram", username: "ana_rivera", displayName: "Ana Rivera", bio: "dev tools", posts: devPosts("ig") }),
+        acc({ platform: "x", username: "ana_rivera", displayName: "Ana Rivera", bio: "dev tools", posts: devPosts("x") }),
+        acc({ platform: "mastodon", username: "ana_rivera", displayName: "Ana Rivera", bio: "dev tools", posts: devPosts("ma") }),
+        acc({ platform: "facebook", username: "ana_rivera", displayName: "Ana Rivera", bio: "cocina recetas", posts: [
+            { id: "fb1", timestamp: "2024-11-02T12:00:00Z", caption: "hoy preparé una tortilla para la familia receta de la abuela", likes: 1, comments: 0 },
+            { id: "fb2", timestamp: "2024-11-05T13:00:00Z", caption: "el secreto del sofrito es la paciencia fuego lento", likes: 1, comments: 0 } ] }),
+    ];
+    const r = correlate(accounts);
+    const score = (a: number, b: number) => {
+        const e = r.edges.find((x) => (x.source === a && x.target === b) || (x.source === b && x.target === a));
+        return e ? e.score : 0;
     };
-    assert.notEqual(clusterIdOf("alex_dev"), clusterIdOf("zoltan_kovacs"), "A/B must not drag in C");
+    // Complete-linkage contract: no merged cluster may hide a sub-merge-strength pair.
+    for (const id of r.identities) {
+        for (const a of id.accountIndices) {
+            for (const b of id.accountIndices) {
+                if (a < b) assert.ok(score(a, b) >= r.thresholds.merge, `pair ${a}-${b} below merge inside a cluster`);
+            }
+        }
+    }
+    // The Spanish-cooking namesake (same handle+name) must stay its own identity.
+    const cook = r.identities.find((id) => id.accountIndices.some((i) => r.nodes[i].platform === "facebook"));
+    assert.equal(cook?.accountIndices.length, 1, "namesake with different behaviour stays separate");
+});
+
+test("identical handle+name+bio but only 1 post each does NOT auto-merge (coverage gate)", () => {
+    const one = (h: number) => [{ id: "p", timestamp: `2024-11-02T${h}:00:00Z`, caption: "hello world", likes: 0, comments: 0 }];
+    const accounts = [
+        acc({ platform: "instagram", username: "same_guy", displayName: "Same Guy", bio: "same bio here", posts: one(20) }),
+        acc({ platform: "x", username: "same_guy", displayName: "Same Guy", bio: "same bio here", posts: one(20) }),
+    ];
+    const r = correlate(accounts);
+    assert.equal(r.identities.length, 2, "one post each is too thin to auto-merge");
 });
 
 test("invalid timestamp fails loudly", () => {

@@ -47,8 +47,11 @@ export async function runReplay(
     const reportBytes = Buffer.from(reportJson, "utf8");
     const reportSha = sha256(reportBytes);
 
-    // 3. correlation artifact: the identity graph is custody-logged in its own
-    //    right, so the *analysis* (not just the raw findings) is tamper-evident.
+    // 3. correlation artifact. report.json embeds the full correlation as part
+    //    of the sealed case record; correlation.json is the SAME data exported as
+    //    a standalone, separately-hashed graph artifact (what the SPA fetches and
+    //    a reviewer downloads). The redundancy is intentional: one is the record,
+    //    one is the export, and both are under custody so either download verifies.
     const correlationJson = JSON.stringify(report.correlation, null, 2) + "\n";
     const correlationBytes = Buffer.from(correlationJson, "utf8");
     const correlationSha = sha256(correlationBytes);

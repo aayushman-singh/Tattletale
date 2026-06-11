@@ -263,17 +263,24 @@ test("co-presence is deterministic across runs", () => {
     assert.equal(JSON.stringify(correlate(build())), JSON.stringify(correlate(build())));
 });
 
-test("a coarse-accuracy point at distance zero is NOT co-presence (city centroid)", () => {
+test("coarse-accuracy points are not an instrument: inapplicable, not a zero", () => {
     // Identical coordinates, but each point declares a 5 km accuracy radius — a
-    // city/venue centroid, not a capture fix. It must never read as "same spot".
+    // city/venue centroid, not a capture fix. It is not a co-presence instrument,
+    // so the signal is INAPPLICABLE (renormalized out), byte-identical to geo-less —
+    // a coarse-only account is never punished with a zero-valued co-presence.
     const coarse = { lat: 19.076, lon: 72.8777, accuracyM: 5000 };
-    const r = correlate([
+    const coarseRun = correlate([
         acc({ platform: "instagram", username: "ana_x", displayName: "Ana X", bio: "dev tools", posts: twin("ig", coarse) }),
         acc({ platform: "x", username: "ana_y", displayName: "Ana Y", bio: "dev tools", posts: twin("x", coarse) }),
     ]);
-    const cp = edgeOf(r)?.features.find((f) => f.feature === "coPresence");
-    assert.ok(cp, "co-presence is applicable (both geo-tagged)");
-    assert.equal(cp!.value, 0, "coarse centroids never co-locate, even at distance zero");
+    const geoless = correlate([
+        acc({ platform: "instagram", username: "ana_x", displayName: "Ana X", bio: "dev tools", posts: twin("ig") }),
+        acc({ platform: "x", username: "ana_y", displayName: "Ana Y", bio: "dev tools", posts: twin("x") }),
+    ]);
+    const e = edgeOf(coarseRun)!;
+    assert.ok(!e.features.some((f) => f.feature === "coPresence"), "coarse-only is inapplicable");
+    assert.equal(e.features.length, 6);
+    assert.equal(e.score, edgeOf(geoless)!.score, "coarse-only must be byte-identical to geo-less");
 });
 
 test("co-presence cannot manufacture a merge from weak behaviour (geo never decides identity)", () => {
@@ -311,6 +318,22 @@ test("a burst of duplicate posts cannot saturate co-presence (one-to-one matchin
     const cp = edgeOf(r)?.features.find((f) => f.feature === "coPresence");
     assert.ok(cp, "applicable");
     assert.ok(cp!.value <= 1 / 3 + 1e-9, `one shared occasion only, not saturated (got ${cp!.value})`);
+});
+
+test("a same-instant burst on BOTH sides is one occasion, not many", () => {
+    // Both accounts emit three posts at the same place and the same minute. That is
+    // a single co-presence event, not three — distinct temporal occasions, not post
+    // pairs, are what count.
+    const burst = (tag: string, geo: { lat: number; lon: number }) => Array.from({ length: 3 }, (_, k) => ({
+        id: `${tag}${k}`, timestamp: "2024-11-02T20:00:00Z", caption: "same place same minute post here", likes: 0, comments: 0, geo,
+    }));
+    const r = correlate([
+        acc({ platform: "instagram", username: "twin_a", displayName: "Twin", bio: "x", posts: burst("a", GEO) }),
+        acc({ platform: "x", username: "twin_b", displayName: "Twin", bio: "x", posts: burst("b", NEAR) }),
+    ]);
+    const cp = edgeOf(r)?.features.find((f) => f.feature === "coPresence");
+    assert.ok(cp, "applicable");
+    assert.equal(cp!.value, 0.333, `one occasion only (1/3, got ${cp!.value})`);
 });
 
 test("co-presence is symmetric under account permutation", () => {

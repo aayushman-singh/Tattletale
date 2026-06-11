@@ -1,11 +1,11 @@
 {
   "mode": "replay",
   "handle": "ana_rivera_dev",
-  "generatedAt": "2026-06-11T07:11:11.145Z",
+  "generatedAt": "2026-06-11T07:22:46.558Z",
   "artifacts": [
     {
       "path": "report.json",
-      "sha256": "2d7db3d7c1fee3423039b56b51da7c6c7189e6f7ab310c144b33474d431bf0f9"
+      "sha256": "1302f6381756c870629b933f6010911660fd41dd339deaa3910d624958ab5164"
     },
     {
       "path": "correlation.json",
@@ -13,18 +13,18 @@
     },
     {
       "path": "report.pdf",
-      "sha256": "416d6560e6fd4c44fd4ea2d16cbc09de68b4eaea9eae5e2a8067ab254f8e5ceb"
+      "sha256": "8ff22b4a3c5ca798df5164b6bce2f3689f7ed68ac7a043b8efa3b76b16fb060d"
     }
   ],
   "custodyEntries": 3,
-  "rootHash": "5ad6613ebc9b36808d1a7bc59a1daf36be0898958612eaa2218910715e137f35",
+  "rootHash": "9581c10c420027e2e4095a39146194f3b3c9feab2edf3090a5137d4be9769700",
   "seal": {
     "algorithm": "Ed25519",
     "signedField": "rootHash",
     "mode": "demo-ephemeral",
-    "keyId": "75977e1d9369215e",
-    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4yLrNV+0vz4Jiu5GwACt2/o0u5TKw43IYKa7xX8/RQc=\n-----END PUBLIC KEY-----\n",
-    "signature": "4dOC3NQ2sOnHLEppjVC4otoflSbY8KPrMwO4iXtSuRTS53KSoXESE6mCvHYB+Vch6B9C3Vo9ZWrgrCKeOreXCg==",
+    "keyId": "55a0091ca724df4b",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA66TLA/6WzMm18wzW5UWCd22RzfVP/IFc6bne0LwH++M=\n-----END PUBLIC KEY-----\n",
+    "signature": "v1n/Ff/3HfIw6oSsTcdtgcymW+/SuCs75tlNbY58cwWuFgWKWeEaPDfcBWC2JF/KHT/9iW2m34Wjs6OupjLHCQ==",
     "note": "Demo seal: key generated at sealing time, not persisted, no external trust anchor. It proves the artifacts are internally consistent and that one key signed them — NOT custody attribution. Court-grade use requires an HSM-held examiner key (mode: hsm) pinned by keyId + an RFC 3161 trusted timestamp (see ADR-0004)."
   }
 }

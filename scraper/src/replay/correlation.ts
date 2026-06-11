@@ -213,12 +213,11 @@ const clamp01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
 function hourHistogram(posts: GoldenPost[]): number[] {
     const bins = new Array(24).fill(0);
     for (const p of posts) {
-        const h = new Date(p.timestamp).getUTCHours();
-        if (Number.isNaN(h)) {
-            // Bad evidence fails loudly — we do not silently weaken a feature.
-            throw new Error(`Invalid post timestamp "${p.timestamp}" (post ${p.id}).`);
-        }
-        bins[h]++;
+        // Strict ISO-8601-with-timezone parse (shared with the geo path): a
+        // timezone-less string would be read in the host's local zone — a
+        // host-dependent result the forensic replay cannot tolerate. Bad evidence
+        // fails loudly; we never silently weaken a feature.
+        bins[new Date(parseInstant(p.timestamp, p.id)).getUTCHours()]++;
     }
     return bins;
 }
@@ -270,12 +269,17 @@ function parseInstant(ts: string, postId: string): number {
     return t;
 }
 
-// Posts of an account that carry BOTH a valid geo point and a valid instant.
+// Capture-grade geo posts of an account: a valid instant, a valid point, AND a
+// stated accuracy no coarser than the co-presence radius. A coarse point (a
+// city/venue centroid) is NOT a co-presence instrument, so it is dropped here
+// rather than counted toward coverage — an account with only coarse points is
+// therefore INAPPLICABLE (renormalized out, neutral), not scored as a zero.
 function geoStamps(posts: GoldenPost[]): GeoStamp[] {
     const out: GeoStamp[] = [];
     for (const p of posts) {
         const geo = validatedGeo(p);
         if (!geo) continue;
+        if ((geo.accuracyM ?? 0) > COPRESENCE_RADIUS_M) continue; // coarse: not an instrument
         out.push({ t: parseInstant(p.timestamp, p.id), geo });
     }
     return out;
@@ -294,13 +298,9 @@ function haversineMeters(a: GeoPoint, b: GeoPoint): number {
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-// Two stamps are co-located only if BOTH points are capture-grade (stated accuracy
-// no coarser than the co-presence radius) AND their separation is within it. A
-// city/venue-centroid point (coarse accuracy) can never read as "the same spot",
-// so a merely-shared city is never co-presence.
+// Two capture-grade stamps are co-located if their separation is within the
+// co-presence radius. (Coarse points are already excluded by `geoStamps`.)
 function coLocated(x: GeoStamp, y: GeoStamp): boolean {
-    if ((x.geo.accuracyM ?? 0) > COPRESENCE_RADIUS_M) return false;
-    if ((y.geo.accuracyM ?? 0) > COPRESENCE_RADIUS_M) return false;
     return haversineMeters(x.geo, y.geo) <= COPRESENCE_RADIUS_M;
 }
 
@@ -308,11 +308,16 @@ function coLocated(x: GeoStamp, y: GeoStamp): boolean {
 // MIN_GEO_COVERAGE capture-grade geo posts (no instrument / too sparse to mean
 // anything; renormalized out, never punished). Otherwise the value is in [0,1].
 //
-// Co-present occasions are counted by a deterministic ONE-TO-ONE greedy matching:
-// candidate cross-pairs are ordered tightest-time-first and each post is consumed
-// at most once. This makes the count SYMMETRIC in (a, b) — independent of which
-// account sorts first — and stops a burst of duplicate posts from saturating the
-// signal against a single post on the other side. Saturates at COPRESENCE_SATURATION.
+// Counting is two-staged so the result reflects DISTINCT real-world occasions, not
+// post volume:
+//   1. One-to-one greedy matching of co-located cross-pairs (tightest-time-first,
+//      each post consumed once) — symmetric in (a, b) and immune to a one-sided
+//      duplicate burst matching the same post repeatedly.
+//   2. The matched pairs are then collapsed into distinct temporal occasions: pairs
+//      whose times fall within COPRESENCE_WINDOW_MS of each other are ONE occasion.
+//      So two accounts that both spam N posts at the same instant/place still count
+//      as a single co-presence event, not N.
+// Saturates at COPRESENCE_SATURATION.
 function coPresence(a: GoldenPost[], b: GoldenPost[]): { value: number; occasions: number } | null {
     const ga = geoStamps(a);
     const gb = geoStamps(b);
@@ -331,12 +336,22 @@ function coPresence(a: GoldenPost[], b: GoldenPost[]): { value: number; occasion
 
     const usedA = new Set<number>();
     const usedB = new Set<number>();
-    let occasions = 0;
+    const matchTimes: number[] = [];
     for (const c of candidates) {
         if (usedA.has(c.i) || usedB.has(c.j)) continue;
         usedA.add(c.i);
         usedB.add(c.j);
-        occasions++;
+        // Representative time of the matched pair (earlier of the two posts).
+        matchTimes.push(Math.min(ga[c.i].t, gb[c.j].t));
+    }
+
+    // Collapse matched pairs into distinct temporal occasions by 1-D gap clustering.
+    matchTimes.sort((p, q) => p - q);
+    let occasions = 0;
+    let prev = -Infinity;
+    for (const t of matchTimes) {
+        if (t - prev > COPRESENCE_WINDOW_MS) occasions++;
+        prev = t;
     }
     return { value: Math.min(1, occasions / COPRESENCE_SATURATION), occasions };
 }
@@ -509,9 +524,12 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
     // Canonicalize account order so cluster ids, layout coordinates, edge order
     // and therefore the root hash are independent of the order accounts were
     // collected in — required for a reproducible forensic replay.
-    const accounts = [...input].sort((a, b) =>
-        `${a.platform} ${a.username}`.localeCompare(`${b.platform} ${b.username}`),
-    );
+    const keyOf = (p: GoldenPlatform): string => `${p.platform} ${p.username}`;
+    const accounts = [...input].sort((a, b) => {
+        const ka = keyOf(a);
+        const kb = keyOf(b);
+        return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
     const df = buildDocFrequency(accounts);
     const n = accounts.length;
 

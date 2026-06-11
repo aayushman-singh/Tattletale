@@ -1,12 +1,21 @@
 // Shared types for replay mode. No runtime, no I/O — just the shapes that flow
 // between the fixture loader, the report assembler, and the custody manifest.
 
+// Capture-location of a post. Optional everywhere: when absent, the
+// temporal-geospatial co-presence signal is INAPPLICABLE for any pair touching
+// this post's account and is renormalized out of the score — never imputed.
+export interface GeoPoint {
+    lat: number; // degrees, -90..90
+    lon: number; // degrees, -180..180
+}
+
 export interface GoldenPost {
     id: string;
     timestamp: string;
     caption: string;
     likes: number;
     comments: number;
+    geo?: GeoPoint;
 }
 
 export interface GoldenPlatform {

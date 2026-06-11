@@ -9,7 +9,7 @@
 // hand-written assertions. Here every edge is *computed* from observable signals
 // and carries the feature breakdown that justifies it.
 
-import type { GoldenPlatform, GoldenPost } from "./types.js";
+import type { GeoPoint, GoldenPlatform, GoldenPost } from "./types.js";
 import type {
     CorrelationResult,
     CorrelationNode,
@@ -31,6 +31,28 @@ const WEIGHTS = {
     temporal: 0.14,
     sharedTerms: 0.16,
 } as const;
+
+// ---- 7th signal: temporal-geospatial co-presence (applicability-gated overlay) ----
+//
+// Two accounts run by ONE operator tend to post from the SAME place at the SAME
+// moment (one device, cross-posting). That is the signal: distinct posting
+// occasions on account A that coincide — in fine space AND tight time — with a
+// post on account B. It is deliberately NOT the coarse "same city": a 250 m /
+// 30 min coincidence is what separates a shared operator from two strangers who
+// merely live in the same town (the namesake trap), so geo can never collapse
+// two distinct people on location alone.
+//
+// It is an OVERLAY, not a 7th convex weight: when geo/time metadata is missing
+// it is INAPPLICABLE and the six behavioural weights renormalize to 1.0 — the
+// score is then byte-identical to the geo-less engine, so absence is true
+// neutrality, never a fabricated value. When applicable it claims W_COPRESENCE
+// and proportionally scales the six. A geo-tagged pair that is NEVER co-located
+// scores 0 here (kept in the average) — honest mild evidence AGAINST a shared
+// operator, distinct from "no instrument".
+const W_COPRESENCE = 0.1;
+const COPRESENCE_RADIUS_M = 250; // "same place" — tight enough to exclude a shared city
+const COPRESENCE_WINDOW_MS = 30 * 60 * 1000; // "same time" — a 30-min cross-post window
+const COPRESENCE_SATURATION = 3; // independent co-located occasions for full credit
 
 // Edges weaker than this are noise and are dropped from the graph entirely.
 const EDGE_FLOOR = 0.35;
@@ -200,6 +222,79 @@ function hourHistogram(posts: GoldenPost[]): number[] {
     return bins;
 }
 
+// ---------- temporal-geospatial co-presence ----------
+
+function validatedGeo(p: GoldenPost): GeoPoint | null {
+    if (!p.geo) return null;
+    const { lat, lon } = p.geo;
+    if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lon) ||
+        lat < -90 ||
+        lat > 90 ||
+        lon < -180 ||
+        lon > 180
+    ) {
+        // Malformed geo is bad evidence — it fails loudly, never silently dropped.
+        throw new Error(`Invalid geo for post ${p.id}: lat=${lat}, lon=${lon}.`);
+    }
+    return { lat, lon };
+}
+
+interface GeoStamp {
+    t: number; // epoch ms
+    geo: GeoPoint;
+}
+
+// Posts of an account that carry BOTH a valid geo point and a valid timestamp.
+// A bad timestamp on a geo post fails loudly (same contract as the hour histogram).
+function geoStamps(posts: GoldenPost[]): GeoStamp[] {
+    const out: GeoStamp[] = [];
+    for (const p of posts) {
+        const geo = validatedGeo(p);
+        if (!geo) continue;
+        const t = Date.parse(p.timestamp);
+        if (Number.isNaN(t)) {
+            throw new Error(`Invalid post timestamp "${p.timestamp}" (post ${p.id}).`);
+        }
+        out.push({ t, geo });
+    }
+    return out;
+}
+
+// Great-circle distance in metres (haversine).
+function haversineMeters(a: GeoPoint, b: GeoPoint): number {
+    const R = 6_371_000;
+    const toRad = (d: number): number => (d * Math.PI) / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLon = toRad(b.lon - a.lon);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const h =
+        Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+// Returns null when the signal is INAPPLICABLE (either account has no geo-stamped
+// post — no instrument to compare). Otherwise the value is in [0,1], counting
+// DISTINCT posting occasions on `a` that coincide in fine space and tight time
+// with any post on `b`, saturating at COPRESENCE_SATURATION.
+function coPresence(a: GoldenPost[], b: GoldenPost[]): { value: number; occasions: number } | null {
+    const ga = geoStamps(a);
+    const gb = geoStamps(b);
+    if (ga.length === 0 || gb.length === 0) return null;
+    let occasions = 0;
+    for (const x of ga) {
+        const coincides = gb.some(
+            (y) =>
+                Math.abs(x.t - y.t) <= COPRESENCE_WINDOW_MS &&
+                haversineMeters(x.geo, y.geo) <= COPRESENCE_RADIUS_M,
+        );
+        if (coincides) occasions++;
+    }
+    return { value: Math.min(1, occasions / COPRESENCE_SATURATION), occasions };
+}
+
 // ---------- shared low-frequency terms ----------
 
 // Document frequency: how many accounts each term appears in. A term seen in few
@@ -264,19 +359,42 @@ function scorePair(
         ],
     ];
 
+    // Co-presence overlay. When applicable it claims W_COPRESENCE and the six
+    // behavioural weights renormalize to (1 - W_COPRESENCE); when inapplicable
+    // (no geo metadata) baseScale = 1 and the math is byte-identical to the
+    // six-signal engine — absence is true neutrality, not a zero that drags.
+    const cop = coPresence(a.posts, b.posts);
+    const baseScale = cop !== null ? 1 - W_COPRESENCE : 1;
+
     let score = 0;
     const features: FeatureContribution[] = parts.map(([key, value, label]) => {
-        const weight = WEIGHTS[key];
+        const weight = WEIGHTS[key] * baseScale;
         const contribution = value * weight;
         score += contribution;
         return {
             feature: key,
             value: round(value),
-            weight,
+            weight: round(weight),
             contribution: round(contribution),
             label,
         };
     });
+
+    if (cop !== null) {
+        const contribution = cop.value * W_COPRESENCE;
+        score += contribution;
+        features.push({
+            feature: "coPresence",
+            value: round(cop.value),
+            weight: W_COPRESENCE,
+            contribution: round(contribution),
+            label:
+                cop.occasions > 0
+                    ? `co-located posting: ${cop.occasions} occasion${cop.occasions === 1 ? "" : "s"} within ${COPRESENCE_RADIUS_M} m and ${COPRESENCE_WINDOW_MS / 60000} min`
+                    : "geo-tagged but never co-located (evidence against a shared operator)",
+        });
+    }
+
     features.sort((x, y) => y.contribution - x.contribution);
     return { score: round(score), features };
 }
@@ -447,8 +565,14 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
             "Heuristic link score (NOT a calibrated probability): pairwise handle & display-name " +
             "Jaro-Winkler, bio Jaccard, bounded stylometric agreement, hour-of-day cosine, and " +
             "shared low-frequency vocabulary — each behavioural signal coverage-gated by post " +
-            "count. Accounts agglomerate into identities under a complete-linkage guard.",
-        weights: WEIGHTS,
+            "count. A seventh signal, temporal-geospatial co-presence, is an applicability-gated " +
+            `overlay (weight ${W_COPRESENCE}): when both accounts carry geo+time metadata it rewards ` +
+            `distinct posting occasions co-located within ${COPRESENCE_RADIUS_M} m and ` +
+            `${COPRESENCE_WINDOW_MS / 60000} min and the six behavioural weights renormalize to ` +
+            `${1 - W_COPRESENCE}; when metadata is absent the signal is inapplicable and the six ` +
+            "renormalize to 1.0 (no fabricated value). Accounts agglomerate into identities under a " +
+            "complete-linkage guard.",
+        weights: { ...WEIGHTS, coPresence: W_COPRESENCE },
         thresholds: { edgeFloor: EDGE_FLOOR, merge: MERGE_THRESHOLD },
         nodes,
         edges: edges.sort((a, b) => b.score - a.score || a.source - b.source || a.target - b.target),

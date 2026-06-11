@@ -148,3 +148,117 @@ test("deterministic: same input => identical graph (incl. layout coords)", () =>
     const b = JSON.stringify(correlate(accounts));
     assert.equal(a, b, "correlation output must be byte-identical across runs");
 });
+
+// ---------- 7th signal: temporal-geospatial co-presence ----------
+
+const GEO = { lat: 19.076, lon: 72.8777 }; // one fine spot (Mumbai, ~building scale)
+const NEAR = { lat: 19.0768, lon: 72.8779 }; // ~95 m away — same place, within 250 m
+const FAR = { lat: 19.12, lon: 72.93 }; // ~7 km away — same CITY, coarse only
+
+// Same handle/name/style/vocab pair so they already link; behavioural evidence
+// is held identical between the geo and geo-less variants so any score delta is
+// attributable to co-presence alone.
+const twin = (tag: string, geo?: { lat: number; lon: number }, hourShift = 0) => [
+    { id: `${tag}1`, timestamp: `2024-11-02T${20 + hourShift}:00:00Z`, caption: "shipping a tiny CLI tool tonight, missing await again", likes: 1, comments: 0, ...(geo ? { geo } : {}) },
+    { id: `${tag}2`, timestamp: `2024-11-05T${21 + hourShift}:00:00Z`, caption: "the compiler caught the bug, ship small ship often", likes: 1, comments: 0, ...(geo ? { geo } : {}) },
+    { id: `${tag}3`, timestamp: `2024-11-07T${20 + hourShift}:30:00Z`, caption: "refactored the parser, fewer nodes same behaviour", likes: 1, comments: 0, ...(geo ? { geo } : {}) },
+];
+
+const edgeOf = (r: ReturnType<typeof correlate>, a = 0, b = 1) =>
+    r.edges.find((e) => (e.source === a && e.target === b) || (e.source === b && e.target === a));
+
+test("co-presence raises the link score above the identical geo-less pair", () => {
+    // Distinct handles keep the geo-less base below 1.0 so the overlay has headroom;
+    // every other signal is held identical between the two variants.
+    const geoless = correlate([
+        acc({ platform: "instagram", username: "ana_dev_ig", displayName: "Ana Dev", bio: "dev tools", posts: twin("ig") }),
+        acc({ platform: "x", username: "ana_dev_x", displayName: "Ana Dev", bio: "dev tools", posts: twin("x") }),
+    ]);
+    const copresent = correlate([
+        acc({ platform: "instagram", username: "ana_dev_ig", displayName: "Ana Dev", bio: "dev tools", posts: twin("ig", GEO) }),
+        acc({ platform: "x", username: "ana_dev_x", displayName: "Ana Dev", bio: "dev tools", posts: twin("x", NEAR) }),
+    ]);
+    const before = edgeOf(geoless)!;
+    const after = edgeOf(copresent)!;
+    assert.ok(after.score > before.score, `co-presence must raise score (${before.score} -> ${after.score})`);
+    const cp = after.features.find((f) => f.feature === "coPresence");
+    assert.ok(cp, "the co-presence feature must be present and inspectable");
+    assert.equal(cp!.value, 1, "three co-located occasions saturate the signal");
+    assert.equal(cp!.weight, 0.1, "co-presence carries a transparent fixed weight");
+    assert.equal(before.features.length, 6, "geo-less pair has only the six behavioural signals");
+    assert.equal(after.features.length, 7, "the geo pair gains the seventh signal");
+});
+
+test("co-presence raises cohesion for a true co-present identity", () => {
+    const r = correlate([
+        acc({ platform: "instagram", username: "ana_dev_ig", displayName: "Ana Dev", bio: "dev tools", posts: twin("ig", GEO) }),
+        acc({ platform: "x", username: "ana_dev_x", displayName: "Ana Dev", bio: "dev tools", posts: twin("x", NEAR) }),
+    ]);
+    const geoless = correlate([
+        acc({ platform: "instagram", username: "ana_dev_ig", displayName: "Ana Dev", bio: "dev tools", posts: twin("ig") }),
+        acc({ platform: "x", username: "ana_dev_x", displayName: "Ana Dev", bio: "dev tools", posts: twin("x") }),
+    ]);
+    assert.equal(r.identities.length, 1, "the true co-present pair resolves to one identity");
+    assert.ok((r.identities[0].cohesion ?? 0) > (geoless.identities[0].cohesion ?? 0), "cohesion must rise");
+});
+
+test("a coarse shared city does NOT merge a behavioural namesake", () => {
+    // Same handle + name (a namesake trap) but DIFFERENT behaviour (dev vs cook),
+    // each geo-tagged 7 km apart in the same city. Geo must not collapse them.
+    const r = correlate([
+        acc({ platform: "instagram", username: "ana_rivera", displayName: "Ana Rivera", bio: "dev tools", posts: twin("ig", GEO) }),
+        acc({ platform: "facebook", username: "ana_rivera", displayName: "Ana Rivera", bio: "cocina recetas", posts: [
+            { id: "fb1", timestamp: "2024-11-02T12:00:00Z", caption: "hoy preparé una tortilla para la familia receta de la abuela", likes: 1, comments: 0, geo: FAR },
+            { id: "fb2", timestamp: "2024-11-05T13:00:00Z", caption: "el secreto del sofrito es la paciencia fuego lento", likes: 1, comments: 0, geo: FAR },
+            { id: "fb3", timestamp: "2024-11-07T12:30:00Z", caption: "domingo de paella para toda la familia", likes: 1, comments: 0, geo: FAR } ] }),
+    ]);
+    assert.equal(r.identities.length, 2, "a shared city must not collapse two distinct people");
+    const cp = edgeOf(r)?.features.find((f) => f.feature === "coPresence");
+    // Geo present but never within 250 m AND 30 min => measured zero, not imputed.
+    assert.ok(cp, "co-presence is applicable (both geo-tagged) and reported");
+    assert.equal(cp!.value, 0, "a coarse city share yields zero co-presence");
+});
+
+test("missing geo on one side => co-presence inapplicable (neutral, six signals)", () => {
+    const withGeoOneSide = correlate([
+        acc({ platform: "instagram", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("ig", GEO) }),
+        acc({ platform: "x", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("x") }), // no geo
+    ]);
+    const geoless = correlate([
+        acc({ platform: "instagram", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("ig") }),
+        acc({ platform: "x", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("x") }),
+    ]);
+    const e = edgeOf(withGeoOneSide)!;
+    assert.equal(e.features.length, 6, "one-sided geo is inapplicable — no co-presence feature");
+    assert.ok(!e.features.some((f) => f.feature === "coPresence"));
+    // Inapplicable must be byte-identical to the geo-less score — true neutrality.
+    assert.equal(e.score, edgeOf(geoless)!.score, "missing metadata changes nothing, never fabricates");
+});
+
+test("geo-tagged but never co-located scores zero with an honest evidence-against label", () => {
+    // Same place, but always 6 hours apart => never co-present in time.
+    const r = correlate([
+        acc({ platform: "instagram", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("ig", GEO, 0) }),
+        acc({ platform: "x", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("x", GEO, -6) }),
+    ]);
+    const cp = edgeOf(r)?.features.find((f) => f.feature === "coPresence");
+    assert.ok(cp, "co-presence is applicable");
+    assert.equal(cp!.value, 0, "same place, different times => not co-present");
+    assert.match(cp!.label, /never co-located/);
+});
+
+test("malformed geo fails loudly", () => {
+    const accounts = [
+        acc({ username: "a", posts: [{ id: "x", timestamp: "2024-11-02T20:00:00Z", caption: "hi there", likes: 0, comments: 0, geo: { lat: 200, lon: 0 } }] }),
+        acc({ username: "b", posts: [{ id: "y", timestamp: "2024-11-02T20:10:00Z", caption: "hi there", likes: 0, comments: 0, geo: GEO }] }),
+    ];
+    assert.throws(() => correlate(accounts), /Invalid geo/);
+});
+
+test("co-presence is deterministic across runs", () => {
+    const build = () => [
+        acc({ platform: "instagram", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("ig", GEO) }),
+        acc({ platform: "x", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("x", NEAR) }),
+    ];
+    assert.equal(JSON.stringify(correlate(build())), JSON.stringify(correlate(build())));
+});

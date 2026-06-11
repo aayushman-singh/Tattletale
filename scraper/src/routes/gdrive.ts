@@ -1,3 +1,4 @@
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import axios from "axios";
 import qs from "qs";
@@ -11,9 +12,13 @@ import GoogleDriveUser, { IGoogleDriveUser } from "../models/GoogleDriveUser";
 import mongoose from "mongoose";
 import { __dirname } from "../../../config";
 
-const CLIENT_ID =
-    "218022995131-pkv99vvugfmhr73ua600lg44q362bbsj.apps.googleusercontent.com";
-const CLIENT_SECRET = "***REDACTED***";
+const CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+if (!CLIENT_ID || !CLIENT_SECRET) {
+    throw new Error(
+        "GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must be set (see .env.example).",
+    );
+}
 const REDIRECT_URI = "http://localhost:3009/oauth2callback";
 const TOKEN_PATH = path.join(__dirname, "drive_token.json");
 
@@ -26,8 +31,8 @@ let user = '';
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            "***REDACTED***",
-            {
+            clusterUri(),
+            { dbName: "driveDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,

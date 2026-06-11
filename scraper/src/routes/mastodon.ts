@@ -1,3 +1,5 @@
+import "../../../config.js"; // load .env first (must precede any env read)
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import cors from "cors";
 import { scrapeMastodon } from "../Helpers/Mastodon/mastodonScraper"; // Adjust path as needed
@@ -12,8 +14,8 @@ app.use(express.json());
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            "***REDACTED***",
-            {
+            clusterUri(),
+            { dbName: "mastodonDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,

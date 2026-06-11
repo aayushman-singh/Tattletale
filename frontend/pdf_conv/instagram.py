@@ -14,9 +14,9 @@ from urllib.parse import urlparse
 import re
 
 # MongoDB Connection Constants
-MONGO_URI=YOUR_MONGO_URI_HERE
-DATABASE_NAME=YOUR_DATABASE_NAME_HERE
-COLLECTION_NAME=YOUR_COLLECTION_NAME_HERE
+MONGO_URI = os.environ["MONGO_CLUSTER_URI"]
+DATABASE_NAME="instagramDB"
+COLLECTION_NAME="instagram_users"
 
 class InstagramDataReport:
     def __init__(self):

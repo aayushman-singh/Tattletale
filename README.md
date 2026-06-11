@@ -38,6 +38,54 @@ What was stripped: live credentials, session cookies, real targets' scrape outpu
 | Live cookie sessions | Removed from history, replaced with `session.example.json` |
 | Personal scrape outputs (PDFs) | Removed from history |
 
+## Try it — replay demo (no logins, no live scraping)
+
+The live scraper needs nine platform logins and a headed browser, so you can't
+just click "run" on a public deploy. Instead the app ships a **replay mode**: a
+recruiter opens the **`/demo`** route, clicks **Run demo case**, and watches the
+full pipeline — scrape → normalize → **correlate identities** → **SHA‑256 hash +
+Ed25519 seal** → append‑only custody log → report — execute against **synthetic**
+target profiles, then downloads the real generated **PDF + JSON + chain‑of‑custody
+manifest**.
+
+```bash
+# One-command local full stack (backend + frontend + mongo):
+docker compose up --build      # then open http://localhost:8080/demo
+
+# Or regenerate a case bundle from the CLI (offline, no DB):
+cd scraper && npm run start:replay -- ana_rivera_dev --demo
+# -> output/golden/ana_rivera_dev/generated/{report,correlation,manifest,custody-log}.json + report.pdf
+```
+
+### Cross-identity correlation — "same person, different handles" made real
+
+Given the accounts observed for a target, the engine
+(`scraper/src/replay/correlation.ts`) scores every account pair on **handle**
+(Jaro‑Winkler), **display name**, **bio overlap**, a **writing‑style
+fingerprint** (punctuation, casing, language, function‑word rates), **posting
+hour‑of‑day**, and **shared distinctive vocabulary**, then clusters them into
+identities — with the per‑feature evidence behind every link.
+
+![Identity correlation graph](docs/assets/identity-correlation-graph.png)
+
+The forensically important part is the **negative** result: a same‑named account
+("Ana Rivera", a home cook posting in Spanish at midday) is **flagged but kept
+separate** from the developer "Ana Rivera" (three accounts, posting code at night)
+— because a shared *name* is weak evidence and the *behaviour* doesn't match. The
+engine refuses the false attribution and shows you why. Every score is
+deterministic and explainable; no black box.
+
+The custody log is a genuine hash chain (each entry binds the artifact's SHA‑256
+to the previous entry's hash), so the downloadable manifest's **root hash** is
+recomputable and tamper‑evident — change any artifact byte and the root changes.
+It demonstrates the *mechanism* of chain‑of‑custody on data that harms no real
+person. It is **not** court‑grade: the manifest itself isn't cryptographically
+signed and there's no external trust anchor (timestamping authority / HSM) —
+those are the next steps to make it evidentiary, and are out of scope for a demo.
+
+> The golden fixtures under `output/golden/` are 100% invented. No real scraped
+> media ships in this repo.
+
 ## Features
 
 - **9-platform scraping** — Instagram, X/Twitter, WhatsApp, Telegram, Facebook, Discord, Mastodon, YouTube, Google Drive
@@ -49,7 +97,65 @@ What was stripped: live credentials, session cookies, real targets' scrape outpu
 - **AI/ML layer** — entity extraction, summarization, visualization
 - **Multi-surface** — web dashboard, mobile app, standalone Windows scraper
 
-## Flowchart
+## Architecture
+
+The original product flowchart (rendered below) is the high-level picture. The Mermaid diagram traces the **chain-of-custody path** a single artifact actually takes through the code — from a target handle to a court-ready bundle.
+
+```mermaid
+flowchart TD
+    handle["Target handle / phone / email"]
+
+    subgraph scrapers["Per-platform scraper routes (Express)"]
+        ig["instagram.ts"]
+        x["x.ts"]
+        fb["facebook.ts"]
+        dc["discord.ts"]
+        md["mastodon.ts"]
+        yt["youtube.ts"]
+        wa["whatsapp.ts"]
+        tg["telegram.py (Telethon)"]
+        gd["gdrive.ts / gmail.ts / google.ts"]
+    end
+
+    maigret["Maigret 2500-site sweep<br/>(frontend/maigret/server.py)"]
+
+    handle --> scrapers
+    handle --> maigret
+
+    subgraph capture["Capture + retry (async-retry, 3x backoff)"]
+        artifact["Raw artifacts<br/>screenshots · chat logs · JSON"]
+    end
+
+    scrapers --> artifact
+    maigret --> artifact
+
+    s3["AWS S3 bucket<br/>uploadToS3() in mongoUtils.ts"]
+    platdb["Per-platform Mongo<br/>${platform}DB.${platform}_users"]
+    logdb["logDB.logs<br/>(log.ts, append-only activity log)"]
+    tldb["timelineDB.timeline_users<br/>(timeline.ts)"]
+
+    artifact -->|"PutObject"| s3
+    s3 -->|"S3 URL"| platdb
+    artifact --> logdb
+    platdb --> tldb
+
+    subgraph report["Report bundle (reportlab)"]
+        pdf["PDF report<br/>frontend/pdf_conv/*.py"]
+        json["Structured JSON dump"]
+    end
+
+    platdb --> report
+    tldb --> report
+    logdb --> report
+    maigret --> report
+
+    pdf --> bundle["Court-ready output:<br/>PDF + JSON + raw artifacts"]
+    json --> bundle
+```
+
+> **Accuracy note.** The diagram reflects what the hackathon code does today: artifacts are pushed to S3, their URLs and metadata are upserted into per-platform Mongo databases, activity is recorded in `logDB`, and the `pdf_conv` reportlab scripts read those databases to emit the report. The cryptographic **SHA hashing and append-only signing** described in [Sample output](#sample-output) are part of the *designed* chain-of-custody model — the hackathon code persists and logs artifacts but does not yet compute per-artifact content hashes in-tree. See [docs/adr/](docs/adr/) for the reasoning behind session, rate-limit, and correlation decisions.
+
+### Original product flowchart
 
 <img src="./Readme Section Flowchart.png" alt="Tattletale architecture flowchart"/>
 
@@ -153,7 +259,7 @@ Tattletale/
 │   └── src/Helpers/        Per-platform helpers (Telegram, WhatsApp, etc.)
 ├── frontend/               React + Tailwind dashboard
 ├── mobileApp/              Flutter Android/iOS client
-├── mobileScraper/          Flutter scraper variant
+├── mobileScraper/          Appium + WebdriverIO prototype (see note below)
 ├── docker/                 Container definitions
 ├── *.example               Credential shims (copy → rename → fill)
 ├── SESSIONS.md             Session file generation + safety
@@ -161,6 +267,12 @@ Tattletale/
 ├── requirements.txt        Python deps
 └── package.json            Root deps
 ```
+
+> **`mobileScraper/` is a prototype.** It drives a real Android Instagram app via
+> Appium + WebdriverIO against an `emulator-5554` device, used to explore mobile
+> data capture where the web path is blocked. It needs the Android SDK + a running
+> emulator and is **not** wired into the main pipeline or CI. Credentials come from
+> `IG_USERNAME` / `IG_PASSWORD` (throwaway test account only). Treat it as a spike.
 
 ## How this repo was sanitized
 

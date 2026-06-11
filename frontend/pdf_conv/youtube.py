@@ -13,7 +13,7 @@ from reportlab.pdfbase import pdfmetrics
 
 class YoutubeDataReport:
     def __init__(self):
-        self.MONGO_URI = "***REDACTED***"
+        self.MONGO_URI = os.environ["MONGO_CLUSTER_URI"]
         self.DATABASE_NAME = "youtubeDB"
         self.COLLECTION_NAME = "youtube_users"
         try:

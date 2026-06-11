@@ -13,9 +13,9 @@ from urllib.parse import urlparse
 import time
 
 # MongoDB Configuration
-MONGO_URI=YOUR_MONGO_URI_HERE
-DATABASE_NAME=YOUR_DATABASE_NAME_HERE
-COLLECTION_NAME=YOUR_COLLECTION_NAME_HERE
+MONGO_URI = os.environ["MONGO_CLUSTER_URI"]
+DATABASE_NAME="facebookDB"
+COLLECTION_NAME="facebook_users"
 
 class FacebookDataReport:
     def __init__(self):

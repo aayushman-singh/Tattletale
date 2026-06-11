@@ -151,9 +151,11 @@ test("deterministic: same input => identical graph (incl. layout coords)", () =>
 
 // ---------- 7th signal: temporal-geospatial co-presence ----------
 
-const GEO = { lat: 19.076, lon: 72.8777 }; // one fine spot (Mumbai, ~building scale)
-const NEAR = { lat: 19.0768, lon: 72.8779 }; // ~95 m away — same place, within 250 m
-const FAR = { lat: 19.12, lon: 72.93 }; // ~7 km away — same CITY, coarse only
+// All capture-grade points declare a fine accuracy — a point that states no
+// accuracy is no longer treated as a perfect fix (see the no-accuracy test).
+const GEO = { lat: 19.076, lon: 72.8777, accuracyM: 25 }; // one fine spot (Mumbai, ~building scale)
+const NEAR = { lat: 19.0768, lon: 72.8779, accuracyM: 25 }; // ~95 m away — same place, within 250 m
+const FAR = { lat: 19.12, lon: 72.93, accuracyM: 25 }; // ~7 km away — fine fix, but a different part of the CITY
 
 // Same handle/name/style/vocab pair so they already link; behavioural evidence
 // is held identical between the geo and geo-less variants so any score delta is
@@ -283,6 +285,26 @@ test("coarse-accuracy points are not an instrument: inapplicable, not a zero", (
     assert.equal(e.score, edgeOf(geoless)!.score, "coarse-only must be byte-identical to geo-less");
 });
 
+test("a point with no stated accuracy is not an instrument: inapplicable, not a perfect fix", () => {
+    // Fine-looking coordinates, but NO accuracyM declared. Unknown precision must
+    // never be assumed perfect — certifying ≤250 m co-presence from an unqualified
+    // coordinate would fabricate precision. So it is dropped (like a coarse point):
+    // the signal is INAPPLICABLE and the score is byte-identical to geo-less.
+    const noAcc = { lat: 19.076, lon: 72.8777 }; // same fine spot, but precision UNSTATED
+    const run = correlate([
+        acc({ platform: "instagram", username: "ana_n", displayName: "Ana N", bio: "dev tools", posts: twin("ig", noAcc) }),
+        acc({ platform: "x", username: "ana_m", displayName: "Ana M", bio: "dev tools", posts: twin("x", noAcc) }),
+    ]);
+    const geoless = correlate([
+        acc({ platform: "instagram", username: "ana_n", displayName: "Ana N", bio: "dev tools", posts: twin("ig") }),
+        acc({ platform: "x", username: "ana_m", displayName: "Ana M", bio: "dev tools", posts: twin("x") }),
+    ]);
+    const e = edgeOf(run)!;
+    assert.ok(!e.features.some((f) => f.feature === "coPresence"), "no-accuracy points are inapplicable");
+    assert.equal(e.features.length, 6);
+    assert.equal(e.score, edgeOf(geoless)!.score, "unstated accuracy must be byte-identical to geo-less");
+});
+
 test("co-presence cannot manufacture a merge from weak behaviour (geo never decides identity)", () => {
     // Two behaviourally DIFFERENT people (a dev and a Spanish cook, different
     // handles) who happen to repeatedly post from the same fine spot at the same
@@ -313,7 +335,7 @@ test("a burst of duplicate posts cannot saturate co-presence (one-to-one matchin
         acc({ platform: "instagram", username: "spammer", displayName: "S", bio: "x", posts: burst }),
         acc({ platform: "x", username: "spammer", displayName: "S", bio: "x", posts: [
             { id: "b0", timestamp: "2024-11-02T20:05:00Z", caption: "same place same time spam post", likes: 0, comments: 0, geo: NEAR },
-            { id: "b1", timestamp: "2024-11-09T09:00:00Z", caption: "unrelated later post elsewhere entirely", likes: 0, comments: 0, geo: { lat: 28.61, lon: 77.20 } } ] }),
+            { id: "b1", timestamp: "2024-11-09T09:00:00Z", caption: "unrelated later post elsewhere entirely", likes: 0, comments: 0, geo: { lat: 28.61, lon: 77.20, accuracyM: 25 } } ] }),
     ]);
     const cp = edgeOf(r)?.features.find((f) => f.feature === "coPresence");
     assert.ok(cp, "applicable");

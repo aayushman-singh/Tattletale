@@ -4,14 +4,17 @@
 // Capture-location of a post. Optional everywhere. Co-presence is gated on a
 // MINIMUM number of capture-grade geo posts PER ACCOUNT PAIR: when either account
 // in a pair lacks enough, the signal is INAPPLICABLE for that pair and is
-// renormalized out of the score — never imputed. `accuracyM`, when supplied, is
-// the point's capture uncertainty (1-sigma radius, metres); a point coarser than
-// the co-presence radius (e.g. a city/venue centroid) can never establish fine
-// co-presence, so a merely-shared city is never mistaken for the same spot.
+// renormalized out of the score — never imputed. `accuracyM` is the point's
+// capture uncertainty (1-sigma radius, metres). It is REQUIRED for a point to
+// count as a co-presence instrument: a point coarser than the co-presence radius
+// (a city/venue centroid) — OR one that declares no accuracy at all (unknown
+// precision is never assumed perfect) — can never establish fine co-presence, so
+// a merely-shared city, and an unqualified coordinate, are both dropped rather
+// than mistaken for the same spot.
 export interface GeoPoint {
     lat: number; // degrees, -90..90
     lon: number; // degrees, -180..180
-    accuracyM?: number; // capture uncertainty radius in metres; coarse points can't co-locate
+    accuracyM?: number; // capture uncertainty (m); REQUIRED & fine (<=250 m) to count as an instrument
 }
 
 export interface GoldenPost {

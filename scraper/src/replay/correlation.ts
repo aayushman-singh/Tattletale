@@ -270,16 +270,23 @@ function parseInstant(ts: string, postId: string): number {
 }
 
 // Capture-grade geo posts of an account: a valid instant, a valid point, AND a
-// stated accuracy no coarser than the co-presence radius. A coarse point (a
-// city/venue centroid) is NOT a co-presence instrument, so it is dropped here
-// rather than counted toward coverage — an account with only coarse points is
-// therefore INAPPLICABLE (renormalized out, neutral), not scored as a zero.
+// STATED accuracy no coarser than the co-presence radius. Two kinds of point are
+// NOT instruments and are dropped here (not counted toward coverage), so an
+// account left with too few becomes INAPPLICABLE (renormalized out, neutral),
+// never scored as a zero:
+//   - a coarse point (accuracy worse than the radius — a city/venue centroid);
+//   - a point with NO stated accuracy. Unknown precision is never assumed to be a
+//     perfect fix: certifying fine co-presence (≤250 m) from a coordinate that
+//     declares no uncertainty would fabricate precision the evidence never
+//     claimed. Absent accuracy is treated exactly like a coarse point — dropped.
 function geoStamps(posts: GoldenPost[]): GeoStamp[] {
     const out: GeoStamp[] = [];
     for (const p of posts) {
         const geo = validatedGeo(p);
         if (!geo) continue;
-        if ((geo.accuracyM ?? 0) > COPRESENCE_RADIUS_M) continue; // coarse: not an instrument
+        // Require a declared, fine accuracy. `undefined` (unknown precision) and
+        // anything coarser than the radius are both non-instruments.
+        if (geo.accuracyM === undefined || geo.accuracyM > COPRESENCE_RADIUS_M) continue;
         out.push({ t: parseInstant(p.timestamp, p.id), geo });
     }
     return out;

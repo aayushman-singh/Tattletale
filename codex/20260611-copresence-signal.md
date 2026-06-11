@@ -23,3 +23,18 @@ Line refs are to the supplied diff.
 11. **[Medium] The “coarse shared city” test is weak** (`correlation.test.ts`). It uses two precise points 7km apart, so it only proves distance rejection. It does not test city centroids, rounded coordinates, same venue/campus, or a namesake pair where co-presence pushes the score over merge.
 
 12. **[Low/Medium] The `GeoPoint` comment is false** (`types.ts`). It says absent geo makes co-presence inapplicable for any pair touching that post’s account. Implementation says pair-level applicability starts once each account has any geo-stamped post. That mismatch will mislead fixture producers.
+
+---
+
+## Codex pass 2 (hardened diff)
+
+**Findings**
+- **High** - Sparse/capture-grade geo is not actually neutral. `geoStamps()` counts every valid geo point toward coverage, but `coLocated()` later rejects coarse `accuracyM` points. So two coarse-only posts per side make `coPresence()` applicable, add a zero-valued feature, and scale behaviour by `0.9` instead of renormalizing it out. That violates guarantee (4). See [correlation.ts](C:/Repo/Tattletale/scraper/src/replay/correlation.ts:274), [correlation.ts](C:/Repo/Tattletale/scraper/src/replay/correlation.ts:301), [correlation.ts](C:/Repo/Tattletale/scraper/src/replay/correlation.ts:316), [correlation.ts](C:/Repo/Tattletale/scraper/src/replay/correlation.ts:418).
+
+- **Medium** - Duplicate-burst immunity only holds one-sided. The one-to-one matcher consumes posts, not real-world occasions. If both accounts emit three duplicate posts at the same place/time, greedy matching counts three occasions and saturates `coPresence` to `1`, even though there was one actual occasion. Existing test coverage only checks many-to-one. See [correlation.ts](C:/Repo/Tattletale/scraper/src/replay/correlation.ts:330) and [correlation.test.ts](C:/Repo/Tattletale/scraper/src/replay/__tests__/correlation.test.ts:299).
+
+- **High** - Determinism still has host-dependent paths. Non-geo timestamps still go through `new Date(p.timestamp).getUTCHours()`, while strict timezone validation only applies inside `geoStamps()`. A timezone-less non-geo timestamp can score differently by host timezone. Account canonicalization also uses default `localeCompare`, which can vary for non-ASCII identifiers by locale/ICU. See [correlation.ts](C:/Repo/Tattletale/scraper/src/replay/correlation.ts:216) and [correlation.ts](C:/Repo/Tattletale/scraper/src/replay/correlation.ts:512).
+
+Guarantee (1) holds: merge candidates and complete-linkage use `baseMatrix`, not co-presence. Guarantee (3) holds narrowly for explicit `accuracyM > 250`: those points cannot co-locate at distance 0.
+
+I could not run the test suite: `npm test --prefix scraper` was rejected by the sandbox policy.

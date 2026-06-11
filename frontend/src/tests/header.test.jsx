@@ -94,7 +94,14 @@ describe("Header Component", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("tattletale")).toBeInTheDocument();
+    // The "Case File" wordmark renders two-tone ("tattle" + a coloured "tale"
+    // span), so the brand text is split across nodes. Match the brand <span>
+    // by its normalized text content rather than a single contiguous text node.
+    expect(
+      screen.getByText(
+        (_, el) => el?.tagName === "SPAN" && el?.textContent === "tattletale",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("Features")).toBeInTheDocument();
     expect(screen.getByText("About")).toBeInTheDocument();
     expect(screen.getByText("Services")).toBeInTheDocument();

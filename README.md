@@ -63,7 +63,9 @@ Given the accounts observed for a target, the engine
 (`scraper/src/replay/correlation.ts`) scores every account pair on **handle**
 (Jaro‑Winkler), **display name**, **bio overlap**, a **writing‑style
 fingerprint** (punctuation, casing, language, function‑word rates), **posting
-hour‑of‑day**, and **shared distinctive vocabulary**, then clusters them into
+hour‑of‑day**, **shared distinctive vocabulary**, and **temporal‑geospatial
+co‑presence** (posting from the same fine place within minutes — applied only
+where geo/time metadata exists, never imputed), then clusters them into
 identities — with the per‑feature evidence behind every link.
 
 ![Identity correlation graph](docs/assets/identity-correlation-graph.png)

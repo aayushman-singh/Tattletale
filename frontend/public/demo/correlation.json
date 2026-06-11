@@ -1,12 +1,12 @@
 {
   "method": "Heuristic link score (NOT a calibrated probability): pairwise handle & display-name Jaro-Winkler, bio Jaccard, bounded stylometric agreement, hour-of-day cosine, and shared low-frequency vocabulary — each behavioural signal coverage-gated by post count. A seventh signal, temporal-geospatial co-presence, is an applicability-gated overlay (weight 0.1): when both accounts carry geo+time metadata it rewards distinct posting occasions co-located within 250 m and 30 min and the six behavioural weights renormalize to 0.9; when metadata is absent the signal is inapplicable and the six renormalize to 1.0 (no fabricated value). Accounts agglomerate into identities under a complete-linkage guard.",
   "weights": {
-    "handle": 0.24,
-    "name": 0.12,
-    "bio": 0.12,
-    "style": 0.22,
-    "temporal": 0.14,
-    "sharedTerms": 0.16,
+    "handle": 0.216,
+    "name": 0.108,
+    "bio": 0.108,
+    "style": 0.198,
+    "temporal": 0.126,
+    "sharedTerms": 0.144,
     "coPresence": 0.1
   },
   "thresholds": {

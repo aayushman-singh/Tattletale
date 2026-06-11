@@ -53,6 +53,7 @@ const W_COPRESENCE = 0.1;
 const COPRESENCE_RADIUS_M = 250; // "same place" — tight enough to exclude a shared city
 const COPRESENCE_WINDOW_MS = 30 * 60 * 1000; // "same time" — a 30-min cross-post window
 const COPRESENCE_SATURATION = 3; // independent co-located occasions for full credit
+const MIN_GEO_COVERAGE = 2; // capture-grade geo posts each side before the signal applies
 
 // Edges weaker than this are noise and are dropped from the graph entirely.
 const EDGE_FLOOR = 0.35;
@@ -224,9 +225,13 @@ function hourHistogram(posts: GoldenPost[]): number[] {
 
 // ---------- temporal-geospatial co-presence ----------
 
+// `null`/`undefined`/absent geo means "no location recorded" — a legitimate
+// absent state, handled as neutral upstream. A PRESENT-but-malformed geo object
+// (non-finite or out-of-range, or a coarser-than-fine accuracy that is itself
+// invalid) is bad evidence and fails loudly — never silently dropped.
 function validatedGeo(p: GoldenPost): GeoPoint | null {
-    if (!p.geo) return null;
-    const { lat, lon } = p.geo;
+    if (p.geo === undefined || p.geo === null) return null;
+    const { lat, lon, accuracyM } = p.geo;
     if (
         !Number.isFinite(lat) ||
         !Number.isFinite(lon) ||
@@ -235,10 +240,12 @@ function validatedGeo(p: GoldenPost): GeoPoint | null {
         lon < -180 ||
         lon > 180
     ) {
-        // Malformed geo is bad evidence — it fails loudly, never silently dropped.
         throw new Error(`Invalid geo for post ${p.id}: lat=${lat}, lon=${lon}.`);
     }
-    return { lat, lon };
+    if (accuracyM !== undefined && (!Number.isFinite(accuracyM) || accuracyM < 0)) {
+        throw new Error(`Invalid geo accuracy for post ${p.id}: accuracyM=${accuracyM}.`);
+    }
+    return accuracyM === undefined ? { lat, lon } : { lat, lon, accuracyM };
 }
 
 interface GeoStamp {
@@ -246,18 +253,30 @@ interface GeoStamp {
     geo: GeoPoint;
 }
 
-// Posts of an account that carry BOTH a valid geo point and a valid timestamp.
-// A bad timestamp on a geo post fails loudly (same contract as the hour histogram).
+// Strict ISO-8601 instant WITH an explicit timezone (Z or ±hh:mm). A timezone-less
+// or non-standard string is ambiguous (would parse in the host's local zone, a
+// determinism hole) and is rejected — bad evidence fails loudly.
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+function parseInstant(ts: string, postId: string): number {
+    if (!ISO_INSTANT.test(ts)) {
+        throw new Error(
+            `Invalid post timestamp "${ts}" (post ${postId}): require ISO-8601 with a timezone (Z or ±hh:mm).`,
+        );
+    }
+    const t = Date.parse(ts);
+    if (Number.isNaN(t)) {
+        throw new Error(`Invalid post timestamp "${ts}" (post ${postId}).`);
+    }
+    return t;
+}
+
+// Posts of an account that carry BOTH a valid geo point and a valid instant.
 function geoStamps(posts: GoldenPost[]): GeoStamp[] {
     const out: GeoStamp[] = [];
     for (const p of posts) {
         const geo = validatedGeo(p);
         if (!geo) continue;
-        const t = Date.parse(p.timestamp);
-        if (Number.isNaN(t)) {
-            throw new Error(`Invalid post timestamp "${p.timestamp}" (post ${p.id}).`);
-        }
-        out.push({ t, geo });
+        out.push({ t: parseInstant(p.timestamp, p.id), geo });
     }
     return out;
 }
@@ -275,22 +294,49 @@ function haversineMeters(a: GeoPoint, b: GeoPoint): number {
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-// Returns null when the signal is INAPPLICABLE (either account has no geo-stamped
-// post — no instrument to compare). Otherwise the value is in [0,1], counting
-// DISTINCT posting occasions on `a` that coincide in fine space and tight time
-// with any post on `b`, saturating at COPRESENCE_SATURATION.
+// Two stamps are co-located only if BOTH points are capture-grade (stated accuracy
+// no coarser than the co-presence radius) AND their separation is within it. A
+// city/venue-centroid point (coarse accuracy) can never read as "the same spot",
+// so a merely-shared city is never co-presence.
+function coLocated(x: GeoStamp, y: GeoStamp): boolean {
+    if ((x.geo.accuracyM ?? 0) > COPRESENCE_RADIUS_M) return false;
+    if ((y.geo.accuracyM ?? 0) > COPRESENCE_RADIUS_M) return false;
+    return haversineMeters(x.geo, y.geo) <= COPRESENCE_RADIUS_M;
+}
+
+// Returns null when the signal is INAPPLICABLE — either account has fewer than
+// MIN_GEO_COVERAGE capture-grade geo posts (no instrument / too sparse to mean
+// anything; renormalized out, never punished). Otherwise the value is in [0,1].
+//
+// Co-present occasions are counted by a deterministic ONE-TO-ONE greedy matching:
+// candidate cross-pairs are ordered tightest-time-first and each post is consumed
+// at most once. This makes the count SYMMETRIC in (a, b) — independent of which
+// account sorts first — and stops a burst of duplicate posts from saturating the
+// signal against a single post on the other side. Saturates at COPRESENCE_SATURATION.
 function coPresence(a: GoldenPost[], b: GoldenPost[]): { value: number; occasions: number } | null {
     const ga = geoStamps(a);
     const gb = geoStamps(b);
-    if (ga.length === 0 || gb.length === 0) return null;
+    if (ga.length < MIN_GEO_COVERAGE || gb.length < MIN_GEO_COVERAGE) return null;
+
+    const candidates: Array<{ i: number; j: number; dt: number }> = [];
+    for (let i = 0; i < ga.length; i++) {
+        for (let j = 0; j < gb.length; j++) {
+            const dt = Math.abs(ga[i].t - gb[j].t);
+            if (dt <= COPRESENCE_WINDOW_MS && coLocated(ga[i], gb[j])) {
+                candidates.push({ i, j, dt });
+            }
+        }
+    }
+    candidates.sort((p, q) => p.dt - q.dt || p.i - q.i || p.j - q.j);
+
+    const usedA = new Set<number>();
+    const usedB = new Set<number>();
     let occasions = 0;
-    for (const x of ga) {
-        const coincides = gb.some(
-            (y) =>
-                Math.abs(x.t - y.t) <= COPRESENCE_WINDOW_MS &&
-                haversineMeters(x.geo, y.geo) <= COPRESENCE_RADIUS_M,
-        );
-        if (coincides) occasions++;
+    for (const c of candidates) {
+        if (usedA.has(c.i) || usedB.has(c.j)) continue;
+        usedA.add(c.i);
+        usedB.add(c.j);
+        occasions++;
     }
     return { value: Math.min(1, occasions / COPRESENCE_SATURATION), occasions };
 }
@@ -316,7 +362,7 @@ function scorePair(
     b: GoldenPlatform,
     df: Map<string, number>,
     nAccounts: number,
-): { score: number; features: FeatureContribution[] } {
+): { score: number; baseScore: number; features: FeatureContribution[] } {
     const handle = jaroWinkler(normalizeHandle(a.username), normalizeHandle(b.username));
     const name = jaroWinkler(a.displayName.toLowerCase(), b.displayName.toLowerCase());
     const bio = jaccard(new Set(tokenize(a.bio)), new Set(tokenize(b.bio)));
@@ -359,10 +405,16 @@ function scorePair(
         ],
     ];
 
+    // `baseScore` is the pure six-signal behavioural score (weights sum to 1.0).
+    // It is what drives MERGE decisions: co-presence may raise the displayed score
+    // and cohesion and flag a link, but it can NEVER manufacture a merge — geo
+    // never collapses two behaviourally-distinct people. See `correlate`.
+    const baseScore = parts.reduce((s, [key, value]) => s + value * WEIGHTS[key], 0);
+
     // Co-presence overlay. When applicable it claims W_COPRESENCE and the six
     // behavioural weights renormalize to (1 - W_COPRESENCE); when inapplicable
-    // (no geo metadata) baseScale = 1 and the math is byte-identical to the
-    // six-signal engine — absence is true neutrality, not a zero that drags.
+    // (no/insufficient geo metadata) baseScale = 1 and the displayed score is the
+    // behavioural score — absence is true neutrality, not a zero that drags.
     const cop = coPresence(a.posts, b.posts);
     const baseScale = cop !== null ? 1 - W_COPRESENCE : 1;
 
@@ -396,7 +448,7 @@ function scorePair(
     }
 
     features.sort((x, y) => y.contribution - x.contribution);
-    return { score: round(score), features };
+    return { score: round(score), baseScore: round(baseScore), features };
 }
 
 const round = (n: number): number => Math.round(n * 1000) / 1000;
@@ -474,14 +526,21 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
         y: 0,
     }));
 
-    // Full pairwise score matrix — needed for the complete-linkage merge guard.
+    // Two full pairwise matrices. `scoreMatrix` is the DISPLAYED score (with the
+    // co-presence overlay) — it drives edge weight, banding and cohesion.
+    // `baseMatrix` is the pure six-signal BEHAVIOURAL score and is the ONLY thing
+    // that drives merges: co-presence can corroborate and flag a link, but it can
+    // never collapse two behaviourally-distinct identities.
     const scoreMatrix: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
+    const baseMatrix: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
     const edges: CorrelationEdge[] = [];
     for (let i = 0; i < n; i++) {
         for (let j = i + 1; j < n; j++) {
-            const { score, features } = scorePair(accounts[i], accounts[j], df, n);
+            const { score, baseScore, features } = scorePair(accounts[i], accounts[j], df, n);
             scoreMatrix[i][j] = score;
             scoreMatrix[j][i] = score;
+            baseMatrix[i][j] = baseScore;
+            baseMatrix[j][i] = baseScore;
             if (score < EDGE_FLOOR) continue;
             edges.push({
                 source: i,
@@ -498,10 +557,12 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
         }
     }
 
-    // Guarded agglomeration. A pair only merges if its link >= MERGE_THRESHOLD
-    // AND merging keeps the cluster internally consistent: every cross-pair
-    // between the two groups must clear EDGE_FLOOR. This blocks transitive
-    // over-merge (A-B, B-C strong but A-C contradictory must NOT collapse A,B,C).
+    // Guarded agglomeration, decided purely on BEHAVIOURAL evidence (baseMatrix).
+    // A pair only merges if its behavioural link >= MERGE_THRESHOLD AND merging
+    // keeps the cluster internally consistent: every cross-pair between the two
+    // groups must itself be behaviourally merge-strength (strict complete-linkage).
+    // This blocks transitive over-merge AND ensures co-presence — a geo overlay —
+    // can never be the deciding factor that collapses two distinct people.
     const uf = new UnionFind(n);
     const membersOf = (root: number): number[] => {
         const m: number[] = [];
@@ -512,18 +573,24 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
     const mergeCandidates = edges
         .filter(
             (e) =>
-                e.score >= MERGE_THRESHOLD &&
+                baseMatrix[e.source][e.target] >= MERGE_THRESHOLD &&
                 Math.min(coverageOf(e.source), coverageOf(e.target)) >= MIN_MERGE_COVERAGE,
         )
-        .sort((a, b) => b.score - a.score || a.source - b.source || a.target - b.target);
+        .sort(
+            (a, b) =>
+                baseMatrix[b.source][b.target] - baseMatrix[a.source][a.target] ||
+                a.source - b.source ||
+                a.target - b.target,
+        );
     for (const e of mergeCandidates) {
         const ra = uf.find(e.source);
         const rb = uf.find(e.target);
         if (ra === rb) continue;
         const ga = membersOf(ra);
         const gb = membersOf(rb);
-        // Strict complete-linkage: every cross-pair must itself be merge-strength.
-        const consistent = ga.every((x) => gb.every((y) => scoreMatrix[x][y] >= MERGE_THRESHOLD));
+        // Strict complete-linkage on behavioural score: every cross-pair must
+        // itself be behaviourally merge-strength.
+        const consistent = ga.every((x) => gb.every((y) => baseMatrix[x][y] >= MERGE_THRESHOLD));
         if (consistent) uf.union(e.source, e.target);
     }
 
@@ -572,7 +639,15 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
             `${1 - W_COPRESENCE}; when metadata is absent the signal is inapplicable and the six ` +
             "renormalize to 1.0 (no fabricated value). Accounts agglomerate into identities under a " +
             "complete-linkage guard.",
-        weights: { ...WEIGHTS, coPresence: W_COPRESENCE },
+        // Effective weights for the APPLICABLE case (geo present): the six
+        // behavioural weights scaled by (1 - W_COPRESENCE) plus co-presence, summing
+        // to 1.0. When geo is absent the six renormalize back to 1.0 (see `method`).
+        weights: {
+            ...(Object.fromEntries(
+                Object.entries(WEIGHTS).map(([k, v]) => [k, round(v * (1 - W_COPRESENCE))]),
+            ) as Record<keyof typeof WEIGHTS, number>),
+            coPresence: W_COPRESENCE,
+        },
         thresholds: { edgeFloor: EDGE_FLOOR, merge: MERGE_THRESHOLD },
         nodes,
         edges: edges.sort((a, b) => b.score - a.score || a.source - b.source || a.target - b.target),

@@ -1,12 +1,17 @@
 // Shared types for replay mode. No runtime, no I/O — just the shapes that flow
 // between the fixture loader, the report assembler, and the custody manifest.
 
-// Capture-location of a post. Optional everywhere: when absent, the
-// temporal-geospatial co-presence signal is INAPPLICABLE for any pair touching
-// this post's account and is renormalized out of the score — never imputed.
+// Capture-location of a post. Optional everywhere. Co-presence is gated on a
+// MINIMUM number of capture-grade geo posts PER ACCOUNT PAIR: when either account
+// in a pair lacks enough, the signal is INAPPLICABLE for that pair and is
+// renormalized out of the score — never imputed. `accuracyM`, when supplied, is
+// the point's capture uncertainty (1-sigma radius, metres); a point coarser than
+// the co-presence radius (e.g. a city/venue centroid) can never establish fine
+// co-presence, so a merely-shared city is never mistaken for the same spot.
 export interface GeoPoint {
     lat: number; // degrees, -90..90
     lon: number; // degrees, -180..180
+    accuracyM?: number; // capture uncertainty radius in metres; coarse points can't co-locate
 }
 
 export interface GoldenPost {

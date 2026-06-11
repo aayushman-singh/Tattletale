@@ -262,3 +262,72 @@ test("co-presence is deterministic across runs", () => {
     ];
     assert.equal(JSON.stringify(correlate(build())), JSON.stringify(correlate(build())));
 });
+
+test("a coarse-accuracy point at distance zero is NOT co-presence (city centroid)", () => {
+    // Identical coordinates, but each point declares a 5 km accuracy radius — a
+    // city/venue centroid, not a capture fix. It must never read as "same spot".
+    const coarse = { lat: 19.076, lon: 72.8777, accuracyM: 5000 };
+    const r = correlate([
+        acc({ platform: "instagram", username: "ana_x", displayName: "Ana X", bio: "dev tools", posts: twin("ig", coarse) }),
+        acc({ platform: "x", username: "ana_y", displayName: "Ana Y", bio: "dev tools", posts: twin("x", coarse) }),
+    ]);
+    const cp = edgeOf(r)?.features.find((f) => f.feature === "coPresence");
+    assert.ok(cp, "co-presence is applicable (both geo-tagged)");
+    assert.equal(cp!.value, 0, "coarse centroids never co-locate, even at distance zero");
+});
+
+test("co-presence cannot manufacture a merge from weak behaviour (geo never decides identity)", () => {
+    // Two behaviourally DIFFERENT people (a dev and a Spanish cook, different
+    // handles) who happen to repeatedly post from the same fine spot at the same
+    // time. Co-presence saturates, but behaviour is far below merge — they MUST
+    // stay separate: geo can raise the score, never collapse the identities.
+    const r = correlate([
+        acc({ platform: "instagram", username: "dev_guy", displayName: "Dev Guy", bio: "rust compilers", posts: [
+            { id: "d1", timestamp: "2024-11-02T20:00:00Z", caption: "shipping a tiny CLI tool tonight, missing await again", likes: 1, comments: 0, geo: GEO },
+            { id: "d2", timestamp: "2024-11-05T21:00:00Z", caption: "the compiler caught the bug, ship small ship often", likes: 1, comments: 0, geo: GEO },
+            { id: "d3", timestamp: "2024-11-07T20:30:00Z", caption: "refactored the parser, fewer nodes same behaviour", likes: 1, comments: 0, geo: GEO } ] }),
+        acc({ platform: "facebook", username: "cocina_abuela", displayName: "Cocina Abuela", bio: "cocina recetas", posts: [
+            { id: "c1", timestamp: "2024-11-02T20:10:00Z", caption: "hoy preparé una tortilla para la familia receta de la abuela", likes: 1, comments: 0, geo: NEAR },
+            { id: "c2", timestamp: "2024-11-05T21:05:00Z", caption: "el secreto del sofrito es la paciencia fuego lento", likes: 1, comments: 0, geo: NEAR },
+            { id: "c3", timestamp: "2024-11-07T20:25:00Z", caption: "domingo de paella para toda la familia", likes: 1, comments: 0, geo: NEAR } ] }),
+    ]);
+    assert.equal(r.identities.length, 2, "strong co-presence must NOT merge behaviourally-distinct people");
+    const cp = edgeOf(r)?.features.find((f) => f.feature === "coPresence");
+    assert.ok((cp?.value ?? 0) > 0, "co-presence is genuinely high here — the guard, not absence, keeps them apart");
+});
+
+test("a burst of duplicate posts cannot saturate co-presence (one-to-one matching)", () => {
+    // Account A spams five posts at the same place/time; account B has ONE post
+    // there. Only one occasion can be matched — volume cannot inflate the signal.
+    const burst = Array.from({ length: 5 }, (_, k) => ({
+        id: `a${k}`, timestamp: "2024-11-02T20:00:00Z", caption: "same place same time spam post", likes: 0, comments: 0, geo: GEO,
+    }));
+    const r = correlate([
+        acc({ platform: "instagram", username: "spammer", displayName: "S", bio: "x", posts: burst }),
+        acc({ platform: "x", username: "spammer", displayName: "S", bio: "x", posts: [
+            { id: "b0", timestamp: "2024-11-02T20:05:00Z", caption: "same place same time spam post", likes: 0, comments: 0, geo: NEAR },
+            { id: "b1", timestamp: "2024-11-09T09:00:00Z", caption: "unrelated later post elsewhere entirely", likes: 0, comments: 0, geo: { lat: 28.61, lon: 77.20 } } ] }),
+    ]);
+    const cp = edgeOf(r)?.features.find((f) => f.feature === "coPresence");
+    assert.ok(cp, "applicable");
+    assert.ok(cp!.value <= 1 / 3 + 1e-9, `one shared occasion only, not saturated (got ${cp!.value})`);
+});
+
+test("co-presence is symmetric under account permutation", () => {
+    const a = acc({ platform: "instagram", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("ig", GEO) });
+    const b = acc({ platform: "x", username: "ana_dev", displayName: "Ana Dev", bio: "dev tools", posts: twin("x", NEAR) });
+    const cpOf = (r: ReturnType<typeof correlate>) => edgeOf(r)?.features.find((f) => f.feature === "coPresence")?.value;
+    assert.equal(cpOf(correlate([a, b])), cpOf(correlate([b, a])), "co-presence value must not depend on input order");
+});
+
+test("a timezone-less timestamp on a geo post fails loudly", () => {
+    const accounts = [
+        acc({ platform: "instagram", username: "a", displayName: "A", bio: "x", posts: [
+            { id: "p1", timestamp: "2024-11-02T20:00:00", caption: "no timezone here", likes: 0, comments: 0, geo: GEO },
+            { id: "p2", timestamp: "2024-11-03T20:00:00", caption: "no timezone here either", likes: 0, comments: 0, geo: GEO } ] }),
+        acc({ platform: "x", username: "b", displayName: "B", bio: "x", posts: [
+            { id: "q1", timestamp: "2024-11-02T20:05:00Z", caption: "fine", likes: 0, comments: 0, geo: NEAR },
+            { id: "q2", timestamp: "2024-11-03T20:05:00Z", caption: "fine too", likes: 0, comments: 0, geo: NEAR } ] }),
+    ];
+    assert.throws(() => correlate(accounts), /require ISO-8601 with a timezone/);
+});

@@ -28,6 +28,45 @@ co-occurrence**, and wiring the scorer into the *live* Mongo-backed pipeline
 (today it runs over the replay fixtures). The original design below stands as the
 target for the live path.
 
+## Update (Phase 3): a seventh signal — temporal-geospatial co-presence
+
+`correlation.ts` now scores a seventh signal: **co-presence**. When posts carry
+capture-location metadata (`GoldenPost.geo = {lat, lon}`), two accounts run by one
+operator tend to post **from the same place at the same moment** — one device
+cross-posting. The signal counts *distinct posting occasions* on account A that
+are co-located with a post on account B within **250 m and 30 minutes**,
+saturating at three occasions.
+
+**Design choices, and why:**
+
+- **Overlay, not a 7th convex weight.** Co-presence claims a fixed weight (0.1)
+  *only when applicable*. When at least one account has no geo metadata the signal
+  is **inapplicable** and the six behavioural weights renormalize to 1.0 — the
+  score is then byte-identical to the six-signal engine. Absent metadata is true
+  neutrality, **never an imputed value**. This is the all-or-nothing rule: no
+  fabricated geo, no silent default.
+- **Three distinct states, not two.** (1) *No instrument* — geo missing →
+  inapplicable, renormalized out. (2) *Measured non-co-presence* — both geo-tagged
+  but never within 250 m + 30 min → value 0, **kept in the average** as honest mild
+  evidence *against* a shared operator. (3) *Co-presence* — value rises with
+  repeated co-located occasions. Conflating (1) and (2) would be a lie about what
+  the data shows.
+- **Fine, not coarse — the namesake guard.** The 250 m / 30 min window is
+  deliberately tight. Two strangers who merely live in the same city are routinely
+  kilometres apart and never synchronized, so a shared *city* yields **zero**
+  co-presence. Geo can therefore never collapse two distinct people on location
+  alone; the complete-linkage merge guard and the modest 0.1 weight further bound
+  its influence.
+
+**What co-presence can prove:** that two accounts repeatedly emitted posts from the
+same fine location within minutes — a strong tell for one operator/device when it
+recurs.
+
+**What it cannot prove:** it is still a *heuristic contribution to `cohesion`, not a
+probability*. A single coincidence can be chance (a shared venue); spoofed or
+absent geo is not evidence; and co-presence says nothing about *who* the operator
+is. It raises or lowers a link score; it never decides identity on its own.
+
 ---
 
 **Original status:** Proposed

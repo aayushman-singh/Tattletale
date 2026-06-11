@@ -1,0 +1,30 @@
+{
+  "mode": "replay",
+  "handle": "ana_rivera_dev",
+  "generatedAt": "2026-06-08T18:06:02.186Z",
+  "artifacts": [
+    {
+      "path": "report.json",
+      "sha256": "0f40d6cff75fdbaa4f44142ebd9bd2a9f09f9b2f6459efdf83585bbee465f378"
+    },
+    {
+      "path": "correlation.json",
+      "sha256": "9ea49cf5acdd523faa78d55b9567c7bbf2e9ec75ebb4feda065f707a229e15c6"
+    },
+    {
+      "path": "report.pdf",
+      "sha256": "e520e3538ae7d1ae167468952be0a797644c86407ff5eeac7527eb290f4e8f97"
+    }
+  ],
+  "custodyEntries": 3,
+  "rootHash": "5bc7eb4864627faf9ceee0313367897faebfffea5e382023cb91ae5f46bfbc96",
+  "seal": {
+    "algorithm": "Ed25519",
+    "signedField": "rootHash",
+    "mode": "demo-ephemeral",
+    "keyId": "352cd927c494db5d",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAuSLMEc/kLvOi9csWM0ZDhtYc4DiuHAS3kgggdYgxQJM=\n-----END PUBLIC KEY-----\n",
+    "signature": "e8zFABv0UeSTzJE9urlPQnxVROK1q7znIfkI/7UccDWXU/A2nWR1XlS6OBiNCeBSQMB4uepRrMIXZEiXlr8zAg==",
+    "note": "Demo seal: key generated at sealing time, not persisted, no external trust anchor. It proves the artifacts are internally consistent and that one key signed them — NOT custody attribution. Court-grade use requires an HSM-held examiner key (mode: hsm) pinned by keyId + an RFC 3161 trusted timestamp (see ADR-0004)."
+  }
+}

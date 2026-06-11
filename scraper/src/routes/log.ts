@@ -1,5 +1,7 @@
+import "../../../config.js"; // load .env first (must precede any env read)
 import express, { Request, Response } from 'express';
 import mongoose, { Schema, Document } from 'mongoose';
+import { clusterUri } from "../Helpers/mongoUri.js";
 import multer, { FileFilterCallback } from 'multer';
 import fs from 'fs';
 import cors from 'cors';
@@ -251,14 +253,7 @@ app.post('/api/upload/text', upload.array('files'), async (req: MulterRequest, r
     }
 });
 // Database connection and server start
-// Original problematic URL:
-// mongodb+srv://aayushman2702:Lmaoded@11@cluster0.eivmu.mongodb.net/logDB?retryWrites=true&w=majority
-
-// Special characters in the password need to be properly encoded
-const password = encodeURIComponent('Lmaoded@11');
-const mongoUrl = `mongodb+srv://aayushman2702:${password}@cluster0.eivmu.mongodb.net/logDB?retryWrites=true&w=majority`;
-
-mongoose.connect(mongoUrl)
+mongoose.connect(clusterUri(), { dbName: "logDB" })
     .then(() => {
         app.listen(5002, () => {
             console.log('Server running on port 5002');

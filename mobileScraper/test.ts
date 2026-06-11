@@ -33,4 +33,9 @@ async function loginInstagram(username: string, password: string) {
   }
 }
 
-loginInstagram("aayushman3260", "testing@1").catch(console.error);
+const igUser = process.env.IG_USERNAME;
+const igPass = process.env.IG_PASSWORD;
+if (!igUser || !igPass) {
+    throw new Error("IG_USERNAME and IG_PASSWORD must be set (see .env.example). mobileScraper is prototype-only.");
+}
+loginInstagram(igUser, igPass).catch(console.error);

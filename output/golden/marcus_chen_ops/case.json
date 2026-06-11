@@ -1,0 +1,84 @@
+{
+  "synthetic": true,
+  "notice": "100% synthetic data. This person does not exist. No real account was scraped.",
+  "target": {
+    "handle": "marcus_chen_ops",
+    "displayName": "Marcus Chen",
+    "summary": "Fictional DevOps/SRE persona used to demonstrate the Tattletale replay pipeline.",
+    "firstSeen": "2019-08-01",
+    "tags": [
+      "sre",
+      "devops",
+      "synthetic-demo"
+    ]
+  },
+  "platforms": [
+    {
+      "platform": "x",
+      "username": "marcus_chen_ops",
+      "url": "https://x.com/marcus_chen_ops",
+      "displayName": "Marcus Chen",
+      "bio": "SRE. On-call survivor. Postmortems are love letters to your future self.",
+      "verified": true,
+      "followers": 22140,
+      "following": 412,
+      "postCount": 5530,
+      "posts": [
+        {
+          "id": "x_101",
+          "timestamp": "2024-11-03T03:14:00Z",
+          "caption": "Pager went off at 3am. Root cause: someone set a timeout to 0. Reader, it was me.",
+          "likes": 2310,
+          "comments": 142
+        },
+        {
+          "id": "x_102",
+          "timestamp": "2024-10-21T16:00:00Z",
+          "caption": "Reminder: a green dashboard is not the same as a working system.",
+          "likes": 1870,
+          "comments": 96
+        }
+      ]
+    },
+    {
+      "platform": "youtube",
+      "username": "MarcusChenOps",
+      "url": "https://youtube.com/@MarcusChenOps",
+      "displayName": "Marcus Chen Ops",
+      "bio": "Weekly SRE war stories and homelab teardowns.",
+      "verified": false,
+      "followers": 48200,
+      "following": 0,
+      "postCount": 88,
+      "posts": [
+        {
+          "id": "yt_101",
+          "timestamp": "2024-10-30T12:00:00Z",
+          "caption": "I rebuilt my entire homelab on $300 of used hardware",
+          "likes": 6120,
+          "comments": 410
+        }
+      ]
+    },
+    {
+      "platform": "telegram",
+      "username": "marcus_ops",
+      "url": "https://t.me/marcus_ops",
+      "displayName": "Marcus | Ops Channel",
+      "bio": "Incident notes and dotfiles. No spam.",
+      "verified": false,
+      "followers": 3100,
+      "following": 0,
+      "postCount": 220,
+      "posts": [
+        {
+          "id": "tg_101",
+          "timestamp": "2024-11-02T08:00:00Z",
+          "caption": "New dotfiles drop: tmux + neovim + a kubectl alias that will change your life.",
+          "likes": 0,
+          "comments": 0
+        }
+      ]
+    }
+  ]
+}

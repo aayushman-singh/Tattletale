@@ -9,7 +9,12 @@ yarn.lock
 /dist/
 /build/
 /out/
-/output/
+# Ignore scrape outputs but NOT the committed synthetic replay fixtures.
+# (Must ignore the *contents* of /output, not /output itself — git cannot
+#  re-include a path whose parent directory is excluded.)
+/output/*
+!/output/golden/
+!/output/golden/**
 /storage/
 
 # Python
@@ -79,3 +84,30 @@ following_log.txt
 
 # Internal helper artifacts
 _filter_callback.py
+
+# Scrape caches / crawler state (data, not source)
+/scraper/src/Helpers/storage/
+/scraper/instagram_data.json
+*.json.session
+
+# Replay-mode golden fixtures: re-include AFTER the global *.pdf/*.png ignores
+# above so the synthetic demo bundle (including report.pdf) stays committed.
+!/output/golden/**
+
+# Static demo bundle served by the frontend (synthetic, no live scrape).
+# Re-include after the global *.pdf ignore so /demo/report.pdf ships.
+!/frontend/public/demo/**
+
+# Build output (per-package)
+/scraper/dist/
+/backend/dist/
+
+# Docs assets (committed screenshots)
+!/docs/assets/**
+
+# Playwright MCP scratch
+.playwright-mcp/
+/frontend/.playwright-mcp/
+demo-fullpage.png
+graph-only.png
+!/docs/assets/*.png

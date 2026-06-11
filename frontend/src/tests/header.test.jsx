@@ -72,8 +72,8 @@ describe("Header Component", () => {
       </MemoryRouter>
     );
   
-    // Open dropdown
-    await user.click(screen.getByTestId('services-dropdown'));
+    // Open dropdown via the Services trigger (Radix DropdownMenuTrigger renders the "Services" span)
+    await user.click(screen.getByText('Services'));
   
    
     await waitFor(() => {

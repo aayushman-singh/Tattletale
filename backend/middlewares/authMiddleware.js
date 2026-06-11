@@ -3,7 +3,11 @@ import User from "../models/userModel.js";
 import asyncHandler from "express-async-handler";
 
 export const protect = asyncHandler(async (req, res, next) => {
-  const JWT_SECRET = "1234"; // Hardcoded secret
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    res.status(500);
+    throw new Error("JWT_SECRET is not set. Copy .env.example to .env and set it.");
+  }
 
   let token;
 
@@ -12,11 +16,10 @@ export const protect = asyncHandler(async (req, res, next) => {
     req.headers.authorization.startsWith("Bearer")
   ) {
     try {
-      console.log(`${JWT_SECRET}`)
       token = req.headers.authorization.split(" ")[1];
      
 
-      const decoded = jwt.verify(token, JWT_SECRET); // Verify token with hardcoded secret
+      const decoded = jwt.verify(token, JWT_SECRET);
      
 
       req.user = await User.findById(decoded.id).select("-password");

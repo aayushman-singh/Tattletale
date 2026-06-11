@@ -1,0 +1,916 @@
+{
+  "mode": "replay",
+  "synthetic": true,
+  "notice": "100% synthetic data. This person does not exist. No real account was scraped.",
+  "handle": "ana_rivera_dev",
+  "generatedAt": "2026-06-08T18:06:02.186Z",
+  "target": {
+    "handle": "ana_rivera_dev",
+    "displayName": "Ana Rivera",
+    "summary": "Fictional software developer persona used to demonstrate the Tattletale replay pipeline.",
+    "firstSeen": "2021-03-14",
+    "tags": [
+      "developer",
+      "open-source",
+      "synthetic-demo"
+    ]
+  },
+  "platformCount": 4,
+  "findings": [
+    {
+      "platform": "instagram",
+      "username": "ana_rivera_dev",
+      "url": "https://instagram.com/ana_rivera_dev",
+      "displayName": "Ana Rivera",
+      "bio": "Building tiny tools. Coffee, Python, and bad puns. she/her.",
+      "verified": false,
+      "metrics": {
+        "followers": 4821,
+        "following": 612,
+        "posts": 137
+      },
+      "samplePosts": [
+        {
+          "id": "ig_001",
+          "timestamp": "2024-11-02T19:22:00Z",
+          "caption": "shipped a CLI that renames 10k files in 200ms. rust go brrr.",
+          "likes": 312,
+          "comments": 24
+        },
+        {
+          "id": "ig_002",
+          "timestamp": "2024-11-05T20:05:00Z",
+          "caption": "the compiler caught a bug i would never have. types are just unit tests you don't write.",
+          "likes": 198,
+          "comments": 11
+        },
+        {
+          "id": "ig_003",
+          "timestamp": "2024-11-08T21:14:00Z",
+          "caption": "spent the evening squashing a flaky test. it was a missing await. it is always a missing await.",
+          "likes": 274,
+          "comments": 19
+        },
+        {
+          "id": "ig_004",
+          "timestamp": "2024-11-12T19:48:00Z",
+          "caption": "ship small, ship often. my CLI got 3 new flags tonight.",
+          "likes": 221,
+          "comments": 13
+        }
+      ]
+    },
+    {
+      "platform": "x",
+      "username": "ana_rivera_dev",
+      "url": "https://x.com/ana_rivera_dev",
+      "displayName": "Ana Rivera",
+      "bio": "dev. i make small things that do one thing well. opinions are load-bearing.",
+      "verified": false,
+      "metrics": {
+        "followers": 9140,
+        "following": 388,
+        "posts": 2204
+      },
+      "samplePosts": [
+        {
+          "id": "x_001",
+          "timestamp": "2024-11-04T20:11:00Z",
+          "caption": "hot take: most retries are just fallbacks wearing a trench coat.",
+          "likes": 540,
+          "comments": 63
+        },
+        {
+          "id": "x_002",
+          "timestamp": "2024-11-06T21:47:00Z",
+          "caption": "spent 3 hours on a bug. it was a missing await. it is always a missing await.",
+          "likes": 1203,
+          "comments": 89
+        },
+        {
+          "id": "x_003",
+          "timestamp": "2024-11-09T19:30:00Z",
+          "caption": "rewrote the CLI parser tonight. the compiler did most of the work, honestly.",
+          "likes": 410,
+          "comments": 41
+        },
+        {
+          "id": "x_004",
+          "timestamp": "2024-11-13T20:55:00Z",
+          "caption": "ship small, ship often. that's the whole methodology.",
+          "likes": 690,
+          "comments": 58
+        }
+      ]
+    },
+    {
+      "platform": "mastodon",
+      "username": "ana_rivera",
+      "url": "https://hachyderm.io/@ana_rivera",
+      "displayName": "Ana Rivera",
+      "bio": "Federated and proud. Toots about compilers and gardening. she/her.",
+      "verified": false,
+      "metrics": {
+        "followers": 1320,
+        "following": 540,
+        "posts": 410
+      },
+      "samplePosts": [
+        {
+          "id": "mas_001",
+          "timestamp": "2024-11-03T20:30:00Z",
+          "caption": "migrated my blog to a static generator i wrote on a flight. the compiler is my favorite coworker.",
+          "likes": 87,
+          "comments": 14
+        },
+        {
+          "id": "mas_002",
+          "timestamp": "2024-11-07T21:05:00Z",
+          "caption": "another evening, another missing await. the CLI works now though.",
+          "likes": 64,
+          "comments": 9
+        },
+        {
+          "id": "mas_003",
+          "timestamp": "2024-11-11T19:40:00Z",
+          "caption": "ship small, ship often. pushed a tiny tool that does exactly one thing.",
+          "likes": 91,
+          "comments": 12
+        }
+      ]
+    },
+    {
+      "platform": "facebook",
+      "username": "ana.rivera.cocina",
+      "url": "https://facebook.com/ana.rivera.cocina",
+      "displayName": "Ana Rivera",
+      "bio": "Cocinera casera. Recetas, familia y los asados del domingo. Madrid.",
+      "verified": false,
+      "metrics": {
+        "followers": 870,
+        "following": 430,
+        "posts": 95
+      },
+      "samplePosts": [
+        {
+          "id": "fb_001",
+          "timestamp": "2024-11-02T11:40:00Z",
+          "caption": "Hoy preparé una tortilla de patatas para toda la familia. Receta de mi abuela.",
+          "likes": 64,
+          "comments": 9
+        },
+        {
+          "id": "fb_002",
+          "timestamp": "2024-11-06T12:15:00Z",
+          "caption": "El secreto de un buen sofrito es la paciencia. Fuego lento siempre.",
+          "likes": 51,
+          "comments": 7
+        },
+        {
+          "id": "fb_003",
+          "timestamp": "2024-11-10T13:05:00Z",
+          "caption": "Domingo de asado con los primos. Nada como cocinar para la gente que quieres.",
+          "likes": 73,
+          "comments": 12
+        }
+      ]
+    }
+  ],
+  "crossPlatformMatches": [
+    {
+      "username": "ana_rivera_dev",
+      "platforms": [
+        "instagram",
+        "mastodon",
+        "x"
+      ],
+      "band": "high",
+      "evidence": "username similarity (ana_rivera_dev ↔ ana_rivera_dev); writing-style fingerprint (punctuation, casing, function words); shared distinctive terms: \"bug\", \"spent\", \"always\", \"tonight\""
+    }
+  ],
+  "correlation": {
+    "method": "Heuristic link score (NOT a calibrated probability): pairwise handle & display-name Jaro-Winkler, bio Jaccard, bounded stylometric agreement, hour-of-day cosine, and shared low-frequency vocabulary — each behavioural signal coverage-gated by post count. Accounts agglomerate into identities under a complete-linkage guard.",
+    "weights": {
+      "handle": 0.24,
+      "name": 0.12,
+      "bio": 0.12,
+      "style": 0.22,
+      "temporal": 0.14,
+      "sharedTerms": 0.16
+    },
+    "thresholds": {
+      "edgeFloor": 0.35,
+      "merge": 0.55
+    },
+    "nodes": [
+      {
+        "index": 0,
+        "platform": "facebook",
+        "username": "ana.rivera.cocina",
+        "displayName": "Ana Rivera",
+        "followers": 870,
+        "cluster": 0,
+        "x": 500,
+        "y": 100
+      },
+      {
+        "index": 1,
+        "platform": "instagram",
+        "username": "ana_rivera_dev",
+        "displayName": "Ana Rivera",
+        "followers": 4821,
+        "cluster": 1,
+        "x": 500,
+        "y": 450
+      },
+      {
+        "index": 2,
+        "platform": "mastodon",
+        "username": "ana_rivera",
+        "displayName": "Ana Rivera",
+        "followers": 1320,
+        "cluster": 1,
+        "x": 578,
+        "y": 585
+      },
+      {
+        "index": 3,
+        "platform": "x",
+        "username": "ana_rivera_dev",
+        "displayName": "Ana Rivera",
+        "followers": 9140,
+        "cluster": 1,
+        "x": 422,
+        "y": 585
+      }
+    ],
+    "edges": [
+      {
+        "source": 1,
+        "target": 3,
+        "score": 0.836,
+        "band": "high",
+        "features": [
+          {
+            "feature": "handle",
+            "value": 1,
+            "weight": 0.24,
+            "contribution": 0.24,
+            "label": "username similarity (ana_rivera_dev ↔ ana_rivera_dev)"
+          },
+          {
+            "feature": "style",
+            "value": 0.906,
+            "weight": 0.22,
+            "contribution": 0.199,
+            "label": "writing-style fingerprint (punctuation, casing, function words)"
+          },
+          {
+            "feature": "sharedTerms",
+            "value": 1,
+            "weight": 0.16,
+            "contribution": 0.16,
+            "label": "shared distinctive terms: \"bug\", \"spent\", \"always\", \"tonight\""
+          },
+          {
+            "feature": "name",
+            "value": 1,
+            "weight": 0.12,
+            "contribution": 0.12,
+            "label": "display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+          },
+          {
+            "feature": "temporal",
+            "value": 0.833,
+            "weight": 0.14,
+            "contribution": 0.117,
+            "label": "posting hour-of-day profile"
+          },
+          {
+            "feature": "bio",
+            "value": 0,
+            "weight": 0.12,
+            "contribution": 0,
+            "label": "overlapping bio vocabulary"
+          }
+        ],
+        "rationale": "username similarity (ana_rivera_dev ↔ ana_rivera_dev); writing-style fingerprint (punctuation, casing, function words); shared distinctive terms: \"bug\", \"spent\", \"always\", \"tonight\""
+      },
+      {
+        "source": 1,
+        "target": 2,
+        "score": 0.76,
+        "band": "high",
+        "features": [
+          {
+            "feature": "handle",
+            "value": 0.95,
+            "weight": 0.24,
+            "contribution": 0.228,
+            "label": "username similarity (ana_rivera_dev ↔ ana_rivera)"
+          },
+          {
+            "feature": "style",
+            "value": 0.956,
+            "weight": 0.22,
+            "contribution": 0.21,
+            "label": "writing-style fingerprint (punctuation, casing, function words)"
+          },
+          {
+            "feature": "temporal",
+            "value": 0.943,
+            "weight": 0.14,
+            "contribution": 0.132,
+            "label": "posting hour-of-day profile"
+          },
+          {
+            "feature": "name",
+            "value": 1,
+            "weight": 0.12,
+            "contribution": 0.12,
+            "label": "display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+          },
+          {
+            "feature": "sharedTerms",
+            "value": 0.333,
+            "weight": 0.16,
+            "contribution": 0.053,
+            "label": "shared distinctive terms: \"evening\""
+          },
+          {
+            "feature": "bio",
+            "value": 0.133,
+            "weight": 0.12,
+            "contribution": 0.016,
+            "label": "overlapping bio vocabulary"
+          }
+        ],
+        "rationale": "username similarity (ana_rivera_dev ↔ ana_rivera); writing-style fingerprint (punctuation, casing, function words); posting hour-of-day profile"
+      },
+      {
+        "source": 2,
+        "target": 3,
+        "score": 0.686,
+        "band": "high",
+        "features": [
+          {
+            "feature": "handle",
+            "value": 0.95,
+            "weight": 0.24,
+            "contribution": 0.228,
+            "label": "username similarity (ana_rivera ↔ ana_rivera_dev)"
+          },
+          {
+            "feature": "style",
+            "value": 0.939,
+            "weight": 0.22,
+            "contribution": 0.207,
+            "label": "writing-style fingerprint (punctuation, casing, function words)"
+          },
+          {
+            "feature": "temporal",
+            "value": 0.943,
+            "weight": 0.14,
+            "contribution": 0.132,
+            "label": "posting hour-of-day profile"
+          },
+          {
+            "feature": "name",
+            "value": 1,
+            "weight": 0.12,
+            "contribution": 0.12,
+            "label": "display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+          },
+          {
+            "feature": "bio",
+            "value": 0,
+            "weight": 0.12,
+            "contribution": 0,
+            "label": "overlapping bio vocabulary"
+          },
+          {
+            "feature": "sharedTerms",
+            "value": 0,
+            "weight": 0.16,
+            "contribution": 0,
+            "label": "no shared distinctive terms"
+          }
+        ],
+        "rationale": "username similarity (ana_rivera ↔ ana_rivera_dev); writing-style fingerprint (punctuation, casing, function words); posting hour-of-day profile"
+      },
+      {
+        "source": 0,
+        "target": 2,
+        "score": 0.487,
+        "band": "medium",
+        "features": [
+          {
+            "feature": "handle",
+            "value": 0.92,
+            "weight": 0.24,
+            "contribution": 0.221,
+            "label": "username similarity (ana.rivera.cocina ↔ ana_rivera)"
+          },
+          {
+            "feature": "style",
+            "value": 0.664,
+            "weight": 0.22,
+            "contribution": 0.146,
+            "label": "writing-style fingerprint (punctuation, casing, function words)"
+          },
+          {
+            "feature": "name",
+            "value": 1,
+            "weight": 0.12,
+            "contribution": 0.12,
+            "label": "display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+          },
+          {
+            "feature": "bio",
+            "value": 0,
+            "weight": 0.12,
+            "contribution": 0,
+            "label": "overlapping bio vocabulary"
+          },
+          {
+            "feature": "temporal",
+            "value": 0,
+            "weight": 0.14,
+            "contribution": 0,
+            "label": "posting hour-of-day profile"
+          },
+          {
+            "feature": "sharedTerms",
+            "value": 0,
+            "weight": 0.16,
+            "contribution": 0,
+            "label": "no shared distinctive terms"
+          }
+        ],
+        "rationale": "username similarity (ana.rivera.cocina ↔ ana_rivera); writing-style fingerprint (punctuation, casing, function words); display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+      },
+      {
+        "source": 0,
+        "target": 1,
+        "score": 0.475,
+        "band": "medium",
+        "features": [
+          {
+            "feature": "handle",
+            "value": 0.87,
+            "weight": 0.24,
+            "contribution": 0.209,
+            "label": "username similarity (ana.rivera.cocina ↔ ana_rivera_dev)"
+          },
+          {
+            "feature": "style",
+            "value": 0.666,
+            "weight": 0.22,
+            "contribution": 0.146,
+            "label": "writing-style fingerprint (punctuation, casing, function words)"
+          },
+          {
+            "feature": "name",
+            "value": 1,
+            "weight": 0.12,
+            "contribution": 0.12,
+            "label": "display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+          },
+          {
+            "feature": "bio",
+            "value": 0,
+            "weight": 0.12,
+            "contribution": 0,
+            "label": "overlapping bio vocabulary"
+          },
+          {
+            "feature": "temporal",
+            "value": 0,
+            "weight": 0.14,
+            "contribution": 0,
+            "label": "posting hour-of-day profile"
+          },
+          {
+            "feature": "sharedTerms",
+            "value": 0,
+            "weight": 0.16,
+            "contribution": 0,
+            "label": "no shared distinctive terms"
+          }
+        ],
+        "rationale": "username similarity (ana.rivera.cocina ↔ ana_rivera_dev); writing-style fingerprint (punctuation, casing, function words); display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+      },
+      {
+        "source": 0,
+        "target": 3,
+        "score": 0.473,
+        "band": "medium",
+        "features": [
+          {
+            "feature": "handle",
+            "value": 0.87,
+            "weight": 0.24,
+            "contribution": 0.209,
+            "label": "username similarity (ana.rivera.cocina ↔ ana_rivera_dev)"
+          },
+          {
+            "feature": "style",
+            "value": 0.655,
+            "weight": 0.22,
+            "contribution": 0.144,
+            "label": "writing-style fingerprint (punctuation, casing, function words)"
+          },
+          {
+            "feature": "name",
+            "value": 1,
+            "weight": 0.12,
+            "contribution": 0.12,
+            "label": "display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+          },
+          {
+            "feature": "bio",
+            "value": 0,
+            "weight": 0.12,
+            "contribution": 0,
+            "label": "overlapping bio vocabulary"
+          },
+          {
+            "feature": "temporal",
+            "value": 0,
+            "weight": 0.14,
+            "contribution": 0,
+            "label": "posting hour-of-day profile"
+          },
+          {
+            "feature": "sharedTerms",
+            "value": 0,
+            "weight": 0.16,
+            "contribution": 0,
+            "label": "no shared distinctive terms"
+          }
+        ],
+        "rationale": "username similarity (ana.rivera.cocina ↔ ana_rivera_dev); writing-style fingerprint (punctuation, casing, function words); display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+      }
+    ],
+    "identities": [
+      {
+        "id": 0,
+        "label": "Ana Rivera",
+        "accountIndices": [
+          0
+        ],
+        "platforms": [
+          "facebook"
+        ],
+        "cohesion": null
+      },
+      {
+        "id": 1,
+        "label": "Ana Rivera",
+        "accountIndices": [
+          1,
+          2,
+          3
+        ],
+        "platforms": [
+          "instagram",
+          "mastodon",
+          "x"
+        ],
+        "cohesion": 0.761
+      }
+    ]
+  },
+  "brief": {
+    "text": "Ana Rivera (@ana_rivera_dev) presents 2 distinct identities across 4 platforms (instagram, x, mastodon, facebook). The correlation engine links 3 accounts as one person with high cohesion, and flags 1 same-named account as a likely different individual. Activity totals 14 sampled posts and 16,151 followers, concentrated in the evening (peak around 19:00 UTC). Posts appear in English and Spanish. The mapped network spans 11 contacts, 4 of whom appear on more than one platform. First observed 2021-03-14. Themes: developer, open-source, synthetic-demo.",
+    "generator": "extractive",
+    "validated": true,
+    "facts": {
+      "handle": "ana_rivera_dev",
+      "displayName": "Ana Rivera",
+      "platformCount": 4,
+      "platforms": [
+        "instagram",
+        "x",
+        "mastodon",
+        "facebook"
+      ],
+      "totalFollowers": 16151,
+      "totalPosts": 14,
+      "identityCount": 2,
+      "primaryIdentityAccounts": 3,
+      "primaryCohesionBand": "high",
+      "flaggedNamesakes": 1,
+      "peakHourUtc": 19,
+      "activityWindow": "evening",
+      "languages": [
+        "English",
+        "Spanish"
+      ],
+      "topTags": [
+        "developer",
+        "open-source",
+        "synthetic-demo"
+      ],
+      "firstSeen": "2021-03-14",
+      "contactCount": 11,
+      "crossPlatformContacts": 4
+    }
+  },
+  "network": {
+    "nodes": [
+      {
+        "id": "self:facebook",
+        "kind": "self",
+        "label": "facebook",
+        "platform": "facebook",
+        "cluster": 0,
+        "crossPlatform": false,
+        "degree": 2,
+        "x": 500,
+        "y": 250
+      },
+      {
+        "id": "self:instagram",
+        "kind": "self",
+        "label": "instagram",
+        "platform": "instagram",
+        "cluster": 1,
+        "crossPlatform": false,
+        "degree": 5,
+        "x": 570,
+        "y": 320
+      },
+      {
+        "id": "self:mastodon",
+        "kind": "self",
+        "label": "mastodon",
+        "platform": "mastodon",
+        "cluster": 1,
+        "crossPlatform": false,
+        "degree": 4,
+        "x": 500,
+        "y": 390
+      },
+      {
+        "id": "self:x",
+        "kind": "self",
+        "label": "x",
+        "platform": "x",
+        "cluster": 1,
+        "crossPlatform": false,
+        "degree": 6,
+        "x": 430,
+        "y": 320
+      },
+      {
+        "id": "c_compiler_cat",
+        "kind": "contact",
+        "label": "compiler_cat",
+        "platform": "mastodon",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 2,
+        "x": 500,
+        "y": 95
+      },
+      {
+        "id": "c_dev_sam",
+        "kind": "contact",
+        "label": "dev_sam",
+        "platform": "instagram",
+        "cluster": -1,
+        "crossPlatform": true,
+        "degree": 2,
+        "x": 595,
+        "y": 198
+      },
+      {
+        "id": "c_grace_hw",
+        "kind": "contact",
+        "label": "grace_hw",
+        "platform": "mastodon",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 746,
+        "y": 227
+      },
+      {
+        "id": "c_lena_codes",
+        "kind": "contact",
+        "label": "lena_codes",
+        "platform": "mastodon",
+        "cluster": -1,
+        "crossPlatform": true,
+        "degree": 2,
+        "x": 673,
+        "y": 341
+      },
+      {
+        "id": "c_madrid_foodies",
+        "kind": "contact",
+        "label": "madrid_foodies",
+        "platform": "facebook",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 704,
+        "y": 467
+      },
+      {
+        "id": "c_marco_builds",
+        "kind": "contact",
+        "label": "marco_builds",
+        "platform": "x",
+        "cluster": -1,
+        "crossPlatform": true,
+        "degree": 3,
+        "x": 549,
+        "y": 460
+      },
+      {
+        "id": "c_oss_weekly",
+        "kind": "contact",
+        "label": "oss_weekly",
+        "platform": "x",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 424,
+        "y": 536
+      },
+      {
+        "id": "c_pyconf",
+        "kind": "contact",
+        "label": "pyconf",
+        "platform": "x",
+        "cluster": -1,
+        "crossPlatform": true,
+        "degree": 2,
+        "x": 368,
+        "y": 415
+      },
+      {
+        "id": "c_recetas_abuela",
+        "kind": "contact",
+        "label": "recetas_abuela",
+        "platform": "facebook",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 233,
+        "y": 352
+      },
+      {
+        "id": "c_rustlang_news",
+        "kind": "contact",
+        "label": "rustlang_news",
+        "platform": "x",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 254,
+        "y": 227
+      },
+      {
+        "id": "c_tiny_tools_club",
+        "kind": "contact",
+        "label": "tiny_tools_club",
+        "platform": "instagram",
+        "cluster": -1,
+        "crossPlatform": false,
+        "degree": 1,
+        "x": 354,
+        "y": 131
+      }
+    ],
+    "links": [
+      {
+        "source": "self:instagram",
+        "target": "c_dev_sam",
+        "type": "mutual",
+        "timestamp": "2024-10-05T19:30:00Z",
+        "t": 1728156600000
+      },
+      {
+        "source": "self:instagram",
+        "target": "c_pyconf",
+        "type": "follow",
+        "timestamp": "2024-10-08T18:45:00Z",
+        "t": 1728413100000
+      },
+      {
+        "source": "self:mastodon",
+        "target": "c_compiler_cat",
+        "type": "mutual",
+        "timestamp": "2024-10-10T20:20:00Z",
+        "t": 1728591600000
+      },
+      {
+        "source": "self:x",
+        "target": "c_rustlang_news",
+        "type": "follow",
+        "timestamp": "2024-10-12T19:55:00Z",
+        "t": 1728762900000
+      },
+      {
+        "source": "self:x",
+        "target": "c_marco_builds",
+        "type": "mutual",
+        "timestamp": "2024-10-15T20:40:00Z",
+        "t": 1729024800000
+      },
+      {
+        "source": "self:mastodon",
+        "target": "c_lena_codes",
+        "type": "mutual",
+        "timestamp": "2024-10-18T20:05:00Z",
+        "t": 1729281900000
+      },
+      {
+        "source": "self:x",
+        "target": "c_pyconf",
+        "type": "mention",
+        "timestamp": "2024-10-19T21:05:00Z",
+        "t": 1729371900000
+      },
+      {
+        "source": "self:facebook",
+        "target": "c_recetas_abuela",
+        "type": "mutual",
+        "timestamp": "2024-10-20T12:30:00Z",
+        "t": 1729427400000
+      },
+      {
+        "source": "self:x",
+        "target": "c_dev_sam",
+        "type": "reply",
+        "timestamp": "2024-10-22T20:10:00Z",
+        "t": 1729627800000
+      },
+      {
+        "source": "self:x",
+        "target": "c_oss_weekly",
+        "type": "follow",
+        "timestamp": "2024-10-25T20:50:00Z",
+        "t": 1729889400000
+      },
+      {
+        "source": "self:instagram",
+        "target": "c_tiny_tools_club",
+        "type": "mutual",
+        "timestamp": "2024-10-28T18:30:00Z",
+        "t": 1730140200000
+      },
+      {
+        "source": "self:instagram",
+        "target": "c_marco_builds",
+        "type": "message",
+        "timestamp": "2024-11-01T21:15:00Z",
+        "t": 1730495700000
+      },
+      {
+        "source": "self:mastodon",
+        "target": "c_grace_hw",
+        "type": "follow",
+        "timestamp": "2024-11-02T21:40:00Z",
+        "t": 1730583600000
+      },
+      {
+        "source": "self:instagram",
+        "target": "c_lena_codes",
+        "type": "follow",
+        "timestamp": "2024-11-03T19:25:00Z",
+        "t": 1730661900000
+      },
+      {
+        "source": "self:facebook",
+        "target": "c_madrid_foodies",
+        "type": "follow",
+        "timestamp": "2024-11-04T13:10:00Z",
+        "t": 1730725800000
+      },
+      {
+        "source": "self:x",
+        "target": "c_marco_builds",
+        "type": "reply",
+        "timestamp": "2024-11-08T20:15:00Z",
+        "t": 1731096900000
+      },
+      {
+        "source": "self:mastodon",
+        "target": "c_compiler_cat",
+        "type": "reply",
+        "timestamp": "2024-11-11T20:35:00Z",
+        "t": 1731357300000
+      }
+    ],
+    "timeRange": {
+      "startMs": 1728156600000,
+      "endMs": 1731357300000
+    },
+    "contactCount": 11,
+    "crossPlatformContacts": 4
+  }
+}

@@ -14,7 +14,7 @@ from reportlab.pdfbase import pdfmetrics
 
 class TwitterDataReport:
     def __init__(self):
-        self.MONGO_URI = "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+        self.MONGO_URI = os.environ["MONGO_CLUSTER_URI"]
         self.DATABASE_NAME = "twitterDB"
         self.COLLECTION_NAME = "twitter_users"
         try:

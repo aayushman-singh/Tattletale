@@ -1,3 +1,4 @@
+import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import axios from "axios";
 import qs from "qs";
@@ -16,9 +17,13 @@ import GmailInUser, { IGmailInUser } from "../models/Gmail/GmailInUser";
 import GmailOutUser, { IGmailOutUser } from "../models/Gmail/GmailOutUser.ts";
 import { __dirname } from "../../../config.ts";
 
-const CLIENT_ID =
-    "218022995131-pkv99vvugfmhr73ua600lg44q362bbsj.apps.googleusercontent.com";
-const CLIENT_SECRET = "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";
+const CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+if (!CLIENT_ID || !CLIENT_SECRET) {
+    throw new Error(
+        "GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must be set (see .env.example).",
+    );
+}
 const REDIRECT_URI = "http://localhost:3006/oauth2callback";
 const TOKEN_PATH = path.join(__dirname, "token.json");
 
@@ -28,8 +33,8 @@ const TOKEN_PATH = path.join(__dirname, "token.json");
 const connectDB = async () => {
     try {
         await mongoose.connect(
-            "mongodb+srv://aayushman2702:Lmaoded%4011@cluster0.eivmu.mongodb.net/gmailDB?retryWrites=true&w=majority",
-            {
+            clusterUri(),
+            { dbName: "gmailDB",
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             } as mongoose.ConnectOptions,

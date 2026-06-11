@@ -1,0 +1,55 @@
+# One-command local demo: backend + frontend + mongo.
+#   docker compose up --build
+# Then open http://localhost:8080  (the replay demo lives at /demo and needs no login).
+#
+# This boots the auth backend and the React frontend against a local MongoDB.
+# The scrapers are NOT included — they need headed Chromium + real platform
+# sessions and have no containerised/free path (see DECISIONS.md). The public
+# experience is the keyless replay demo served by the frontend.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    restart: unless-stopped
+    environment:
+      # Backend application database (full URI incl. db name). See .env.example.
+      MONGO_URI: mongodb://mongo:27017/tattletale
+      JWT_SECRET: ${JWT_SECRET:-dev-only-insecure-change-me}
+      NODE_ENV: production
+      PORT: "5001"
+    ports:
+      - "5001:5001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+      args:
+        # Optional — omit for demo mode (Google sign-in disabled, replay works).
+        VITE_GOOGLE_OAUTH_CLIENT_ID: ${VITE_GOOGLE_OAUTH_CLIENT_ID:-}
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:

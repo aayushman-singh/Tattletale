@@ -38,17 +38,21 @@ test("extractive brief round-trips through its own validator", () => {
 });
 
 test("validator rejects a hallucinated PLACE not in the facts", () => {
-    // The classic failure: model invents a city.
+    // The classic failure: model invents a city. Sentence is otherwise built
+    // only from grounded words, so the place name is the sole token the
+    // vocabulary-bounds guard can reject — proving it is what trips it.
     assert.throws(
-        () => validateBrief("Ana Rivera appears to be based in Mumbai.", FACTS),
-        /Mumbai/,
+        () => validateBrief("Ana Rivera posts in Mumbai.", FACTS),
+        /mumbai/i,
     );
 });
 
 test("validator rejects a hallucinated PERSON not in the facts", () => {
+    // "contacts" is grounded (the network clause), so "Boris" is the only
+    // ungrounded token and the guard names it.
     assert.throws(
-        () => validateBrief("Ana Rivera frequently contacts Boris.", FACTS),
-        /Boris/,
+        () => validateBrief("Ana Rivera contacts Boris.", FACTS),
+        /boris/i,
     );
 });
 
@@ -60,7 +64,9 @@ test("validator rejects a fabricated NUMBER not in the facts", () => {
 });
 
 test("validator accepts only fact-derived names and numbers", () => {
-    const ok = "Ana Rivera operates 3 accounts across instagram and is active in the evening.";
+    // Every token here comes from the grounded extractive brief (or the closed
+    // function-word set), so a faithful rephrasing passes.
+    const ok = "Ana Rivera links 3 accounts across instagram with high cohesion.";
     assert.doesNotThrow(() => validateBrief(ok, FACTS));
 });
 

@@ -17,8 +17,10 @@ from scraper.src.Helpers.Telegram.mongoUtils import upload_telegram_chats_to_mon
 from scraper.src.Helpers.Telegram.s3 import upload_to_s3
 
 load_dotenv()
-API_ID=YOUR_API_ID_HERE
-API_HASH=YOUR_API_HASH_HERE
+# Telegram API credentials are operator-supplied via env; missing values raise
+# loudly (KeyError) rather than running with a placeholder — no silent fallback.
+API_ID = os.environ["TELEGRAM_API_ID"]
+API_HASH = os.environ["TELEGRAM_API_HASH"]
 
 # Global variables for cleanup
 active_clients = []

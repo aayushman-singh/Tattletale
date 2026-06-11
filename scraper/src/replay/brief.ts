@@ -133,39 +133,30 @@ export function composeExtractive(f: BriefFacts): string {
     );
 }
 
-// ---------- the anti-hallucination guard ----------
+// ---------- fact-bounded validation ----------
+//
+// This is a VOCABULARY-BOUNDS check, not a propositional fact-checker (it does
+// not verify the relations a sentence asserts). Its guarantee is narrow but real:
+// the validated text may use NO word and NO number that the deterministic,
+// provably-grounded extractive brief did not already use (beyond closed-class
+// grammatical glue). An LLM therefore cannot smuggle in a place ("madrid"), a
+// person ("boris"), an attribute ("age", "employer"), or a fabricated statistic —
+// in any case (upper or lower). It can only re-phrase the grounded brief.
 
-// Structural vocabulary the brief is allowed to use beyond the fact-derived
-// tokens. Anything Capitalized in the text must reduce to one of these or to a
-// token derived from BriefFacts, or validation throws.
-const STRUCTURAL_WORDS = new Set(
+// Closed-class grammatical words an LLM may use to reshape sentences without
+// asserting any new entity. Intentionally tiny and fixed.
+const FUNCTION_WORDS = new Set(
     (
-        "the target presents a single resolved identity distinct identities across platform platforms " +
-        "correlation engine links account accounts as one person with high medium low cohesion and flags " +
-        "same named likely different individual activity totals sampled posts followers concentrated in " +
-        "the night morning afternoon evening peak around utc appear more than one platform mapped network " +
-        "spans contact contacts of whom on first observed themes appears mostly based posting patterns to"
+        "a an the and or but as at by for from in into of on to with is are was were be been being " +
+        "this that these those it its their there here who whom which while also than then more most " +
+        "one two three four five six seven eight nine ten not no s"
     )
         .split(/\s+/)
         .filter(Boolean),
 );
 
-function allowedNameTokens(f: BriefFacts): Set<string> {
-    const set = new Set(STRUCTURAL_WORDS);
-    const add = (s: string) =>
-        s
-            .toLowerCase()
-            .split(/[^a-z0-9]+/)
-            .filter(Boolean)
-            .forEach((t) => set.add(t));
-    add(f.displayName);
-    add(f.handle);
-    f.platforms.forEach(add);
-    f.languages.forEach(add);
-    f.topTags.forEach(add);
-    add(f.activityWindow);
-    return set;
-}
+const wordsOf = (s: string): string[] =>
+    s.toLowerCase().split(/[^a-z]+/).filter(Boolean);
 
 function allowedNumbers(f: BriefFacts): Set<string> {
     const nums = [
@@ -182,20 +173,22 @@ function allowedNumbers(f: BriefFacts): Set<string> {
     const set = new Set<string>();
     for (const n of nums) set.add(String(n));
     set.add("00"); // the ":00" in the peak-hour clause
-    // firstSeen date components (e.g. 2021-03-14 -> 2021, 03, 14)
     for (const part of f.firstSeen.split(/[^0-9]+/)) if (part) set.add(part);
     return set;
 }
 
 /**
- * Throws if `text` contains a proper-noun candidate or a number that does not
- * trace back to `facts`. Returns nothing on success.
+ * Throws if `text` uses a word or number not present in `facts`'s grounded
+ * brief. `reference` is the trusted, provably-grounded text whose vocabulary
+ * bounds `text`; it defaults to the extractive brief for `facts`, so any
+ * summarizer is held to exactly the words/numbers the facts justify.
  */
-export function validateBrief(text: string, facts: BriefFacts): void {
-    const names = allowedNameTokens(facts);
+export function validateBrief(text: string, facts: BriefFacts, reference?: string): void {
+    const ref = reference ?? composeExtractive(facts);
+    const allowedWords = new Set<string>([...wordsOf(ref), ...FUNCTION_WORDS]);
     const numbers = allowedNumbers(facts);
 
-    // Numbers: every digit group (commas stripped) must be an allowed fact number.
+    // Numbers: every digit group (commas stripped) must be a grounded fact number.
     for (const m of text.matchAll(/\d[\d,]*/g)) {
         const norm = m[0].replace(/,/g, "");
         if (!numbers.has(norm)) {
@@ -205,14 +198,13 @@ export function validateBrief(text: string, facts: BriefFacts): void {
         }
     }
 
-    // Names: every Capitalized alphabetic token must be an allowed token. This
-    // catches a hallucinated place ("Mumbai") or person ("John") the model might
-    // invent. Handles (@ana_rivera_dev) are lowercase and skipped naturally.
-    for (const m of text.matchAll(/\b([A-Z][a-zA-Z]+)\b/g)) {
-        const tok = m[1].toLowerCase();
-        if (!names.has(tok)) {
+    // Words: every alphabetic token (any case) must come from the grounded brief
+    // or the closed function-word set. This catches lowercase hallucinations the
+    // old capitalized-only check missed.
+    for (const w of wordsOf(text)) {
+        if (!allowedWords.has(w)) {
             throw new Error(
-                `Brief failed validation: proper noun "${m[1]}" is not derived from the source facts.`,
+                `Brief failed validation: word "${w}" is not present in the grounded source brief.`,
             );
         }
     }

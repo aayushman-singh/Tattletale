@@ -1,12 +1,13 @@
 {
-  "method": "Heuristic link score (NOT a calibrated probability): pairwise handle & display-name Jaro-Winkler, bio Jaccard, bounded stylometric agreement, hour-of-day cosine, and shared low-frequency vocabulary — each behavioural signal coverage-gated by post count. Accounts agglomerate into identities under a complete-linkage guard.",
+  "method": "Heuristic link score (NOT a calibrated probability): pairwise handle & display-name Jaro-Winkler, bio Jaccard, bounded stylometric agreement, hour-of-day cosine, and shared low-frequency vocabulary — each behavioural signal coverage-gated by post count. A seventh signal, temporal-geospatial co-presence, is an applicability-gated overlay (weight 0.1): when both accounts carry geo+time metadata it rewards distinct posting occasions co-located within 250 m and 30 min and the six behavioural weights renormalize to 0.9; when metadata is absent the signal is inapplicable and the six renormalize to 1.0 (no fabricated value). Accounts agglomerate into identities under a complete-linkage guard.",
   "weights": {
-    "handle": 0.24,
-    "name": 0.12,
-    "bio": 0.12,
-    "style": 0.22,
-    "temporal": 0.14,
-    "sharedTerms": 0.16
+    "handle": 0.216,
+    "name": 0.108,
+    "bio": 0.108,
+    "style": 0.198,
+    "temporal": 0.126,
+    "sharedTerms": 0.144,
+    "coPresence": 0.1
   },
   "thresholds": {
     "edgeFloor": 0.35,
@@ -58,48 +59,55 @@
     {
       "source": 1,
       "target": 3,
-      "score": 0.836,
+      "score": 0.787,
       "band": "high",
       "features": [
         {
           "feature": "handle",
           "value": 1,
-          "weight": 0.24,
-          "contribution": 0.24,
+          "weight": 0.216,
+          "contribution": 0.216,
           "label": "username similarity (ana_rivera_dev ↔ ana_rivera_dev)"
         },
         {
           "feature": "style",
           "value": 0.906,
-          "weight": 0.22,
-          "contribution": 0.199,
+          "weight": 0.198,
+          "contribution": 0.179,
           "label": "writing-style fingerprint (punctuation, casing, function words)"
         },
         {
           "feature": "sharedTerms",
           "value": 1,
-          "weight": 0.16,
-          "contribution": 0.16,
+          "weight": 0.144,
+          "contribution": 0.144,
           "label": "shared distinctive terms: \"bug\", \"spent\", \"always\", \"tonight\""
         },
         {
           "feature": "name",
           "value": 1,
-          "weight": 0.12,
-          "contribution": 0.12,
+          "weight": 0.108,
+          "contribution": 0.108,
           "label": "display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
         },
         {
           "feature": "temporal",
-          "value": 0.833,
-          "weight": 0.14,
-          "contribution": 0.117,
+          "value": 0.577,
+          "weight": 0.126,
+          "contribution": 0.073,
           "label": "posting hour-of-day profile"
+        },
+        {
+          "feature": "coPresence",
+          "value": 0.667,
+          "weight": 0.1,
+          "contribution": 0.067,
+          "label": "co-located posting: 2 occasions within 250 m and 30 min"
         },
         {
           "feature": "bio",
           "value": 0,
-          "weight": 0.12,
+          "weight": 0.108,
           "contribution": 0,
           "label": "overlapping bio vocabulary"
         }
@@ -160,7 +168,7 @@
     {
       "source": 2,
       "target": 3,
-      "score": 0.686,
+      "score": 0.669,
       "band": "high",
       "features": [
         {
@@ -178,18 +186,18 @@
           "label": "writing-style fingerprint (punctuation, casing, function words)"
         },
         {
-          "feature": "temporal",
-          "value": 0.943,
-          "weight": 0.14,
-          "contribution": 0.132,
-          "label": "posting hour-of-day profile"
-        },
-        {
           "feature": "name",
           "value": 1,
           "weight": 0.12,
           "contribution": 0.12,
           "label": "display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
+        },
+        {
+          "feature": "temporal",
+          "value": 0.816,
+          "weight": 0.14,
+          "contribution": 0.114,
+          "label": "posting hour-of-day profile"
         },
         {
           "feature": "bio",
@@ -206,7 +214,7 @@
           "label": "no shared distinctive terms"
         }
       ],
-      "rationale": "username similarity (ana_rivera ↔ ana_rivera_dev); writing-style fingerprint (punctuation, casing, function words); posting hour-of-day profile"
+      "rationale": "username similarity (ana_rivera ↔ ana_rivera_dev); writing-style fingerprint (punctuation, casing, function words); display-name similarity (\"Ana Rivera\" ↔ \"Ana Rivera\")"
     },
     {
       "source": 0,
@@ -387,7 +395,7 @@
         "mastodon",
         "x"
       ],
-      "cohesion": 0.761
+      "cohesion": 0.739
     }
   ]
 }

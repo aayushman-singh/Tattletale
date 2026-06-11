@@ -1,0 +1,381 @@
+{
+  "synthetic": true,
+  "notice": "100% synthetic data. This person does not exist. No real account was scraped.",
+  "target": {
+    "handle": "ana_rivera_dev",
+    "displayName": "Ana Rivera",
+    "summary": "Fictional software developer persona used to demonstrate the Tattletale replay pipeline.",
+    "firstSeen": "2021-03-14",
+    "tags": [
+      "developer",
+      "open-source",
+      "synthetic-demo"
+    ]
+  },
+  "platforms": [
+    {
+      "platform": "instagram",
+      "username": "ana_rivera_dev",
+      "url": "https://instagram.com/ana_rivera_dev",
+      "displayName": "Ana Rivera",
+      "bio": "Building tiny tools. Coffee, Python, and bad puns. she/her.",
+      "verified": false,
+      "followers": 4821,
+      "following": 612,
+      "postCount": 137,
+      "posts": [
+        {
+          "id": "ig_001",
+          "timestamp": "2024-11-02T19:22:00Z",
+          "caption": "shipped a CLI that renames 10k files in 200ms. rust go brrr.",
+          "likes": 312,
+          "comments": 24,
+          "geo": {
+            "lat": 19.076,
+            "lon": 72.8777,
+            "accuracyM": 25
+          }
+        },
+        {
+          "id": "ig_002",
+          "timestamp": "2024-11-05T20:05:00Z",
+          "caption": "the compiler caught a bug i would never have. types are just unit tests you don't write.",
+          "likes": 198,
+          "comments": 11,
+          "geo": {
+            "lat": 19.0654,
+            "lon": 72.829,
+            "accuracyM": 25
+          }
+        },
+        {
+          "id": "ig_003",
+          "timestamp": "2024-11-08T21:14:00Z",
+          "caption": "spent the evening squashing a flaky test. it was a missing await. it is always a missing await.",
+          "likes": 274,
+          "comments": 19,
+          "geo": {
+            "lat": 19.113,
+            "lon": 72.869,
+            "accuracyM": 25
+          }
+        },
+        {
+          "id": "ig_004",
+          "timestamp": "2024-11-12T19:48:00Z",
+          "caption": "ship small, ship often. my CLI got 3 new flags tonight.",
+          "likes": 221,
+          "comments": 13,
+          "geo": {
+            "lat": 19.076,
+            "lon": 72.8777,
+            "accuracyM": 25
+          }
+        }
+      ]
+    },
+    {
+      "platform": "x",
+      "username": "ana_rivera_dev",
+      "url": "https://x.com/ana_rivera_dev",
+      "displayName": "Ana Rivera",
+      "bio": "dev. i make small things that do one thing well. opinions are load-bearing.",
+      "verified": false,
+      "followers": 9140,
+      "following": 388,
+      "postCount": 2204,
+      "posts": [
+        {
+          "id": "x_001",
+          "timestamp": "2024-11-05T20:20:00Z",
+          "caption": "hot take: most retries are just fallbacks wearing a trench coat.",
+          "likes": 540,
+          "comments": 63,
+          "geo": {
+            "lat": 19.0654,
+            "lon": 72.829,
+            "accuracyM": 25
+          }
+        },
+        {
+          "id": "x_002",
+          "timestamp": "2024-11-06T21:47:00Z",
+          "caption": "spent 3 hours on a bug. it was a missing await. it is always a missing await.",
+          "likes": 1203,
+          "comments": 89,
+          "geo": {
+            "lat": 19.076,
+            "lon": 72.8777,
+            "accuracyM": 25
+          }
+        },
+        {
+          "id": "x_003",
+          "timestamp": "2024-11-08T21:30:00Z",
+          "caption": "rewrote the CLI parser tonight. the compiler did most of the work, honestly.",
+          "likes": 410,
+          "comments": 41,
+          "geo": {
+            "lat": 19.113,
+            "lon": 72.869,
+            "accuracyM": 25
+          }
+        },
+        {
+          "id": "x_004",
+          "timestamp": "2024-11-13T20:55:00Z",
+          "caption": "ship small, ship often. that's the whole methodology.",
+          "likes": 690,
+          "comments": 58,
+          "geo": {
+            "lat": 19.076,
+            "lon": 72.8777,
+            "accuracyM": 25
+          }
+        }
+      ]
+    },
+    {
+      "platform": "mastodon",
+      "username": "ana_rivera",
+      "url": "https://hachyderm.io/@ana_rivera",
+      "displayName": "Ana Rivera",
+      "bio": "Federated and proud. Toots about compilers and gardening. she/her.",
+      "verified": false,
+      "followers": 1320,
+      "following": 540,
+      "postCount": 410,
+      "posts": [
+        {
+          "id": "mas_001",
+          "timestamp": "2024-11-03T20:30:00Z",
+          "caption": "migrated my blog to a static generator i wrote on a flight. the compiler is my favorite coworker.",
+          "likes": 87,
+          "comments": 14
+        },
+        {
+          "id": "mas_002",
+          "timestamp": "2024-11-07T21:05:00Z",
+          "caption": "another evening, another missing await. the CLI works now though.",
+          "likes": 64,
+          "comments": 9
+        },
+        {
+          "id": "mas_003",
+          "timestamp": "2024-11-11T19:40:00Z",
+          "caption": "ship small, ship often. pushed a tiny tool that does exactly one thing.",
+          "likes": 91,
+          "comments": 12
+        }
+      ]
+    },
+    {
+      "platform": "facebook",
+      "username": "ana.rivera.cocina",
+      "url": "https://facebook.com/ana.rivera.cocina",
+      "displayName": "Ana Rivera",
+      "bio": "Cocinera casera. Recetas, familia y los asados del domingo. Madrid.",
+      "verified": false,
+      "followers": 870,
+      "following": 430,
+      "postCount": 95,
+      "posts": [
+        {
+          "id": "fb_001",
+          "timestamp": "2024-11-02T11:40:00Z",
+          "caption": "Hoy preparé una tortilla de patatas para toda la familia. Receta de mi abuela.",
+          "likes": 64,
+          "comments": 9
+        },
+        {
+          "id": "fb_002",
+          "timestamp": "2024-11-06T12:15:00Z",
+          "caption": "El secreto de un buen sofrito es la paciencia. Fuego lento siempre.",
+          "likes": 51,
+          "comments": 7
+        },
+        {
+          "id": "fb_003",
+          "timestamp": "2024-11-10T13:05:00Z",
+          "caption": "Domingo de asado con los primos. Nada como cocinar para la gente que quieres.",
+          "likes": 73,
+          "comments": 12
+        }
+      ]
+    }
+  ],
+  "network": {
+    "contacts": [
+      {
+        "id": "c_dev_sam",
+        "handle": "dev_sam",
+        "displayName": "Sam",
+        "platform": "instagram"
+      },
+      {
+        "id": "c_compiler_cat",
+        "handle": "compiler_cat",
+        "displayName": "Compiler Cat",
+        "platform": "mastodon"
+      },
+      {
+        "id": "c_pyconf",
+        "handle": "pyconf",
+        "displayName": "PyConf",
+        "platform": "x"
+      },
+      {
+        "id": "c_rustlang_news",
+        "handle": "rustlang_news",
+        "displayName": "Rust News",
+        "platform": "x"
+      },
+      {
+        "id": "c_marco_builds",
+        "handle": "marco_builds",
+        "displayName": "Marco",
+        "platform": "x"
+      },
+      {
+        "id": "c_lena_codes",
+        "handle": "lena_codes",
+        "displayName": "Lena",
+        "platform": "mastodon"
+      },
+      {
+        "id": "c_oss_weekly",
+        "handle": "oss_weekly",
+        "displayName": "OSS Weekly",
+        "platform": "x"
+      },
+      {
+        "id": "c_tiny_tools_club",
+        "handle": "tiny_tools_club",
+        "displayName": "Tiny Tools",
+        "platform": "instagram"
+      },
+      {
+        "id": "c_grace_hw",
+        "handle": "grace_hw",
+        "displayName": "Grace",
+        "platform": "mastodon"
+      },
+      {
+        "id": "c_recetas_abuela",
+        "handle": "recetas_abuela",
+        "displayName": "Recetas",
+        "platform": "facebook"
+      },
+      {
+        "id": "c_madrid_foodies",
+        "handle": "madrid_foodies",
+        "displayName": "Madrid Foodies",
+        "platform": "facebook"
+      }
+    ],
+    "interactions": [
+      {
+        "from": "instagram",
+        "to": "c_dev_sam",
+        "type": "mutual",
+        "timestamp": "2024-10-05T19:30:00Z"
+      },
+      {
+        "from": "x",
+        "to": "c_dev_sam",
+        "type": "reply",
+        "timestamp": "2024-10-22T20:10:00Z"
+      },
+      {
+        "from": "instagram",
+        "to": "c_pyconf",
+        "type": "follow",
+        "timestamp": "2024-10-08T18:45:00Z"
+      },
+      {
+        "from": "x",
+        "to": "c_pyconf",
+        "type": "mention",
+        "timestamp": "2024-10-19T21:05:00Z"
+      },
+      {
+        "from": "mastodon",
+        "to": "c_compiler_cat",
+        "type": "mutual",
+        "timestamp": "2024-10-10T20:20:00Z"
+      },
+      {
+        "from": "x",
+        "to": "c_rustlang_news",
+        "type": "follow",
+        "timestamp": "2024-10-12T19:55:00Z"
+      },
+      {
+        "from": "x",
+        "to": "c_marco_builds",
+        "type": "mutual",
+        "timestamp": "2024-10-15T20:40:00Z"
+      },
+      {
+        "from": "instagram",
+        "to": "c_marco_builds",
+        "type": "message",
+        "timestamp": "2024-11-01T21:15:00Z"
+      },
+      {
+        "from": "mastodon",
+        "to": "c_lena_codes",
+        "type": "mutual",
+        "timestamp": "2024-10-18T20:05:00Z"
+      },
+      {
+        "from": "instagram",
+        "to": "c_lena_codes",
+        "type": "follow",
+        "timestamp": "2024-11-03T19:25:00Z"
+      },
+      {
+        "from": "x",
+        "to": "c_oss_weekly",
+        "type": "follow",
+        "timestamp": "2024-10-25T20:50:00Z"
+      },
+      {
+        "from": "instagram",
+        "to": "c_tiny_tools_club",
+        "type": "mutual",
+        "timestamp": "2024-10-28T18:30:00Z"
+      },
+      {
+        "from": "mastodon",
+        "to": "c_grace_hw",
+        "type": "follow",
+        "timestamp": "2024-11-02T21:40:00Z"
+      },
+      {
+        "from": "x",
+        "to": "c_marco_builds",
+        "type": "reply",
+        "timestamp": "2024-11-08T20:15:00Z"
+      },
+      {
+        "from": "mastodon",
+        "to": "c_compiler_cat",
+        "type": "reply",
+        "timestamp": "2024-11-11T20:35:00Z"
+      },
+      {
+        "from": "facebook",
+        "to": "c_recetas_abuela",
+        "type": "mutual",
+        "timestamp": "2024-10-20T12:30:00Z"
+      },
+      {
+        "from": "facebook",
+        "to": "c_madrid_foodies",
+        "type": "follow",
+        "timestamp": "2024-11-04T13:10:00Z"
+      }
+    ]
+  }
+}

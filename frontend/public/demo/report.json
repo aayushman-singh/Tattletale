@@ -3,7 +3,7 @@
   "synthetic": true,
   "notice": "100% synthetic data. This person does not exist. No real account was scraped.",
   "handle": "ana_rivera_dev",
-  "generatedAt": "2026-06-11T07:22:46.558Z",
+  "generatedAt": "2026-06-11T13:15:54.077Z",
   "target": {
     "handle": "ana_rivera_dev",
     "displayName": "Ana Rivera",
@@ -38,7 +38,8 @@
           "comments": 24,
           "geo": {
             "lat": 19.076,
-            "lon": 72.8777
+            "lon": 72.8777,
+            "accuracyM": 25
           }
         },
         {
@@ -49,7 +50,8 @@
           "comments": 11,
           "geo": {
             "lat": 19.0654,
-            "lon": 72.829
+            "lon": 72.829,
+            "accuracyM": 25
           }
         },
         {
@@ -60,7 +62,8 @@
           "comments": 19,
           "geo": {
             "lat": 19.113,
-            "lon": 72.869
+            "lon": 72.869,
+            "accuracyM": 25
           }
         },
         {
@@ -71,7 +74,8 @@
           "comments": 13,
           "geo": {
             "lat": 19.076,
-            "lon": 72.8777
+            "lon": 72.8777,
+            "accuracyM": 25
           }
         }
       ]
@@ -97,7 +101,8 @@
           "comments": 63,
           "geo": {
             "lat": 19.0654,
-            "lon": 72.829
+            "lon": 72.829,
+            "accuracyM": 25
           }
         },
         {
@@ -108,7 +113,8 @@
           "comments": 89,
           "geo": {
             "lat": 19.076,
-            "lon": 72.8777
+            "lon": 72.8777,
+            "accuracyM": 25
           }
         },
         {
@@ -119,7 +125,8 @@
           "comments": 41,
           "geo": {
             "lat": 19.113,
-            "lon": 72.869
+            "lon": 72.869,
+            "accuracyM": 25
           }
         },
         {
@@ -130,7 +137,8 @@
           "comments": 58,
           "geo": {
             "lat": 19.076,
-            "lon": 72.8777
+            "lon": 72.8777,
+            "accuracyM": 25
           }
         }
       ]

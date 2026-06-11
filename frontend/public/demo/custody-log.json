@@ -3,24 +3,24 @@
     "seq": 1,
     "step": "normalize",
     "artifact": "report.json",
-    "sha256": "1302f6381756c870629b933f6010911660fd41dd339deaa3910d624958ab5164",
+    "sha256": "4713c6622a66876d2e70cc1e7365ccf7d687a447b0f0ef6d84dfd118048692fa",
     "prevHash": "0000000000000000000000000000000000000000000000000000000000000000",
-    "entryHash": "b9ba7fc1c37906abf2aa1305deb26babc393044b012ceb7f2b35a0a12ab9e20c"
+    "entryHash": "63ff286dfa2c4cca2830bd3dad7a1225afac16df966c82ec9b68212aba3dbd28"
   },
   {
     "seq": 2,
     "step": "correlate",
     "artifact": "correlation.json",
     "sha256": "d21fd4b447493a72eb10e0a93b9f98af2cf1804d77e567b170f6d892575d5bf9",
-    "prevHash": "b9ba7fc1c37906abf2aa1305deb26babc393044b012ceb7f2b35a0a12ab9e20c",
-    "entryHash": "9326d132b62f699e7fb914f2595c59f8375d159c269c910a9eae82a350e3c287"
+    "prevHash": "63ff286dfa2c4cca2830bd3dad7a1225afac16df966c82ec9b68212aba3dbd28",
+    "entryHash": "30eff513ffc1428e50acc43b4babaa7afca3e939a7fce46dab73eba65cedb875"
   },
   {
     "seq": 3,
     "step": "render-pdf",
     "artifact": "report.pdf",
-    "sha256": "8ff22b4a3c5ca798df5164b6bce2f3689f7ed68ac7a043b8efa3b76b16fb060d",
-    "prevHash": "9326d132b62f699e7fb914f2595c59f8375d159c269c910a9eae82a350e3c287",
-    "entryHash": "9581c10c420027e2e4095a39146194f3b3c9feab2edf3090a5137d4be9769700"
+    "sha256": "8a70778ae1642b9883500923f8078e2704e81eabf55fd38a386e068b7a1409a2",
+    "prevHash": "30eff513ffc1428e50acc43b4babaa7afca3e939a7fce46dab73eba65cedb875",
+    "entryHash": "a1f19c63a4815b08f809740ef5fd0540aff54a94a77a37c2df7c7b4ff7eae62f"
   }
 ]

@@ -93,6 +93,10 @@ _filter_callback.py
 # Replay-mode golden fixtures: re-include AFTER the global *.pdf/*.png ignores
 # above so the synthetic demo bundle (including report.pdf) stays committed.
 !/output/golden/**
+# ...but NOT the CLI scratch output: `generated/` is re-derived on every replay
+# run (ephemeral signing key + wall-clock generatedAt). The served bundle lives
+# in /frontend/public/demo; this scratch must never be committed.
+/output/golden/*/generated/
 
 # Static demo bundle served by the frontend (synthetic, no live scrape).
 # Re-include after the global *.pdf ignore so /demo/report.pdf ships.

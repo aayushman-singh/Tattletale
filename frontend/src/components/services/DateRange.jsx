@@ -20,10 +20,10 @@ const DateRangePicker = ({ platform, onDateChange }) => {
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-full justify-start text-left font-normal text-white bg-gray-700 hover:bg-gray-600"
+            className="w-full justify-start text-left font-normal text-paper-50 bg-ink-780 hover:bg-ink-740 border-ink-700"
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange.from ? format(dateRange.from, "dd-MM-yyyy") : <span className="text-gray-400">From Date</span>}
+            {dateRange.from ? format(dateRange.from, "dd-MM-yyyy") : <span className="text-mute">From Date</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -40,10 +40,10 @@ const DateRangePicker = ({ platform, onDateChange }) => {
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-full justify-start text-left font-normal text-white bg-gray-700 hover:bg-gray-600"
+            className="w-full justify-start text-left font-normal text-paper-50 bg-ink-780 hover:bg-ink-740 border-ink-700"
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange.to ? format(dateRange.to, "dd-MM-yyyy") : <span className="text-gray-400">To Date</span>}
+            {dateRange.to ? format(dateRange.to, "dd-MM-yyyy") : <span className="text-mute">To Date</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">

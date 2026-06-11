@@ -52,9 +52,9 @@ const MastodonProfile = ({ userData }) => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gray-800/40 rounded-xl p-6">
+      <div className="bg-ink-820/40 rounded-xl p-6">
         <div className="flex items-center space-x-4 mb-6">
-          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-500">
+          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-pf-mastodon">
             <img
               src={userData.profile_pic}
               alt={userData.username}
@@ -62,12 +62,12 @@ const MastodonProfile = ({ userData }) => {
             />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">{userData.username}</h2>
+            <h2 className="text-xl font-bold text-paper-50 font-mono">{userData.username}</h2>
             <a
               href={userData.profile}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-300 hover:text-blue-200 text-sm flex items-center space-x-1"
+              className="text-pf-mastodon hover:text-pf-mastodon text-sm flex items-center space-x-1"
             >
               <User className="h-4 w-4" />
               <span>View Profile</span>
@@ -76,10 +76,10 @@ const MastodonProfile = ({ userData }) => {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-gray-800/30 rounded-xl p-4">
+          <div className="bg-ink-820/30 rounded-xl p-4">
             <button
               onClick={toggleFeed}
-              className="flex items-center justify-between w-full text-blue-400 hover:text-blue-300 transition-all duration-200"
+              className="flex items-center justify-between w-full text-pf-mastodon hover:text-pf-mastodon transition-all duration-200"
               aria-expanded={isFeedExpanded}
             >
               <div className="flex items-center space-x-2">
@@ -106,10 +106,10 @@ const MastodonProfile = ({ userData }) => {
                   href={feed.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors duration-200"
+                  className="flex items-center justify-between p-3 bg-ink-780/30 rounded-lg hover:bg-ink-780/50 transition-colors duration-200"
                 >
-                  <span className="text-white">{feed.label}</span>
-                  <ExternalLink className="h-4 w-4 text-blue-400" />
+                  <span className="text-paper-50">{feed.label}</span>
+                  <ExternalLink className="h-4 w-4 text-pf-mastodon" />
                 </a>
               ))}
             </div>
@@ -118,7 +118,7 @@ const MastodonProfile = ({ userData }) => {
           <div className="flex justify-between items-center">
             <button
               onClick={fetchLogs}
-              className="inline-flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors duration-200"
+              className="inline-flex items-center space-x-2 text-rust-300 hover:text-rust-300 transition-colors duration-200"
             >
               <FileText className="h-5 w-5" />
               <span className="font-medium">
@@ -127,7 +127,7 @@ const MastodonProfile = ({ userData }) => {
             </button>
             <a
               href={userData.logs}
-              className="inline-flex items-center space-x-2 text-blue-400 hover:text-blue-300 text-sm transition-colors duration-200"
+              className="inline-flex items-center space-x-2 text-rust-300 hover:text-rust-300 text-sm transition-colors duration-200"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -137,11 +137,11 @@ const MastodonProfile = ({ userData }) => {
           </div>
 
           {isLogsVisible && (
-            <div className="bg-gray-800/30 rounded-xl p-4 overflow-auto max-h-64">
+            <div className="bg-ink-820/30 rounded-xl p-4 overflow-auto max-h-64">
               {isLogsLoading ? (
-                <p className="text-blue-300">Loading logs...</p>
+                <p className="text-rust-300">Loading logs...</p>
               ) : (
-                <pre className="text-gray-300 whitespace-pre-wrap">{logs}</pre>
+                <pre className="text-paper-300 whitespace-pre-wrap font-mono">{logs}</pre>
               )}
             </div>
           )}
@@ -161,7 +161,7 @@ const MastodonProfile = ({ userData }) => {
             />
             <button
               onClick={closeImageViewer}
-              className="absolute -top-2 -right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg"
+              className="absolute -top-2 -right-2 bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] p-2 rounded-full transition-colors duration-200 shadow-lg"
               aria-label="Close image viewer"
             >
               <X className="h-5 w-5" />

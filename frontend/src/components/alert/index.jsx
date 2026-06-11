@@ -3,22 +3,22 @@ import { XCircle, CheckCircle } from "lucide-react";
 
 const Alert = ({ type, message, onClose }) => {
   const alertStyles = {
-    success: "bg-green-500 text-green-100 border-green-700",
-    error: "bg-red-500 text-red-100 border-red-700",
-    info: "bg-blue-500 text-blue-100 border-blue-700",
-    warning: "bg-yellow-500 text-yellow-100 border-yellow-700",
+    success: "border-signal-ok",
+    error: "border-signal-err",
+    info: "border-signal-info",
+    warning: "border-signal-warn",
   };
 
   const icon = {
-    success: <CheckCircle className="text-green-200" />,
-    error: <XCircle className="text-red-200" />,
-    info: <XCircle className="text-blue-200" />,
-    warning: <XCircle className="text-yellow-200" />,
+    success: <CheckCircle className="text-signal-ok" />,
+    error: <XCircle className="text-signal-err" />,
+    info: <XCircle className="text-signal-info" />,
+    warning: <XCircle className="text-signal-warn" />,
   };
 
   return (
     <div
-      className={`flex items-center p-4 border-l-4 rounded-md ${alertStyles[type]} shadow-lg`}
+      className={`fixed top-[74px] right-[22px] z-[95] flex items-center gap-3 p-4 border-l-[3px] rounded-sm bg-ink-820 text-paper-50 ${alertStyles[type]} shadow-2xl max-w-[360px]`}
     >
       <div className="mr-3">{icon[type]}</div>
       <div className="flex-1">
@@ -26,7 +26,7 @@ const Alert = ({ type, message, onClose }) => {
       </div>
       <button
         onClick={onClose}
-        className="ml-3 text-white hover:text-gray-300 transition-transform transform hover:scale-110"
+        className="ml-3 text-paper-50 hover:text-paper-300 transition-transform transform hover:scale-110"
       >
         ✕
       </button>

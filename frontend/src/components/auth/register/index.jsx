@@ -59,15 +59,15 @@ const Register = () => {
   };
 
   return (
-    <main className="w-full h-screen bg-gray-900 text-gray-100 flex justify-center items-center">
-      <div className="w-96 bg-gray-800 text-gray-300 space-y-5 p-6 shadow-2xl border border-gray-700 rounded-xl">
-        <h3 className="text-gray-100 text-xl font-semibold text-center">
+    <main className="w-full h-screen bg-ink-900 text-paper-50 flex justify-center items-center">
+      <div className="w-96 bg-ink-820 text-paper-300 space-y-5 p-6 shadow-2xl border border-ink-700 rounded-xl">
+        <h3 className="text-paper-50 text-xl font-serif font-semibold text-center">
           Create a New Account
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="text-sm text-gray-400 font-bold">Full Name</label>
+            <label htmlFor="name" className="text-sm text-mute font-bold font-mono">Full Name</label>
             <input
               id="name"
               type="text"
@@ -75,11 +75,11 @@ const Register = () => {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full mt-2 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg"
+              className="w-full mt-2 px-3 py-2 text-paper-50 bg-ink-850 border border-ink-700 focus:ring-rust-500/40 focus:border-rust-500 outline-none rounded-lg"
             />
           </div>
           <div>
-            <label htmlFor="email" className="text-sm text-gray-400 font-bold">Email</label>
+            <label htmlFor="email" className="text-sm text-mute font-bold font-mono">Email</label>
             <input
               id="email"
               type="email"
@@ -87,11 +87,11 @@ const Register = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full mt-2 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg"
+              className="w-full mt-2 px-3 py-2 text-paper-50 bg-ink-850 border border-ink-700 focus:ring-rust-500/40 focus:border-rust-500 outline-none rounded-lg"
             />
           </div>
           <div>
-            <label htmlFor="password" className="text-sm text-gray-400 font-bold">Password</label>
+            <label htmlFor="password" className="text-sm text-mute font-bold font-mono">Password</label>
             <input
               id="password"
               type="password"
@@ -99,7 +99,7 @@ const Register = () => {
               placeholder="Create a new password"
               onChange={handleChange}
               required
-              className="w-full mt-2 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg"
+              className="w-full mt-2 px-3 py-2 text-paper-50 bg-ink-850 border border-ink-700 focus:ring-rust-500/40 focus:border-rust-500 outline-none rounded-lg"
             />
           </div>
 
@@ -109,24 +109,24 @@ const Register = () => {
               type="checkbox"
               checked={formData.termsAccepted}
               onChange={handleChange}
-              className="mr-2"
+              className="mr-2 accent-rust-500"
             />
-            <label htmlFor="termsAccepted" className="text-sm text-gray-400">
+            <label htmlFor="termsAccepted" className="text-sm text-mute">
               I accept the terms and conditions
             </label>
           </div>
 
           {errorMessage && (
-            <span className="text-red-400 font-bold">{errorMessage}</span>
+            <span className="text-signal-err font-bold">{errorMessage}</span>
           )}
 
           <button
             type="submit"
             disabled={isRegistering}
-            className={`w-full px-4 py-2 text-white font-medium rounded-lg ${
+            className={`w-full px-4 py-2 text-[#fdf3ee] font-medium rounded-lg ${
               isRegistering
-                ? "bg-gray-600"
-                : "bg-indigo-600 hover:bg-indigo-700"
+                ? "bg-ink-740"
+                : "bg-rust-500 hover:bg-rust-400"
             }`}
           >
             {isRegistering ? "Signing Up..." : "Sign Up"}
@@ -136,7 +136,7 @@ const Register = () => {
             Already have an account?{" "}
             <Link
               to="/login"
-              className="text-indigo-400 hover:underline font-bold"
+              className="text-rust-300 hover:underline font-bold"
             >
               Continue
             </Link>

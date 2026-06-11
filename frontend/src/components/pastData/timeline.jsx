@@ -12,7 +12,7 @@ export default function TimelineDataViewer({ timelineData }) {
   if (!timelineData) {
     return (
       <GlassCard className="p-6 text-center">
-        <p className="text-gray-400">No timeline data available</p>
+        <p className="text-mute">No timeline data available</p>
       </GlassCard>
     );
   }
@@ -50,27 +50,27 @@ export default function TimelineDataViewer({ timelineData }) {
 
   return (
     <div className="space-y-6">
-      <GlassCard className="bg-gradient-to-br from-gray-900/50 to-blue-900/50">
+      <GlassCard className="bg-ink-820">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10">
-              <AvatarFallback className="bg-blue-600 text-white">
+              <AvatarFallback className="bg-[#d99a32] text-[#fdf3ee]">
                 {timelineData.username?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold font-serif text-paper-50">
                 {timelineData.username || 'Unknown User'}
               </h3>
-              <div className="flex items-center text-blue-400 text-xs">
+              <div className="flex items-center text-pf-google text-xs">
                 <MapPin className="w-3 h-3 mr-1" />
-                <span>Timeline Data ({timelines.length} entries)</span>
+                <span className="font-mono">Timeline Data ({timelines.length} entries)</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-800/50 rounded-lg p-4">
+        <div className="bg-ink-820/50 rounded-lg p-4">
           <ScrollArea className="h-[400px] pr-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
               {timelines.map((item, index) => (
@@ -96,17 +96,17 @@ export default function TimelineDataViewer({ timelineData }) {
                 alt={`Timeline ${currentImageIndex + 1}`}
                 className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
               />
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center space-x-4 bg-gray-900/80 px-4 py-2 rounded-full">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center space-x-4 bg-ink-900/80 px-4 py-2 rounded-full">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     navigateImage(-1);
                   }}
-                  className="text-white hover:text-blue-300 transition-colors duration-200"
+                  className="text-paper-50 hover:text-rust-300 transition-colors duration-200"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
-                <span className="text-white text-sm">
+                <span className="text-paper-50 text-sm font-mono">
                   {currentImageIndex + 1} / {timelines.length}
                 </span>
                 <button
@@ -114,7 +114,7 @@ export default function TimelineDataViewer({ timelineData }) {
                     e.stopPropagation();
                     navigateImage(1);
                   }}
-                  className="text-white hover:text-blue-300 transition-colors duration-200"
+                  className="text-paper-50 hover:text-rust-300 transition-colors duration-200"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
@@ -131,7 +131,7 @@ const TimelinePreview = ({ image, index, onClick }) => {
   return (
     <GlassCard 
       onClick={onClick}
-      className="group relative rounded-lg overflow-hidden cursor-pointer bg-gray-700/50 hover:bg-gray-700/70 transition-colors duration-200"
+      className="group relative rounded-lg overflow-hidden cursor-pointer bg-ink-780/50 hover:bg-ink-780/70 transition-colors duration-200"
     >
       <div className="aspect-video relative">
         <img
@@ -141,8 +141,8 @@ const TimelinePreview = ({ image, index, onClick }) => {
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-end p-3">
-          <span className="text-white text-sm font-medium">Timeline Entry {index + 1}</span>
-          <span className="text-blue-300 text-xs mt-1">Click to view</span>
+          <span className="text-paper-50 text-sm font-medium">Timeline Entry {index + 1}</span>
+          <span className="text-pf-google text-xs mt-1">Click to view</span>
         </div>
       </div>
     </GlassCard>

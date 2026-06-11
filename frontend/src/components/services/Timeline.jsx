@@ -8,7 +8,7 @@ export default function TimelineDataViewer({ timelineData }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (!timelineData) {
-    return <div className="text-gray-400">No timeline data available</div>;
+    return <div className="text-mute">No timeline data available</div>;
   }
 
   const timelines = [
@@ -45,29 +45,29 @@ export default function TimelineDataViewer({ timelineData }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-br from-blue-900 to-gray-800 p-6 rounded-xl shadow-lg border border-blue-700/20">
+      <div className="bg-ink-820 p-6 rounded-xl shadow-lg border border-ink-700">
         <div className="flex items-center space-x-4 mb-6">
           <Avatar className="w-16 h-16">
-            <AvatarFallback className="bg-blue-600">
-              <User className="w-8 h-8 text-white" />
+            <AvatarFallback className="bg-rust-500">
+              <User className="w-8 h-8 text-paper-50" />
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-2xl font-bold text-white">{timelineData.username}</h2>
-            <div className="flex items-center text-blue-400 mt-1">
+            <h2 className="text-2xl font-bold font-serif text-paper-50">{timelineData.username}</h2>
+            <div className="flex items-center text-pf-google mt-1">
               <MapPin className="w-4 h-4 mr-1" />
-              <span>Timeline Data ({timelines.length} entries)</span>
+              <span>Timeline Data (<span className="font-mono">{timelines.length}</span> entries)</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm">
+        <div className="bg-ink-820/50 rounded-xl p-4 backdrop-blur-sm">
           <ScrollArea className="h-[600px] pr-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
               {timelines.map((item, index) => (
                 <div
                   key={index}
-                  className="group relative rounded-lg overflow-hidden cursor-pointer bg-gray-700/50"
+                  className="group relative rounded-lg overflow-hidden cursor-pointer bg-ink-780/50"
                   onClick={() => openImageViewer(item, index)}
                 >
                   <div className="aspect-video relative">
@@ -78,8 +78,8 @@ export default function TimelineDataViewer({ timelineData }) {
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-end p-3">
-                      <span className="text-white text-sm font-medium">Click to View Full</span>
-                      <span className="text-blue-300 text-xs mt-1">Timeline Entry {index + 1}</span>
+                      <span className="text-paper-50 text-sm font-medium">Click to View Full</span>
+                      <span className="text-rust-300 text-xs mt-1 font-mono">Timeline Entry {index + 1}</span>
                     </div>
                   </div>
                 </div>
@@ -102,7 +102,7 @@ export default function TimelineDataViewer({ timelineData }) {
             />
             <button
               onClick={closeImageViewer}
-              className="absolute -top-2 -right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg"
+              className="absolute -top-2 -right-2 bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] p-2 rounded-full transition-colors duration-200 shadow-lg"
               aria-label="Close image viewer"
             >
               <X className="h-5 w-5" />
@@ -110,16 +110,16 @@ export default function TimelineDataViewer({ timelineData }) {
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center space-x-4">
               <button
                 onClick={() => navigateImage(-1)}
-                className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200"
+                className="bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] p-2 rounded-full transition-colors duration-200"
               >
                 ←
               </button>
-              <span className="text-white">
+              <span className="text-paper-50 font-mono">
                 Timeline Entry {currentImageIndex + 1} of {timelines.length}
               </span>
               <button
                 onClick={() => navigateImage(1)}
-                className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200"
+                className="bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] p-2 rounded-full transition-colors duration-200"
               >
                 →
               </button>

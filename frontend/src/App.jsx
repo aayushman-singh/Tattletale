@@ -92,7 +92,7 @@ function App() {
     <>
       <Header />
       {/* Full screen height minus header with flex column */}
-      <div className="w-full flex-grow flex flex-col  bg-gray-700">
+      <div className="w-full flex-grow flex flex-col  bg-ink-900">
         {routesElement}
       </div>
       <ChatbotAvatar />

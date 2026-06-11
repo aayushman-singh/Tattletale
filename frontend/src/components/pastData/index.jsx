@@ -228,17 +228,17 @@ const PastData = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8 pt-20 relative">
+    <div className="min-h-screen bg-ink-900 text-paper-50 p-8 pt-20 relative">
       {alert.visible && (
         <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform ${alert.visible
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg bg-ink-820 transition-all duration-300 ease-in-out transform ${alert.visible
               ? "translate-x-0 opacity-100"
               : "translate-x-full opacity-0"
             } ${alert.type === "success"
-              ? "bg-green-50 text-green-800 border-l-4 border-green-500"
+              ? "text-signal-ok border-l-4 border-signal-ok"
               : alert.type === "error"
-                ? "bg-red-50 text-red-800 border-l-4 border-red-500"
-                : "bg-blue-50 text-blue-800 border-l-4 border-blue-500"
+                ? "text-signal-err border-l-4 border-signal-err"
+                : "text-signal-info border-l-4 border-signal-info"
             }`}
         >
           <div className="flex items-center justify-between">
@@ -246,7 +246,7 @@ const PastData = () => {
               <div className="flex-shrink-0">
                 {alert.type === "success" && (
                   <svg
-                    className="h-5 w-5 text-green-400"
+                    className="h-5 w-5 text-signal-ok"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -259,7 +259,7 @@ const PastData = () => {
                 )}
                 {alert.type === "error" && (
                   <svg
-                    className="h-5 w-5 text-red-400"
+                    className="h-5 w-5 text-signal-err"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -272,7 +272,7 @@ const PastData = () => {
                 )}
                 {alert.type === "info" && (
                   <svg
-                    className="h-5 w-5 text-blue-400"
+                    className="h-5 w-5 text-signal-info"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -288,7 +288,7 @@ const PastData = () => {
             </div>
             <button
               onClick={() => setAlert({ ...alert, visible: false })}
-              className="ml-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex h-8 w-8 items-center justify-center"
+              className="ml-auto -mx-1.5 -my-1.5 bg-ink-780 text-mute rounded-lg focus:ring-2 focus:ring-rust-500/40 p-1.5 hover:bg-ink-740 inline-flex h-8 w-8 items-center justify-center"
             >
               <span className="sr-only">Close</span>
               <X size={18} />
@@ -298,16 +298,16 @@ const PastData = () => {
       )}
 
       {isLoading && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-700 font-semibold">
+        <div className="fixed inset-0 bg-ink-900 bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-xl text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-rust-500 mx-auto mb-4"></div>
+            <p className="text-paper-300 font-semibold font-mono">
               Processing your request...
             </p>
           </div>
         </div>
       )}
-      <h1 className="text-3xl font-bold mb-8 text-center">
+      <h1 className="text-3xl font-bold mb-8 text-center font-serif text-paper-50">
         Past Data
       </h1>
 
@@ -321,7 +321,7 @@ const PastData = () => {
             color={activeSection === "instagram" ? "#E1306C" : "#ccc"}
           />
           <span
-            className={`text-lg ${activeSection === "instagram" ? "text-pink-500" : "text-gray-400"}`}
+            className={`text-lg font-mono ${activeSection === "instagram" ? "text-pf-instagram" : "text-mute"}`}
           >
             Instagram
           </span>
@@ -336,7 +336,7 @@ const PastData = () => {
             color={activeSection === "facebook" ? "#3b5998" : "#ccc"}
           />
           <span
-            className={`text-lg ${activeSection === "facebook" ? "text-blue-600" : "text-gray-400"}`}
+            className={`text-lg font-mono ${activeSection === "facebook" ? "text-pf-facebook" : "text-mute"}`}
           >
             Facebook
           </span>
@@ -351,7 +351,7 @@ const PastData = () => {
             color={activeSection === "x" ? "#1DA1F2" : "#ccc"}
           />
           <span
-            className={`text-lg ${activeSection === "x" ? "text-blue-500" : "text-gray-400"}`}
+            className={`text-lg font-mono ${activeSection === "x" ? "text-pf-x" : "text-mute"}`}
           >
             X
           </span>
@@ -366,7 +366,7 @@ const PastData = () => {
             color={activeSection === "telegram" ? "#0088cc" : "#ccc"}
           />
           <span
-            className={`text-lg ${activeSection === "telegram" ? "text-blue-400" : "text-gray-400"}`}
+            className={`text-lg font-mono ${activeSection === "telegram" ? "text-pf-telegram" : "text-mute"}`}
           >
             Telegram
           </span>
@@ -380,7 +380,7 @@ const PastData = () => {
             color={activeSection === "google" ? "#4285F4" : "#ccc"}
           />
           <span
-            className={`text-lg ${activeSection === "google" ? "text-blue-500" : "text-gray-400"
+            className={`text-lg font-mono ${activeSection === "google" ? "text-pf-google" : "text-mute"
               }`}
           >
             Google
@@ -396,7 +396,7 @@ const PastData = () => {
             color={activeSection === "whatsapp" ? "#25D366" : "#ccc"}
           />
           <span
-            className={`text-lg ${activeSection === "whatsapp" ? "text-green-500" : "text-gray-400"
+            className={`text-lg font-mono ${activeSection === "whatsapp" ? "text-pf-whatsapp" : "text-mute"
               }`}
           >
             WhatsApp
@@ -412,7 +412,7 @@ const PastData = () => {
             color={activeSection === "discord" ? "#5865F2" : "#ccc"}
           />
           <span
-            className={`text-lg ${activeSection === "discord" ? "text-blue-400" : "text-gray-400"
+            className={`text-lg font-mono ${activeSection === "discord" ? "text-pf-discord" : "text-mute"
               }`}
           >
             Discord
@@ -429,7 +429,7 @@ const PastData = () => {
             bgColor={activeSection === "mastodon" ? "#6364FF" : "#ccc"}
           />
           <span
-            className={`text-lg ${activeSection === "mastodon" ? "text-blue-400" : "text-gray-400"
+            className={`text-lg font-mono ${activeSection === "mastodon" ? "text-pf-mastodon" : "text-mute"
               }`}
           >
             Mastodon
@@ -439,14 +439,14 @@ const PastData = () => {
       </div>
 
       {activeSection === "instagram" && (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-pink-500">Instagram</h2>
+        <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold font-serif text-pf-instagram">Instagram</h2>
 
           <div className="flex space-x-4 mt-4">
 
             <button
               onClick={() => handleShowDetails("instagram")}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+              className="bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400"
             >
               Show Details
             </button>
@@ -456,19 +456,19 @@ const PastData = () => {
               <InstagramUsersViewer apiData={instagramData} />
 
               <div className="flex mt-12 space-x-2">
-                <button className="flex items-center space-x-2 bg-green-200 text-green-700 px-4 py-2 rounded-md hover:bg-green-300 transition-colors">
+                <button className="flex items-center space-x-2 text-signal-ok border border-signal-ok/40 bg-signal-ok/10 px-4 py-2 rounded-md transition-colors">
                   <FileCsv size={24} weight="bold" />
                   <span className="text-md font-semibold">Export to CSV</span>
                 </button>
-                <button className="flex items-center space-x-2 bg-red-200 text-red-700 px-4 py-2 rounded-md hover:bg-red-300 transition-colors">
+                <button className="flex items-center space-x-2 text-signal-err border border-signal-err/40 bg-signal-err/10 px-4 py-2 rounded-md transition-colors">
                   <FilePdf size={24} weight="bold" />
                   <span className="text-md font-semibold">Export to PDF</span>
                 </button>
-                <button className="flex items-center space-x-2 bg-blue-200 text-blue-700 px-4 py-2 rounded-md hover:bg-blue-300 transition-colors">
+                <button className="flex items-center space-x-2 text-signal-info border border-signal-info/40 bg-signal-info/10 px-4 py-2 rounded-md transition-colors">
                   <CloudArrowUp size={24} weight="bold" />
                   <span className="text-md font-semibold">Export to Drive</span>
                 </button>
-                <button className="flex items-center space-x-2 bg-yellow-200 text-yellow-700 px-4 py-2 rounded-md hover:bg-yellow-300 transition-colors">
+                <button className="flex items-center space-x-2 text-signal-warn border border-signal-warn/40 bg-signal-warn/10 px-4 py-2 rounded-md transition-colors">
                   <Coins size={24} weight="bold" />
                   <span className="text-md font-semibold">
                     Export to Blockchain
@@ -481,15 +481,15 @@ const PastData = () => {
       )}
 
       {activeSection === "whatsapp" && (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-green-500">WhatsApp</h2>
+        <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold font-serif text-pf-whatsapp">WhatsApp</h2>
 
           <div className="flex space-x-4 mt-4">
 
 
             <button
               onClick={() => handleShowDetails("whatsapp")}
-              className=" bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+              className=" bg-pf-whatsapp text-[#fdf3ee] px-6 py-2 rounded-md hover:opacity-90 disabled:opacity-50"
               disabled={isLoading}
             >
               Show Details
@@ -497,7 +497,7 @@ const PastData = () => {
           </div>
           {whatsappData && showDetails && (
             <div className="mt-6">
-              <h3 className="text-xl font-bold text-white">User Chats</h3>
+              <h3 className="text-xl font-bold font-serif text-paper-50">User Chats</h3>
               <WhatsAppChatsViewer apiData={whatsappData} />
 
             </div>
@@ -508,8 +508,8 @@ const PastData = () => {
       )}
        
       {activeSection === "x" && (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-blue-500">
+        <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold font-serif text-pf-x">
             X (formerly Twitter)
           </h2>
 
@@ -519,14 +519,14 @@ const PastData = () => {
 
             <button
               onClick={() => handleShowDetails("x")}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+              className="bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400"
             >
               Show Details
             </button>
           </div>
           {showDetails && (
             <div className="mt-6">
-              <h3 className="text-xl font-bold text-blue-400 mb-4">Tweets</h3>
+              <h3 className="text-xl font-bold font-serif text-pf-x mb-4">Tweets</h3>
 
               <XTweetsDisplay apiData={xData} />
 
@@ -539,21 +539,21 @@ const PastData = () => {
       )}
 
       {activeSection === "telegram" && (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-blue-400">Telegram</h2>
+        <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold font-serif text-pf-telegram">Telegram</h2>
 
           <div className="flex space-x-4 mt-4">
 
             <button
               onClick={() => handleShowDetails("telegram")}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+              className="bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400"
             >
               Show Details
             </button>
           </div>
           {telegramData && showDetails && (
             <div className="mt-6">
-              <h3 className="text-xl font-semibold text-blue-300 mb-4">
+              <h3 className="text-xl font-semibold font-serif text-rust-300 mb-4">
                 Chats
               </h3>
               <TelegramChatsDisplay apiData={telegramData} />
@@ -563,15 +563,15 @@ const PastData = () => {
       )}
 
       {activeSection === "facebook" && (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-blue-600">Facebook</h2>
+        <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold font-serif text-pf-facebook">Facebook</h2>
 
 
           <div className="flex space-x-4 mt-4">
 
             <button
               onClick={() => handleShowDetails("facebook")}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+              className="bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400"
             >
               Show Details
             </button>
@@ -582,45 +582,45 @@ const PastData = () => {
                 <FacebookDataViewer apiData={facebookData} />;
               </div>
             ) : (
-              <p className="text-gray-400">No Facebook data loaded yet.</p>
+              <p className="text-mute">No Facebook data loaded yet.</p>
             )}
           </div>
         </div>
       )}
        {activeSection === "google" && (
-              <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                <h2 className="text-2xl font-bold text-blue-400 mb-5 text-center">
+              <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold font-serif text-pf-google mb-5 text-center">
                   Google Services
                 </h2>
                 <Tabs defaultValue="search" className="w-full">
                   <TabsList className="grid w-full grid-cols-5 mb-5">
                     <TabsTrigger
                       value="search"
-                      className="text-white bg-gray-700 hover:bg-gray-600"
+                      className="text-paper-50 bg-ink-780 hover:bg-ink-740"
                     >
                       Google Search
                     </TabsTrigger>
                     <TabsTrigger
                       value="youtube"
-                      className="text-white bg-gray-700 hover:bg-gray-600"
+                      className="text-paper-50 bg-ink-780 hover:bg-ink-740"
                     >
                       YouTube History
                     </TabsTrigger>
                     <TabsTrigger
                       value="gmail"
-                      className="text-white bg-gray-700 hover:bg-gray-600"
+                      className="text-paper-50 bg-ink-780 hover:bg-ink-740"
                     >
                       Gmail
                     </TabsTrigger>
                     <TabsTrigger
                       value="drive"
-                      className="text-white bg-gray-700 hover:bg-gray-600"
+                      className="text-paper-50 bg-ink-780 hover:bg-ink-740"
                     >
                       Google Drive
                     </TabsTrigger>
                     <TabsTrigger
                       value="timeline"
-                      className="text-white bg-gray-700 hover:bg-gray-600"
+                      className="text-paper-50 bg-ink-780 hover:bg-ink-740"
                     >
                       Timeline
                     </TabsTrigger>
@@ -630,31 +630,31 @@ const PastData = () => {
       
                   {/* Google Search Tab */}
                   <TabsContent value="search" className="space-y-4">
-                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                      <h2 className="text-2xl font-bold text-blue-400 mb-4">Google Search</h2>
+                    <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold font-serif text-pf-google mb-4">Google Search</h2>
                       <div className="mt-4">
-                        <label className="text-gray-400 text-sm">Google Search Email</label>
-                       
+                        <label className="text-mute text-sm font-mono">Google Search Email</label>
+
                       </div>
-      
-                   
-      
-                 
-      
+
+
+
+
+
                       <div className="flex space-x-4 mt-4">
-                    
+
                         <button
                           onClick={() => handleShowDetails("google")}
-                          className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          className="flex-1 bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400 disabled:opacity-50"
                           disabled={isLoading}
                         >
                           Show Details
                         </button>
                       </div>
-      
+
                       {googleData && showDetails && (
                         <div className="mt-6">
-                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Search History</h3>
+                          <h3 className="text-xl font-semibold font-serif text-rust-300 mb-4">Search History</h3>
                           <GoogleUsersDisplay apiData={googleData} />
                         </div>
                       )}
@@ -663,31 +663,31 @@ const PastData = () => {
       
                   {/* YouTube History Tab */}
                   <TabsContent value="youtube" className="space-y-4">
-                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                      <h2 className="text-2xl font-bold text-blue-400 mb-4">YouTube History</h2>
-      
+                    <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold font-serif text-pf-google mb-4">YouTube History</h2>
+
                       <div className="mt-4">
-                        <label className="text-gray-400 text-sm">YouTube Email</label>
-                    
+                        <label className="text-mute text-sm font-mono">YouTube Email</label>
+
                       </div>
-      
-                    
-      
-      
-      
+
+
+
+
+
                       <div className="flex space-x-4 mt-4">
                         <button
                           onClick={() => handleShowDetails("youtube")}
-                          className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          className="flex-1 bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400 disabled:opacity-50"
                           disabled={isLoading}
                         >
                           Show Details
                         </button>
                       </div>
-      
+
                       {youtubeData && showDetails && (
                         <div className="mt-6">
-                          <h3 className="text-xl font-semibold text-blue-300 mb-4">YouTube History</h3>
+                          <h3 className="text-xl font-semibold font-serif text-rust-300 mb-4">YouTube History</h3>
                           <GoogleInfo data={youtubeData} />
                         </div>
                       )}
@@ -696,50 +696,50 @@ const PastData = () => {
       
                   {/* Gmail Tab */}
                   <TabsContent value="gmail">
-                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                      <h2 className="text-2xl font-bold text-blue-400">Gmail</h2>
+                    <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold font-serif text-pf-google">Gmail</h2>
                       <div className="mt-4">
-           
-      
-      
+
+
+
                       </div>
                       <div className="flex space-x-4 mt-4">
                         <button
                           onClick={() => handleGmailShowDetails("gmailIn")}
-                          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+                          className="bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400"
                         >
                           Show Gmail Inbox
                         </button>
                         <button
                           onClick={() => handleGmailShowDetails("gmailOut")}
-                          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+                          className="bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400"
                         >
                           Show Gmail Sent
                         </button>
-      
+
                       </div>
                       {gmailInData && Array.isArray(gmailInData) && gmailInData.length > 0 && (
                         <div className="mt-6">
-                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Inbox Chats</h3>
+                          <h3 className="text-xl font-semibold font-serif text-rust-300 mb-4">Inbox Chats</h3>
                           <GmailInUsers users={gmailInData} />
                         </div>
                       )}
                     {gmailOutData && Array.isArray(gmailOutData) && gmailOutData.length > 0 && (
   <div className="mt-6">
-    <h3 className="text-xl font-semibold text-blue-300 mb-4">Sent Chats</h3>
+    <h3 className="text-xl font-semibold font-serif text-rust-300 mb-4">Sent Chats</h3>
     <GmailOutUsers users={gmailOutData} />
   </div>
 )}
-      
-      
-      
+
+
+
                     </div>
                   </TabsContent>
                   <TabsContent value="drive">
-                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                      <h2 className="text-2xl font-bold text-blue-400">Google Drive</h2>
+                    <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold font-serif text-pf-google">Google Drive</h2>
                       <div className="mt-4">
-                        <label className="text-gray-400 text-sm">Email Address</label>
+                        <label className="text-mute text-sm font-mono">Email Address</label>
                       </div>
                       <div className="flex space-x-4 mt-4">
                         <button
@@ -747,41 +747,41 @@ const PastData = () => {
                             console.log("Email:", email); // Debugging
                             handleShowDetails("drive");
                           }}
-                          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+                          className="bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400"
                         >
                           Show Details
                         </button>
                       </div>
                       {googleDriveData && showDetails && (
                         <div className="mt-6">
-                          <h3 className="text-xl font-semibold text-blue-300 mb-4">Google Drive Data</h3>
+                          <h3 className="text-xl font-semibold font-serif text-rust-300 mb-4">Google Drive Data</h3>
                           <GoogleDriveUsers users={googleDriveData} />
                         </div>
                       )}
                     </div>
                   </TabsContent>
                   <TabsContent value="timeline" className="space-y-4">
-                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                      <h2 className="text-2xl font-bold text-blue-400 mb-4">Timeline</h2>
+                    <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+                      <h2 className="text-2xl font-bold font-serif text-pf-google mb-4">Timeline</h2>
                       <div className="mt-4">
-                        <label className="text-gray-400 text-sm">Google Account Email</label>
+                        <label className="text-mute text-sm font-mono">Google Account Email</label>
                       </div>
-      
-      
-      
+
+
+
                       <div className="flex space-x-4 mt-4">
                         <button
                           onClick={() => handleShowDetails("timeline")}
-                          className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          className="flex-1 bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400 disabled:opacity-50"
                           disabled={isLoading}
                         >
                           Show Details
                         </button>
                       </div>
-      
+
            {timelineData && timelineData.length > 0 && showDetails && (
   <div className="mt-6 space-y-8">
-    <h3 className="text-xl font-semibold text-blue-300 mb-4">Timeline Data</h3>
+    <h3 className="text-xl font-semibold font-serif text-rust-300 mb-4">Timeline Data</h3>
     {timelineData.map((user, index) => (
       <TimelineDataViewer key={index} timelineData={user} />
     ))}
@@ -794,15 +794,15 @@ const PastData = () => {
               </div>
             )}
    {activeSection === "discord" && (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-blue-600">Discord</h2>
+        <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold font-serif text-pf-discord">Discord</h2>
 
 
           <div className="flex space-x-4 mt-4">
 
             <button
               onClick={() => handleShowDetails("discord")}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+              className="bg-pf-discord text-[#fdf3ee] px-6 py-2 rounded-md hover:opacity-90"
             >
               Show Details
             </button>
@@ -813,21 +813,21 @@ const PastData = () => {
                 <DiscordChatsDisplay apiData={discordData} />
               </div>
             ) : (
-              <p className="text-gray-400">No Discord data loaded yet.</p>
+              <p className="text-mute">No Discord data loaded yet.</p>
             )}
           </div>
         </div>
       )}
       {activeSection === "mastodon" && (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-blue-600">Discord</h2>
+        <div className="bg-ink-820 border border-ink-700 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold font-serif text-pf-mastodon">Discord</h2>
 
 
           <div className="flex space-x-4 mt-4">
 
             <button
               onClick={() => handleShowDetails("mastodon")}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+              className="bg-rust-500 text-[#fdf3ee] px-6 py-2 rounded-md hover:bg-rust-400"
             >
               Show Details
             </button>
@@ -838,7 +838,7 @@ const PastData = () => {
                 <MastodonPostsDisplay apiData={mastodonData} />
               </div>
             ) : (
-              <p className="text-gray-400">No Mastodon data loaded yet.</p>
+              <p className="text-mute">No Mastodon data loaded yet.</p>
             )}
           </div>
         </div>

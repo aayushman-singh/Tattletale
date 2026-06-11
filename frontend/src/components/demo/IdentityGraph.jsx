@@ -6,8 +6,8 @@ import React, { useState, useEffect } from "react";
 // see the feature breakdown that justifies (or weakens) the link. Pure SVG — no
 // graph library, no physics at render time, so it's deterministic and light.
 
-const CLUSTER_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#a855f7", "#ec4899", "#14b8a6"];
-const BAND_STROKE = { high: "#22c55e", medium: "#f59e0b", low: "#6b7280" };
+const CLUSTER_COLORS = ["#c0492e", "#d99a32", "#45a06a", "#9b7bc0", "#cf6a96", "#3f9aa0"];
+const BAND_STROKE = { high: "#45a06a", medium: "#d99a32", low: "#6b6253" };
 
 // Human-readable names for the engine's feature keys. Unknown keys fall back to
 // the raw key, so a new signal still renders before it gets a friendly name.
@@ -40,7 +40,7 @@ export default function IdentityGraph({ correlation }) {
     <div>
       <div className="grid lg:grid-cols-[1.4fr_1fr] gap-5">
         {/* graph */}
-        <div className="bg-gray-900/70 border border-gray-700 rounded-lg p-2">
+        <div className="bg-ink-900/70 border border-ink-700 rounded-lg p-2">
           <svg viewBox="0 0 1000 640" className="w-full h-auto" role="img" aria-label="Identity correlation graph">
             {/* edges first so nodes sit on top */}
             {edges.map((e, i) => {
@@ -79,7 +79,7 @@ export default function IdentityGraph({ correlation }) {
                     key={`l${i}`}
                     x={(a.x + b.x) / 2}
                     y={(a.y + b.y) / 2 - 6}
-                    fill="#9ca3af"
+                    fill="#998f7e"
                     fontSize="14"
                     textAnchor="middle"
                     pointerEvents="none"
@@ -97,22 +97,22 @@ export default function IdentityGraph({ correlation }) {
                   r={nodeR(n)}
                   fill={CLUSTER_COLORS[n.cluster % CLUSTER_COLORS.length]}
                   fillOpacity="0.85"
-                  stroke="#0f172a"
+                  stroke="#0c0a08"
                   strokeWidth="2"
                 />
-                <text x={n.x} y={n.y + 5} fill="#0b1220" fontSize="15" fontWeight="700" textAnchor="middle">
+                <text x={n.x} y={n.y + 5} fill="#0c0a08" fontSize="15" fontWeight="700" textAnchor="middle">
                   {platformGlyph(n.platform)}
                 </text>
-                <text x={n.x} y={n.y + nodeR(n) + 16} fill="#e5e7eb" fontSize="14" textAnchor="middle">
+                <text x={n.x} y={n.y + nodeR(n) + 16} fill="#e6dccb" fontSize="14" textAnchor="middle">
                   @{n.username}
                 </text>
-                <text x={n.x} y={n.y + nodeR(n) + 31} fill="#6b7280" fontSize="12" textAnchor="middle">
+                <text x={n.x} y={n.y + nodeR(n) + 31} fill="#6b6253" fontSize="12" textAnchor="middle">
                   {n.platform}
                 </text>
               </g>
             ))}
           </svg>
-          <div className="flex flex-wrap gap-3 px-2 pb-1 text-xs text-gray-400">
+          <div className="flex flex-wrap gap-3 px-2 pb-1 text-xs text-mute">
             <span className="inline-flex items-center gap-1">
               <span className="inline-block w-4 h-0.5" style={{ background: BAND_STROKE.high }} /> linked (merged)
             </span>
@@ -120,31 +120,31 @@ export default function IdentityGraph({ correlation }) {
               <span className="inline-block w-4 border-t border-dashed" style={{ borderColor: BAND_STROKE.medium }} />{" "}
               flagged, not merged
             </span>
-            <span className="text-gray-500">· thickness = correlation score · click an edge for evidence</span>
+            <span className="text-faint">· thickness = correlation score · click an edge for evidence</span>
           </div>
         </div>
 
         {/* side panel: identities + selected edge */}
         <div className="space-y-4">
           <div>
-            <div className="text-sm font-semibold text-white mb-2">Resolved identities</div>
+            <div className="text-sm font-semibold font-serif text-paper-50 mb-2">Resolved identities</div>
             <div className="space-y-2">
               {identities.map((id) => (
-                <div key={id.id} className="flex items-center gap-2 bg-gray-800/60 border border-gray-700 rounded p-2">
+                <div key={id.id} className="flex items-center gap-2 bg-ink-820/60 border border-ink-700 rounded p-2">
                   <span
                     className="inline-block w-3 h-3 rounded-full shrink-0"
                     style={{ background: CLUSTER_COLORS[id.id % CLUSTER_COLORS.length] }}
                   />
                   <div className="min-w-0">
-                    <div className="text-sm text-white truncate">
+                    <div className="text-sm text-paper-50 truncate">
                       {id.label}{" "}
-                      <span className="text-gray-500">
+                      <span className="text-faint">
                         · {id.accountIndices.length} {id.accountIndices.length === 1 ? "account" : "accounts"}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-400 truncate">{id.platforms.join(" · ")}</div>
+                    <div className="text-xs text-mute truncate font-mono">{id.platforms.join(" · ")}</div>
                   </div>
-                  <span className="ml-auto text-xs text-gray-400">
+                  <span className="ml-auto text-xs text-mute">
                     {id.cohesion === null ? "single" : `cohesion ${id.cohesion}`}
                   </span>
                 </div>
@@ -153,18 +153,18 @@ export default function IdentityGraph({ correlation }) {
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-white mb-2">Why this link?</div>
+            <div className="text-sm font-semibold font-serif text-paper-50 mb-2">Why this link?</div>
             {selectedEdge ? (
-              <div className="bg-gray-800/60 border border-gray-700 rounded p-3">
-                <div className="text-sm text-white">
+              <div className="bg-ink-820/60 border border-ink-700 rounded p-3">
+                <div className="text-sm text-paper-50 font-mono">
                   @{nodes[selectedEdge.source].username}{" "}
-                  <span className="text-gray-500">({nodes[selectedEdge.source].platform})</span> ↔ @
+                  <span className="text-faint">({nodes[selectedEdge.source].platform})</span> ↔ @
                   {nodes[selectedEdge.target].username}{" "}
-                  <span className="text-gray-500">({nodes[selectedEdge.target].platform})</span>
+                  <span className="text-faint">({nodes[selectedEdge.target].platform})</span>
                 </div>
                 <div className="text-xs mt-1 mb-3">
                   score{" "}
-                  <span className="font-mono text-blue-300">{selectedEdge.score.toFixed(3)}</span>{" "}
+                  <span className="font-mono text-rust-300">{selectedEdge.score.toFixed(3)}</span>{" "}
                   <span
                     className="px-1.5 py-0.5 rounded border text-[11px]"
                     style={{ color: BAND_STROKE[selectedEdge.band], borderColor: BAND_STROKE[selectedEdge.band] }}
@@ -172,21 +172,21 @@ export default function IdentityGraph({ correlation }) {
                     {selectedEdge.band}
                   </span>{" "}
                   {selectedEdge.score >= correlation.thresholds.merge ? (
-                    <span className="text-green-400">→ merged</span>
+                    <span className="text-signal-ok">→ merged</span>
                   ) : (
-                    <span className="text-amber-400">→ flagged, kept separate</span>
+                    <span className="text-signal-warn">→ flagged, kept separate</span>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   {selectedEdge.features.map((f) => (
                     <div key={f.feature} className="text-xs" title={f.label}>
-                      <div className="flex justify-between text-gray-400">
+                      <div className="flex justify-between text-mute">
                         <span>{FEATURE_NAMES[f.feature] ?? f.feature}</span>
                         <span className="font-mono">{f.value.toFixed(2)}</span>
                       </div>
-                      <div className="h-1.5 bg-gray-700 rounded">
+                      <div className="h-1.5 bg-ink-780 rounded">
                         <div
-                          className="h-1.5 rounded bg-blue-500"
+                          className="h-1.5 rounded bg-rust-500"
                           style={{ width: `${Math.round((f.contribution / f.weight) * 100)}%` }}
                         />
                       </div>
@@ -195,7 +195,7 @@ export default function IdentityGraph({ correlation }) {
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-800/40 border border-gray-700 rounded p-3 text-xs text-gray-400">
+              <div className="bg-ink-820/40 border border-ink-700 rounded p-3 text-xs text-mute">
                 Click an edge in the graph to see the per-feature evidence (handle, name, writing
                 style, posting time, shared vocabulary, and place-and-time co-presence) the engine used.
               </div>
@@ -204,8 +204,8 @@ export default function IdentityGraph({ correlation }) {
         </div>
       </div>
 
-      <p className="text-gray-500 text-xs mt-3">
-        Method: {correlation.method}
+      <p className="text-faint text-xs mt-3">
+        Method: <span className="font-mono">{correlation.method}</span>
       </p>
     </div>
   );

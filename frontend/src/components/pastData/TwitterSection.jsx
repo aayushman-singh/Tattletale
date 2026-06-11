@@ -9,7 +9,7 @@ const XTweetsDisplay = ({ apiData }) => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   if (!apiData || apiData.length === 0) {
-    return <p className="text-gray-400">No user data available.</p>;
+    return <p className="text-mute">No user data available.</p>;
   }
 
   return (
@@ -21,9 +21,9 @@ const XTweetsDisplay = ({ apiData }) => {
       </div>
       {selectedUser && (
         <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-          <DialogContent className="max-w-4xl h-[90vh] bg-gray-900 text-gray-100 overflow-hidden">
+          <DialogContent className="max-w-4xl h-[90vh] bg-ink-900 text-paper-300 overflow-hidden">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-blue-400">
+              <DialogTitle className="text-2xl font-bold font-serif text-pf-x">
                 {selectedUser.username}'s Tweets
               </DialogTitle>
             </DialogHeader>
@@ -39,18 +39,18 @@ const XTweetsDisplay = ({ apiData }) => {
 
 const UserCard = ({ user, onSelect }) => {
   return (
-    <GlassCard onClick={onSelect} className="cursor-pointer bg-gray-800 text-gray-100">
+    <GlassCard onClick={onSelect} className="cursor-pointer bg-ink-820 text-paper-300">
       <div className="flex items-center mb-4">
         <Avatar className="w-12 h-12 mr-4">
           <AvatarImage src={user.tweets[0]?.user.profile_image_url_https} alt={user.username} />
           <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="text-xl font-semibold text-gray-100">{user.username}</h3>
-          <p className="text-sm text-gray-400">@{user.tweets[0]?.user.screen_name}</p>
+          <h3 className="text-xl font-semibold font-serif text-paper-50">{user.username}</h3>
+          <p className="text-sm font-mono text-mute">@{user.tweets[0]?.user.screen_name}</p>
         </div>
       </div>
-      <div className="flex justify-between text-sm text-gray-400">
+      <div className="flex justify-between text-sm font-mono text-mute">
         <span>Tweets: {user.tweets?.length || 0}</span>
       </div>
     </GlassCard>
@@ -59,7 +59,7 @@ const UserCard = ({ user, onSelect }) => {
 
 const XTweets = ({ tweets, timeline }) => {
   if (!tweets || tweets.length === 0) {
-    return <p className="text-gray-400">No tweets available for this user.</p>;
+    return <p className="text-mute">No tweets available for this user.</p>;
   }
 
   return (
@@ -68,13 +68,13 @@ const XTweets = ({ tweets, timeline }) => {
         <Tweet key={index} tweet={tweet} />
       ))}
       {timeline && (
-        <GlassCard className="bg-gray-800 text-gray-100">
-          <h3 className="text-lg font-bold text-blue-400 mb-2">Timeline</h3>
+        <GlassCard className="bg-ink-820 text-paper-300">
+          <h3 className="text-lg font-bold font-serif text-pf-x mb-2">Timeline</h3>
           <a
             href={timeline}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-300 inline-flex items-center space-x-2"
+            className="text-rust-300 hover:text-rust-300 inline-flex items-center space-x-2"
           >
             <span>View Timeline</span>
             <ExternalLink className="h-4 w-4" />
@@ -89,19 +89,19 @@ const Tweet = ({ tweet }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <GlassCard className="bg-gray-800 text-gray-100">
+    <GlassCard className="bg-ink-820 text-paper-300">
       <div className="flex items-center mb-4">
         <Avatar className="w-10 h-10 mr-3">
           <AvatarImage src={tweet.user.profile_image_url_https} alt={tweet.user.name} />
           <AvatarFallback>{tweet.user.name[0]}</AvatarFallback>
         </Avatar>
         <div>
-          <h4 className="font-semibold text-white">{tweet.user.name}</h4>
-          <p className="text-sm text-gray-400">@{tweet.user.screen_name}</p>
+          <h4 className="font-semibold font-serif text-paper-50">{tweet.user.name}</h4>
+          <p className="text-sm font-mono text-mute">@{tweet.user.screen_name}</p>
         </div>
       </div>
-      <p className="text-gray-300 mb-4">{tweet.full_text}</p>
-      <div className="flex justify-between text-sm text-gray-400 mb-4">
+      <p className="text-paper-300 mb-4">{tweet.full_text}</p>
+      <div className="flex justify-between text-sm font-mono text-mute mb-4">
         <span className="flex items-center">
           <MessageCircle className="w-4 h-4 mr-1" />
           {tweet.reply_count}
@@ -121,7 +121,7 @@ const Tweet = ({ tweet }) => {
       </div>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center text-blue-400 hover:text-blue-300 transition-colors duration-200"
+        className="flex items-center text-rust-300 hover:text-rust-300 transition-colors duration-200"
       >
         {isExpanded ? (
           <>
@@ -136,7 +136,7 @@ const Tweet = ({ tweet }) => {
         )}
       </button>
       {isExpanded && (
-        <div className="mt-4 space-y-2 text-sm text-gray-300">
+        <div className="mt-4 space-y-2 text-sm text-paper-300">
           <p><strong>Created At:</strong> {tweet.created_at}</p>
           <p><strong>Language:</strong> {tweet.lang}</p>
           <p><strong>Views:</strong> {tweet.views_count || "N/A"}</p>
@@ -159,7 +159,7 @@ const Tweet = ({ tweet }) => {
                         href={url.expanded_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline"
+                        className="text-rust-300 hover:underline"
                       >
                         {url.display_url}
                       </a>

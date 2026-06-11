@@ -9,7 +9,7 @@ const MastodonPostsDisplay = ({ apiData }) => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   if (!apiData || apiData.length === 0) {
-    return <p className="text-gray-400">No user data available.</p>;
+    return <p className="text-mute">No user data available.</p>;
   }
 
   return (
@@ -21,9 +21,9 @@ const MastodonPostsDisplay = ({ apiData }) => {
       </div>
       {selectedUser && (
         <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-          <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] bg-gray-900 text-gray-100 flex flex-col p-0">
-            <DialogHeader className="px-6 py-4 border-b border-gray-700 flex-shrink-0">
-              <DialogTitle className="text-2xl font-bold text-purple-400">
+          <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] bg-ink-900 text-paper-300 flex flex-col p-0">
+            <DialogHeader className="px-6 py-4 border-b border-ink-700 flex-shrink-0">
+              <DialogTitle className="text-2xl font-bold font-serif text-pf-mastodon">
                 {selectedUser.fullName || selectedUser.name}'s Mastodon Profile
               </DialogTitle>
             </DialogHeader>
@@ -45,23 +45,23 @@ const UserCard = ({ user, onSelect }) => {
   const feedCount = [user.feed, user.feed_1, user.feed_2, user.feed_3].filter(Boolean).length;
   
   return (
-    <GlassCard onClick={onSelect} className="cursor-pointer bg-gray-800 text-gray-100">
+    <GlassCard onClick={onSelect} className="cursor-pointer bg-ink-820 text-paper-300">
       <div className="flex items-center mb-4">
         <Avatar className="w-12 h-12 mr-4">
           <AvatarImage src={user.profile_pic} alt={user.name} />
-          <AvatarFallback><User className="w-8 h-8 text-purple-400" /></AvatarFallback>
+          <AvatarFallback><User className="w-8 h-8 text-pf-mastodon" /></AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-semibold text-gray-100 truncate">
+          <h3 className="text-xl font-semibold font-serif text-paper-50 truncate">
             {user.fullName || user.name}
           </h3>
-          <p className="text-sm text-gray-400 truncate">@{user.name}</p>
-          <p className="text-xs text-gray-500 truncate">{user.server}</p>
+          <p className="text-sm font-mono text-mute truncate">@{user.name}</p>
+          <p className="text-xs font-mono text-faint truncate">{user.server}</p>
         </div>
       </div>
-      <div className="flex justify-between text-sm text-gray-400">
+      <div className="flex justify-between text-sm font-mono text-mute">
         <span>Feeds: {feedCount}</span>
-        <span className="text-purple-400">Mastodon</span>
+        <span className="text-pf-mastodon">Mastodon</span>
       </div>
     </GlassCard>
   );
@@ -85,9 +85,9 @@ const MastodonProfile = ({ user }) => {
   return (
     <div className="space-y-6">
       {/* Profile Header */}
-      <GlassCard className="bg-gradient-to-br overflow-auto from-purple-900 to-gray-800 text-gray-100">
+      <GlassCard className="bg-ink-820 overflow-auto text-paper-300">
         <div className="flex items-center space-x-4 mb-6">
-          <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-purple-500 flex-shrink-0">
+          <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-pf-mastodon flex-shrink-0">
             <img
               src={user.profile_pic}
               alt={user.name}
@@ -97,46 +97,46 @@ const MastodonProfile = ({ user }) => {
                 e.target.nextSibling.style.display = 'flex';
               }}
             />
-            <div className="w-full h-full bg-gray-600 rounded-full items-center justify-center hidden">
-              <User className="w-10 h-10 text-purple-400" />
+            <div className="w-full h-full bg-ink-740 rounded-full items-center justify-center hidden">
+              <User className="w-10 h-10 text-pf-mastodon" />
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-bold text-white truncate">
+            <h2 className="text-2xl font-bold font-serif text-paper-50 truncate">
               {user.fullName || user.name}
             </h2>
-            <p className="text-purple-300 text-lg truncate">@{user.name}</p>
+            <p className="text-pf-mastodon text-lg font-mono truncate">@{user.name}</p>
             <div className="flex items-center space-x-4 mt-2 flex-wrap">
               <a
                 href={user.profile}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-300 hover:text-purple-200 text-sm flex items-center space-x-1 transition-colors"
+                className="text-pf-mastodon hover:text-pf-mastodon text-sm flex items-center space-x-1 transition-colors"
               >
                 <User className="h-4 w-4" />
                 <span>View Profile</span>
                 <ExternalLink className="h-3 w-3" />
               </a>
-              <span className="text-gray-500 text-sm">•</span>
-              <span className="text-gray-300 text-sm truncate">{user.server}</span>
+              <span className="text-faint text-sm">•</span>
+              <span className="text-paper-300 text-sm font-mono truncate">{user.server}</span>
             </div>
           </div>
         </div>
 
         {/* Last Updated */}
         {user.lastUpdated && (
-          <div className="text-sm text-gray-400 bg-gray-800/30 rounded-lg p-3">
-            <span className="font-medium">Last updated:</span> {new Date(user.lastUpdated).toLocaleString()}
+          <div className="text-sm text-mute bg-ink-820/30 rounded-lg p-3">
+            <span className="font-medium">Last updated:</span> <span className="font-mono">{new Date(user.lastUpdated).toLocaleString()}</span>
           </div>
         )}
       </GlassCard>
 
       {/* Feeds Section */}
       {feeds.length > 0 && (
-        <GlassCard className="bg-gray-800/50 backdrop-blur-sm border overflow-auto border-gray-700/50">
+        <GlassCard className="bg-ink-820/50 backdrop-blur-sm border overflow-auto border-ink-700/50">
           <button
             onClick={toggleFeed}
-            className="flex items-center justify-between w-full text-purple-400 hover:text-purple-300 transition-all duration-200 font-medium"
+            className="flex items-center justify-between w-full text-pf-mastodon hover:text-pf-mastodon transition-all duration-200 font-medium"
             aria-expanded={isFeedExpanded}
           >
             <div className="flex items-center space-x-2">
@@ -161,7 +161,7 @@ const MastodonProfile = ({ user }) => {
               {feeds.map((feed, idx) => (
                 <div 
                   key={idx} 
-                  className="group relative rounded-lg overflow-hidden cursor-pointer bg-gray-700/30 hover:bg-gray-700/50 transition-all duration-200"
+                  className="group relative rounded-lg overflow-hidden cursor-pointer bg-ink-780/30 hover:bg-ink-780/50 transition-all duration-200"
                   onClick={() => openImageViewer(feed.url)}
                 >
                   <div className="aspect-video w-full">
@@ -176,8 +176,8 @@ const MastodonProfile = ({ user }) => {
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-between p-4">
-                    <span className="text-white text-sm font-medium">{feed.label}</span>
-                    <span className="text-white text-xs bg-black/40 px-2 py-1 rounded">View Full</span>
+                    <span className="text-paper-50 text-sm font-medium">{feed.label}</span>
+                    <span className="text-paper-50 text-xs bg-black/40 px-2 py-1 rounded">View Full</span>
                   </div>
                 </div>
               ))}
@@ -187,19 +187,19 @@ const MastodonProfile = ({ user }) => {
       )}
 
       {/* Actions */}
-      <GlassCard className="bg-gray-800/30">
+      <GlassCard className="bg-ink-820/30">
         <div className="flex justify-between items-center">
           <a
             href={user.logs}
-            className="inline-flex items-center space-x-2 text-purple-400 hover:text-purple-300 transition-colors duration-200 font-medium"
+            className="inline-flex items-center space-x-2 text-pf-mastodon hover:text-pf-mastodon transition-colors duration-200 font-medium"
             target="_blank"
             rel="noopener noreferrer"
           >
             <span>Download Logs</span>
             <ExternalLink className="h-4 w-4" />
           </a>
-          <div className="text-sm text-gray-400">
-            <span className="bg-purple-900/30 px-3 py-1 rounded-full">
+          <div className="text-sm text-mute">
+            <span className="bg-pf-mastodon/20 px-3 py-1 rounded-full">
               Mastodon Profile
             </span>
           </div>
@@ -212,7 +212,7 @@ const MastodonProfile = ({ user }) => {
     onClick={closeImageViewer}
   >
     <div
-      className="relative max-w-6xl w-full max-h-[90vh] overflow-auto bg-gray-900 rounded-lg shadow-lg"
+      className="relative max-w-6xl w-full max-h-[90vh] overflow-auto bg-ink-900 rounded-lg shadow-lg"
       onClick={(e) => e.stopPropagation()} // prevent modal close on image click
     >
       <img
@@ -222,7 +222,7 @@ const MastodonProfile = ({ user }) => {
       />
       <button
         onClick={closeImageViewer}
-        className="absolute top-2 right-2 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 transition-colors duration-200 shadow-md"
+        className="absolute top-2 right-2 bg-rust-500 text-[#fdf3ee] p-2 rounded-full hover:bg-rust-400 transition-colors duration-200 shadow-md"
         aria-label="Close image viewer"
       >
         <X className="h-5 w-5" />

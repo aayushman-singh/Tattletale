@@ -21,7 +21,7 @@ const InstagramUsersViewer = ({ apiData }) => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
-    return <p className="text-gray-400">No user data available.</p>;
+    return <p className="text-mute">No user data available.</p>;
   }
 
   return (
@@ -29,7 +29,7 @@ const InstagramUsersViewer = ({ apiData }) => {
       {apiData.map((user, index) => {
         if (!user || !user._id || !user.profile) {
           return (
-            <GlassCard key={index} className="bg-red-900 text-white p-4">
+            <GlassCard key={index} className="bg-red-900 text-paper-50 p-4">
               Invalid user data
             </GlassCard>
           );
@@ -49,9 +49,9 @@ const InstagramUsersViewer = ({ apiData }) => {
           open={!!selectedUser}
           onOpenChange={() => setSelectedUser(null)}
         >
-          <DialogContent className="max-w-4xl h-[90vh] bg-gray-900 text-gray-100 overflow-hidden">
+          <DialogContent className="max-w-4xl h-[90vh] bg-ink-900 text-paper-300 overflow-hidden">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="font-serif">
                 {selectedUser.profile.full_name}'s Profile
               </DialogTitle>
             </DialogHeader>
@@ -70,7 +70,7 @@ const UserCard = ({ user, onSelect }) => {
 
   if (!profile) {
     return (
-      <GlassCard className="bg-red-800 text-white p-4">
+      <GlassCard className="bg-red-800 text-paper-50 p-4">
         User profile not found
       </GlassCard>
     );
@@ -79,28 +79,28 @@ const UserCard = ({ user, onSelect }) => {
   return (
     <GlassCard
       onClick={onSelect}
-      className="cursor-pointer bg-gray-800 text-gray-100"
+      className="cursor-pointer bg-ink-820 text-paper-300"
     >
       <div className="flex items-center mb-4">
         <Avatar className="w-12 h-12 mr-4">
           <AvatarImage src={profile.profile_pic_url} alt={user.username} />
           <AvatarFallback>
-            <Instagram className="w-8 h-8 text-pink-400" />
+            <Instagram className="w-8 h-8 text-pf-instagram" />
           </AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="text-xl font-semibold text-gray-100">
+          <h3 className="text-xl font-semibold font-serif text-paper-50">
             {profile.username || "Unknown"}
           </h3>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm font-mono text-mute">
             {profile.full_name || "No name"}
           </p>
         </div>
       </div>
-      <p className="text-gray-300 mb-4 line-clamp-2">
+      <p className="text-paper-300 mb-4 line-clamp-2">
         {profile.biography || "No bio available"}
       </p>
-      <div className="flex justify-between text-sm text-gray-400">
+      <div className="flex justify-between text-sm font-mono text-mute">
         <span>Followers: {profile.follower_count ?? "?"}</span>
         <span>Following: {profile.following_count ?? "?"}</span>
       </div>
@@ -109,7 +109,7 @@ const UserCard = ({ user, onSelect }) => {
 };
 
 const PostCard = ({ post }) => (
-  <GlassCard className="bg-gray-800 text-gray-100">
+  <GlassCard className="bg-ink-820 text-paper-300">
     {post.type === "Video" ? (
       <video controls className="w-full h-48 object-cover rounded-lg mb-4">
         <source src={post.videoUrl} type="video/mp4" />
@@ -122,14 +122,14 @@ const PostCard = ({ post }) => (
         className="w-full h-48 object-cover rounded-lg mb-4"
       />
     )}
-    <p className="text-gray-300 mb-2 line-clamp-2">{post.caption}</p>
-    <div className="flex justify-between text-sm text-gray-400">
+    <p className="text-paper-300 mb-2 line-clamp-2">{post.caption}</p>
+    <div className="flex justify-between text-sm font-mono text-mute">
       <span>
-        <Heart className="inline w-4 h-4 mr-1 text-pink-400" />{" "}
+        <Heart className="inline w-4 h-4 mr-1 text-pf-instagram" />{" "}
         {post.likesCount}
       </span>
       <span>
-        <MessageCircle className="inline w-4 h-4 mr-1 text-blue-400" />{" "}
+        <MessageCircle className="inline w-4 h-4 mr-1 text-rust-300" />{" "}
         {post.commentsCount}
       </span>
     </div>
@@ -145,7 +145,7 @@ const RenderInstagramData = ({ instagramData }) => {
   return (
     <div className="space-y-8">
       {/* Profile Section */}
-      <GlassCard className="bg-gray-800 text-gray-100">
+      <GlassCard className="bg-ink-820 text-paper-300">
         <div className="flex flex-col md:flex-row md:space-x-6 items-center md:items-start">
           <Avatar className="w-32 h-32">
             <AvatarImage
@@ -153,34 +153,34 @@ const RenderInstagramData = ({ instagramData }) => {
               alt={`${instagramData.profile.username}'s profile`}
             />
             <AvatarFallback>
-              <Instagram className="w-20 h-20 text-pink-400" />
+              <Instagram className="w-20 h-20 text-pf-instagram" />
             </AvatarFallback>
           </Avatar>
           <div className="mt-4 md:mt-0 text-center md:text-left">
-            <h3 className="text-2xl font-bold text-gray-100">
+            <h3 className="text-2xl font-bold font-serif text-paper-50">
               {instagramData.profile.fullName}
             </h3>
-            <p className="text-lg text-pink-400">
+            <p className="text-lg font-mono text-pf-instagram">
               @{instagramData.profile.username}
             </p>
-            <p className="mt-2 text-gray-300">
+            <p className="mt-2 text-paper-300">
               {instagramData.profile.biography}
             </p>
             <div className="flex justify-center md:justify-start space-x-6 mt-4">
-              <p className="text-sm text-gray-300">
-                <span className="font-bold text-pink-400">
+              <p className="text-sm text-paper-300">
+                <span className="font-bold font-mono text-pf-instagram">
                   {instagramData.profile.follower_count}
                 </span>{" "}
                 followers
               </p>
-              <p className="text-sm text-gray-300">
-                <span className="font-bold text-pink-400">
+              <p className="text-sm text-paper-300">
+                <span className="font-bold font-mono text-pf-instagram">
                   {instagramData.profile.following_count}
                 </span>{" "}
                 following
               </p>
-              <p className="text-sm text-gray-300">
-                <span className="font-bold text-pink-400">
+              <p className="text-sm text-paper-300">
+                <span className="font-bold font-mono text-pf-instagram">
                   {instagramData.profile.mediaCount}
                 </span>{" "}
                 posts
@@ -192,7 +192,7 @@ const RenderInstagramData = ({ instagramData }) => {
 
       {/* Posts Section */}
       <div>
-        <h4 className="text-2xl font-bold text-pink-400 mb-6">Posts</h4>
+        <h4 className="text-2xl font-bold font-serif text-pf-instagram mb-6">Posts</h4>
         {instagramData.posts && instagramData.posts.length > 0 ? (
           <ScrollArea className="h-[400px]">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pr-4">
@@ -202,26 +202,26 @@ const RenderInstagramData = ({ instagramData }) => {
             </div>
           </ScrollArea>
         ) : (
-          <p className="text-gray-400">No posts available.</p>
+          <p className="text-mute">No posts available.</p>
         )}
       </div>
 
       {/* Timeline Section */}
       <div>
-        <h4 className="text-2xl font-bold text-pink-400 mb-6">Timeline</h4>
+        <h4 className="text-2xl font-bold font-serif text-pf-instagram mb-6">Timeline</h4>
         <div className="space-y-6">
           {[1, 2, 3].map((timelineNum) =>
             instagramData[`timeline_${timelineNum}`] ? (
               <GlassCard
                 key={timelineNum}
-                className="bg-gray-800 text-gray-100"
+                className="bg-ink-820 text-paper-300"
               >
                 <img
                   src={instagramData[`timeline_${timelineNum}`]}
                   alt={`Timeline screenshot ${timelineNum}`}
                   className="w-full rounded-lg"
                 />
-                <p className="text-pink-400 text-sm mt-2">
+                <p className="text-pf-instagram text-sm mt-2 font-mono">
                   Timeline Screenshot {timelineNum}
                 </p>
               </GlassCard>
@@ -234,7 +234,7 @@ const RenderInstagramData = ({ instagramData }) => {
       <div>
         <button
           onClick={() => setShowFollowers(!showFollowers)}
-          className="flex items-center space-x-2 text-2xl font-bold text-pink-400 mb-4"
+          className="flex items-center space-x-2 text-2xl font-bold font-serif text-pf-instagram mb-4"
         >
           <span>Followers</span>
           <ChevronDown
@@ -248,7 +248,7 @@ const RenderInstagramData = ({ instagramData }) => {
             {instagramData.followers.map((follower, index) => (
               <GlassCard
                 key={index}
-                className="flex flex-col items-center space-y-2 bg-gray-800 text-gray-100"
+                className="flex flex-col items-center space-y-2 bg-ink-820 text-paper-300"
               >
                 <Avatar className="w-16 h-16">
                   <AvatarImage
@@ -256,10 +256,10 @@ const RenderInstagramData = ({ instagramData }) => {
                     alt={follower.username}
                   />
                   <AvatarFallback>
-                    <Users className="w-8 h-8 text-pink-400" />
+                    <Users className="w-8 h-8 text-pf-instagram" />
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-gray-300 text-sm text-center">
+                <span className="text-paper-300 text-sm text-center font-mono">
                   {follower.username}
                 </span>
               </GlassCard>
@@ -272,7 +272,7 @@ const RenderInstagramData = ({ instagramData }) => {
       <div>
         <button
           onClick={() => setShowFollowing(!showFollowing)}
-          className="flex items-center space-x-2 text-2xl font-bold text-pink-400 mb-4"
+          className="flex items-center space-x-2 text-2xl font-bold font-serif text-pf-instagram mb-4"
         >
           <span>Following</span>
           <ChevronDown
@@ -286,7 +286,7 @@ const RenderInstagramData = ({ instagramData }) => {
             {instagramData.following.map((following, index) => (
               <GlassCard
                 key={index}
-                className="flex flex-col items-center space-y-2 bg-gray-800 text-gray-100"
+                className="flex flex-col items-center space-y-2 bg-ink-820 text-paper-300"
               >
                 <Avatar className="w-16 h-16">
                   <AvatarImage
@@ -294,10 +294,10 @@ const RenderInstagramData = ({ instagramData }) => {
                     alt={following.username}
                   />
                   <AvatarFallback>
-                    <UserPlus className="w-8 h-8 text-pink-400" />
+                    <UserPlus className="w-8 h-8 text-pf-instagram" />
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-gray-300 text-sm text-center">
+                <span className="text-paper-300 text-sm text-center font-mono">
                   {following.username}
                 </span>
               </GlassCard>
@@ -308,29 +308,29 @@ const RenderInstagramData = ({ instagramData }) => {
 
       {/* Chats Section */}
       <div>
-        <h4 className="text-2xl font-bold text-pink-400 mb-6">Chats</h4>
+        <h4 className="text-2xl font-bold font-serif text-pf-instagram mb-6">Chats</h4>
         <div className="space-y-6">
           {instagramData?.chats?.length > 0 ? (
             instagramData.chats.map((chat, index) => (
-              <GlassCard key={index} className="bg-gray-800 text-gray-100">
-                <p className="text-gray-300 text-sm">
+              <GlassCard key={index} className="bg-ink-820 text-paper-300">
+                <p className="text-paper-300 text-sm">
                   <span className="font-bold">Receiver: </span>
-                  {chat.receiverUsername}
+                  <span className="font-mono">{chat.receiverUsername}</span>
                 </p>
                 <div className="mt-2">
-                  <span className="text-pink-400 text-sm">Chat URL: </span>
+                  <span className="text-pf-instagram text-sm">Chat URL: </span>
                   <a
                     href={chat.chatLogURL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 underline"
+                    className="text-rust-300 underline"
                   >
                     Download Chat
                   </a>
                 </div>
                 {chat.screenshots?.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-pink-400 text-sm mb-2">Screenshots:</p>
+                    <p className="text-pf-instagram text-sm mb-2">Screenshots:</p>
                     <div className="grid grid-cols-2 gap-4">
                       {chat.screenshots.map((screenshot, i) => (
                         <div key={i} className="space-y-2">
@@ -338,7 +338,7 @@ const RenderInstagramData = ({ instagramData }) => {
                             href={screenshot}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-400 underline"
+                            className="text-rust-300 underline"
                           >
                             <img
                               src={screenshot}
@@ -354,7 +354,7 @@ const RenderInstagramData = ({ instagramData }) => {
               </GlassCard>
             ))
           ) : (
-            <p className="text-gray-400">No chats available.</p>
+            <p className="text-mute">No chats available.</p>
           )}
         </div>
       </div>

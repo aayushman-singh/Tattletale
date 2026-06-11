@@ -23,7 +23,7 @@ const MediaItem = ({ item, onClick }) => {
 
   return (
     <div 
-      className="relative group rounded-xl overflow-hidden cursor-pointer bg-gray-700/50 aspect-square flex items-center justify-center"
+      className="relative group rounded-xl overflow-hidden cursor-pointer bg-ink-780/50 aspect-square flex items-center justify-center"
       onClick={handleClick}
     >
       <img
@@ -32,7 +32,7 @@ const MediaItem = ({ item, onClick }) => {
         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center p-3">
-        <span className="text-white text-sm font-medium">View Full</span>
+        <span className="text-paper-50 text-sm font-medium">View Full</span>
       </div>
     </div>
   );
@@ -109,7 +109,7 @@ const TelegramChat = ({ chat, index }) => {
     <Button
       variant="ghost"
       onClick={customAction || (() => toggleSection(section))}
-      className="w-full justify-between text-blue-400 hover:text-blue-300 hover:bg-gray-700/50 font-medium"
+      className="w-full justify-between text-pf-telegram hover:text-pf-telegram hover:bg-ink-780/50 font-medium"
     >
       <span className="flex items-center">
         {icon}
@@ -119,11 +119,11 @@ const TelegramChat = ({ chat, index }) => {
   );
 
   return (
-    <Card className="bg-gradient-to-br from-blue-700 to-gray-800 p-6 rounded-xl shadow-lg mt-6 border border-blue-600/20 text-white">
+    <Card className="bg-ink-820 p-6 rounded-xl shadow-lg mt-6 border border-pf-telegram/20 text-paper-50">
       <CardHeader>
-        <CardTitle className="text-xl font-bold text-blue-50 flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">
+        <CardTitle className="text-xl font-bold text-pf-telegram flex items-center space-x-3 font-serif">
+          <div className="w-10 h-10 rounded-full bg-pf-telegram flex items-center justify-center">
+            <span className="text-[#fdf3ee] font-bold text-lg">
               {chat.receiverUsername.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -133,7 +133,7 @@ const TelegramChat = ({ chat, index }) => {
 
       <CardContent className="space-y-4">
         {chat.media_files && chat.media_files.length > 0 && (
-          <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50">
+          <div className="bg-ink-820/50 rounded-xl p-4 backdrop-blur-sm border border-ink-700/50">
             {renderSectionButton(
               <ImageIcon className="mr-2 h-5 w-5" />,
               `Media Gallery (${chat.media_files.length})`,
@@ -153,7 +153,7 @@ const TelegramChat = ({ chat, index }) => {
           </div>
         )}
 
-        <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50">
+        <div className="bg-ink-820/50 rounded-xl p-4 backdrop-blur-sm border border-ink-700/50">
           {renderSectionButton(
             <MessageSquareText className="mr-2 h-5 w-5" />,
             "Chat History",
@@ -163,23 +163,23 @@ const TelegramChat = ({ chat, index }) => {
           {expandedSections.logs && (
             <div className="mt-4 space-y-4">
               <ScrollArea className="h-[300px] pr-4">
-                <div className="bg-gray-900/50 rounded-lg p-4">
+                <div className="bg-ink-900/50 rounded-lg p-4">
                   {isLogsLoading ? (
-                    <p className="text-blue-300">Loading chat logs...</p>
+                    <p className="text-rust-300">Loading chat logs...</p>
                   ) : (
-                    <pre className="text-gray-300 whitespace-pre-wrap text-sm">
+                    <pre className="text-paper-300 whitespace-pre-wrap text-sm font-mono">
                       {translatedText || chatLogs}
                     </pre>
                   )}
                 </div>
               </ScrollArea>
               
-              <div className="flex items-center justify-between bg-gray-900/30 rounded-lg p-3">
+              <div className="flex items-center justify-between bg-ink-900/30 rounded-lg p-3">
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={handleTranslate}
                     disabled={isTranslating || isLogsLoading}
-                    className="inline-flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center space-x-2 text-rust-300 hover:text-rust-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Languages className="h-4 w-4" />
                     <span className="font-medium">
@@ -189,7 +189,7 @@ const TelegramChat = ({ chat, index }) => {
                   <select
                     value={selectedLanguage}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="bg-gray-800 text-white text-sm rounded-lg p-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="bg-ink-820 text-paper-50 text-sm rounded-lg p-2 border border-ink-700 focus:outline-none focus:ring-2 focus:ring-rust-500/40 focus:border-rust-500"
                   >
                     <option value="en">English</option>
                     <option value="hi">Hindi</option>
@@ -201,7 +201,7 @@ const TelegramChat = ({ chat, index }) => {
                 </div>
                 <a
                   href={chat.logs}
-                  className="inline-flex items-center space-x-2 text-blue-400 hover:text-blue-300 text-sm transition-colors duration-200 group"
+                  className="inline-flex items-center space-x-2 text-rust-300 hover:text-rust-300 text-sm transition-colors duration-200 group"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -228,7 +228,7 @@ const TelegramChat = ({ chat, index }) => {
             />
             <button
               onClick={closeImageViewer}
-              className="absolute -top-2 -right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg"
+              className="absolute -top-2 -right-2 bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] p-2 rounded-full transition-colors duration-200 shadow-lg"
               aria-label="Close image viewer"
             >
               <X className="h-5 w-5" />

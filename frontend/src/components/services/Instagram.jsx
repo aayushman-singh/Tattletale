@@ -6,14 +6,14 @@ import ImageViewer from "../utils/ImageViewer";
 
 
 const UserCard = ({ user, className }) => (
-  <Card className={`flex flex-col items-center bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-all duration-300 ${className}`}>
+  <Card className={`flex flex-col items-center bg-ink-820 p-4 rounded-lg shadow-md hover:bg-ink-780 transition-all duration-300 ${className}`}>
     <img
       src={user.profile_pic_url || "/api/placeholder/64/64"}
       alt={user.username || "Unknown"}
-      className="w-16 h-16 rounded-full border-2 border-gray-600"
+      className="w-16 h-16 rounded-full border-2 border-ink-700"
     />
-    <span className="text-white text-sm text-center mt-2">{user.username || "Unknown"}</span>
-    <span className="text-gray-400 text-xs">{user.full_name || ""}</span>
+    <span className="text-paper-50 text-sm text-center mt-2 font-mono">{user.username || "Unknown"}</span>
+    <span className="text-mute text-xs">{user.full_name || ""}</span>
   </Card>
 );
 
@@ -50,13 +50,13 @@ const RenderInstagramData = ({ instagramData }) => {
   const renderProfile = () => (
     <div className="flex flex-col md:flex-row md:space-x-6 items-center md:items-start">
       <div className="mt-4 md:mt-0 text-center md:text-left">
-        <h3 className="text-2xl font-bold text-white">{instagramData.profile?.full_name || "Unknown"}</h3>
-        <p className="text-lg text-pink-400">@{instagramData.profile?.username || "unknown"}</p>
-        <p className="mt-2 text-gray-300">{instagramData.profile?.biography || "No bio available"}</p>
+        <h3 className="text-2xl font-bold text-paper-50 font-serif">{instagramData.profile?.full_name || "Unknown"}</h3>
+        <p className="text-lg text-pf-instagram font-mono">@{instagramData.profile?.username || "unknown"}</p>
+        <p className="mt-2 text-paper-300">{instagramData.profile?.biography || "No bio available"}</p>
         <div className="flex justify-center md:justify-start space-x-6 mt-4">
           {["follower_count", "following_count", "media_count"].map((stat) => (
-            <p key={stat} className="text-sm text-gray-300">
-              <span className="font-bold text-pink-500">{instagramData.profile?.[stat] || 0}</span>{" "}
+            <p key={stat} className="text-sm text-paper-300">
+              <span className="font-bold text-pf-instagram font-mono">{instagramData.profile?.[stat] || 0}</span>{" "}
               {stat.split("_")[0]}s
             </p>
           ))}
@@ -76,18 +76,18 @@ const RenderInstagramData = ({ instagramData }) => {
         )?.url;
 
         return (
-          <div key={index} className="bg-gray-800 p-4 rounded-lg shadow-md cursor-pointer" onClick={() => setSelectedImage(media)}>
+          <div key={index} className="bg-ink-820 p-4 rounded-lg shadow-md cursor-pointer" onClick={() => setSelectedImage(media)}>
             <div className="flex items-center space-x-3 mb-4">
               <img src={media.user?.profile_pic_url} alt={media.user?.username} className="w-10 h-10 rounded-full" />
               <div>
-                <p className="text-white font-semibold">{media.user?.username}</p>
-                <p className="text-gray-400 text-sm">{media.user?.full_name}</p>
-                {media.user?.friendship_status?.following && <p className="text-gray-400 text-xs">Following</p>}
+                <p className="text-paper-50 font-semibold font-mono">{media.user?.username}</p>
+                <p className="text-mute text-sm">{media.user?.full_name}</p>
+                {media.user?.friendship_status?.following && <p className="text-mute text-xs">Following</p>}
               </div>
             </div>
             <img src={imageUrl} alt={media.accessibility_caption} className="w-full rounded-lg" />
-            {media.caption?.text && <p className="text-white text-sm mt-2">{media.caption.text}</p>}
-            <div className="flex space-x-4 text-gray-400 text-sm mt-2">
+            {media.caption?.text && <p className="text-paper-50 text-sm mt-2">{media.caption.text}</p>}
+            <div className="flex space-x-4 text-mute text-sm mt-2 font-mono">
               <p>{media.like_count} Likes</p>
               <p>{media.comment_count} Comments</p>
             </div>
@@ -100,25 +100,25 @@ const RenderInstagramData = ({ instagramData }) => {
   const renderLoginActivity = () => (
     <div className="space-y-4">
       {instagramData?.login_activity?.sessions?.map((session) => (
-        <Card key={session.id} className={`border ${session.is_current ? "border-green-500" : "border-gray-600"} bg-gray-900`}>
+        <Card key={session.id} className={`border ${session.is_current ? "border-signal-ok" : "border-ink-700"} bg-ink-900`}>
           <CardHeader
             className="flex flex-row justify-between items-center cursor-pointer p-4"
             onClick={() => toggleSession(session.id)}
           >
             <div>
-              <CardTitle className="text-white">{session.device}</CardTitle>
-              <p className="text-sm text-gray-400">{session.location}</p>
-              <p className="text-xs text-gray-500">Last Active: {new Date(session.timestamp).toLocaleString()}</p>
+              <CardTitle className="text-paper-50 font-serif">{session.device}</CardTitle>
+              <p className="text-sm text-mute">{session.location}</p>
+              <p className="text-xs text-faint font-mono">Last Active: {new Date(session.timestamp).toLocaleString()}</p>
             </div>
-            {expandedSession === session.id ? <ChevronUp className="w-5 h-5 text-pink-400" /> : <ChevronDown className="w-5 h-5 text-pink-400" />}
+            {expandedSession === session.id ? <ChevronUp className="w-5 h-5 text-pf-instagram" /> : <ChevronDown className="w-5 h-5 text-pf-instagram" />}
           </CardHeader>
           {expandedSession === session.id && (
-            <CardContent className="p-4 text-gray-300 space-y-2">
-              <p><span className="font-bold text-pink-500">Login Time:</span> {new Date(session.login_timestamp).toLocaleString()}</p>
-              <p><span className="font-bold text-pink-500">User Agent:</span> {session.user_agent}</p>
-              <p><span className="font-bold text-pink-500">IP Address:</span> {session.ip_address}</p>
-              <p><span className="font-bold text-pink-500">Coordinates:</span> {session.latitude}, {session.longitude}</p>
-              {session.is_current && <p className="text-green-400 font-bold">Active Session</p>}
+            <CardContent className="p-4 text-paper-300 space-y-2">
+              <p><span className="font-bold text-pf-instagram">Login Time:</span> {new Date(session.login_timestamp).toLocaleString()}</p>
+              <p><span className="font-bold text-pf-instagram">User Agent:</span> {session.user_agent}</p>
+              <p><span className="font-bold text-pf-instagram">IP Address:</span> <span className="font-mono">{session.ip_address}</span></p>
+              <p><span className="font-bold text-pf-instagram">Coordinates:</span> <span className="font-mono">{session.latitude}, {session.longitude}</span></p>
+              {session.is_current && <p className="text-signal-ok font-bold">Active Session</p>}
             </CardContent>
           )}
         </Card>
@@ -127,7 +127,7 @@ const RenderInstagramData = ({ instagramData }) => {
   );
 
   return (
-    <div className="mt-6 bg-gray-900 p-6 rounded-lg shadow-xl">
+    <div className="mt-6 bg-ink-900 p-6 rounded-lg shadow-xl">
       {renderProfile()}
 
       <ExpandableSection

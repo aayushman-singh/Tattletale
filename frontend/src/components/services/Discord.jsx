@@ -66,22 +66,22 @@ const DiscordChat = ({ chat }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-900 to-gray-800 p-6 rounded-xl shadow-lg mt-6 border border-blue-700/20">
+    <div className="bg-ink-820 p-6 rounded-xl shadow-lg mt-6 border border-pf-discord/20">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">
+          <div className="w-10 h-10 rounded-full bg-pf-discord flex items-center justify-center">
+            <span className="text-[#fdf3ee] font-bold text-lg">
               {chat.receiverUsername.charAt(0).toUpperCase()}
             </span>
           </div>
-          <h3 className="text-xl font-bold text-white">
+          <h3 className="text-xl font-bold text-pf-discord font-serif">
             {chat.receiverUsername}
           </h3>
         </div>
         <select
           value={selectedLanguage}
           onChange={(e) => setSelectedLanguage(e.target.value)}
-          className="bg-gray-700 text-white text-sm rounded-lg p-2"
+          className="bg-ink-780 text-paper-50 text-sm rounded-lg p-2"
         >
           <option value="en">English</option>
           <option value="hi">Hindi</option>
@@ -93,10 +93,10 @@ const DiscordChat = ({ chat }) => {
 
       <div className="space-y-4">
         {chat.screenshots && chat.screenshots.length > 0 && (
-          <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm">
+          <div className="bg-ink-820/50 rounded-xl p-4 backdrop-blur-sm">
             <button
               onClick={toggleMedia}
-              className="flex items-center justify-between w-full text-blue-400 hover:text-blue-300 transition-all duration-200 group"
+              className="flex items-center justify-between w-full text-pf-discord hover:text-pf-discord transition-all duration-200 group"
               aria-expanded={isMediaExpanded}
             >
               <div className="flex items-center space-x-2">
@@ -122,7 +122,7 @@ const DiscordChat = ({ chat }) => {
               {chat.screenshots.map((mediaFile, idx) => (
                 <div
                   key={idx}
-                  className="relative group rounded-lg overflow-hidden cursor-pointer bg-gray-700/50 aspect-square"
+                  className="relative group rounded-lg overflow-hidden cursor-pointer bg-ink-780/50 aspect-square"
                   onClick={() => openImageViewer(mediaFile)}
                 >
                   <img
@@ -132,7 +132,7 @@ const DiscordChat = ({ chat }) => {
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center p-3">
-                    <span className="text-white text-sm font-medium">
+                    <span className="text-paper-50 text-sm font-medium">
                       View Full
                     </span>
                   </div>
@@ -145,7 +145,7 @@ const DiscordChat = ({ chat }) => {
         <div className="flex justify-between items-center">
           <button
             onClick={fetchChatLogs}
-            className="inline-flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors duration-200 group"
+            className="inline-flex items-center space-x-2 text-rust-300 hover:text-rust-300 transition-colors duration-200 group"
           >
             <span className="font-medium">
               {isChatLogsVisible ? "Close Chat History" : "View Chat History"}
@@ -156,7 +156,7 @@ const DiscordChat = ({ chat }) => {
             href={chat.chats}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-300 text-sm transition-colors duration-200"
+            className="text-rust-300 hover:text-rust-300 text-sm transition-colors duration-200"
           >
             Open Chat Log
           </a>
@@ -164,11 +164,11 @@ const DiscordChat = ({ chat }) => {
       </div>
 
       {isChatLogsVisible && (
-        <div className="bg-gray-800/50 rounded-xl p-4 mt-4 overflow-auto max-h-64">
+        <div className="bg-ink-820/50 rounded-xl p-4 mt-4 overflow-auto max-h-64">
           {isLogsLoading ? (
-            <p className="text-blue-300">Loading chat logs...</p>
+            <p className="text-rust-300">Loading chat logs...</p>
           ) : (
-            <pre className="text-gray-300 whitespace-pre-wrap">
+            <pre className="text-paper-300 whitespace-pre-wrap font-mono">
               {chatLogs}
             </pre>
           )}
@@ -188,7 +188,7 @@ const DiscordChat = ({ chat }) => {
             />
             <button
               onClick={closeImageViewer}
-              className="absolute -top-2 -right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg"
+              className="absolute -top-2 -right-2 bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] p-2 rounded-full transition-colors duration-200 shadow-lg"
               aria-label="Close image viewer"
             >
               <X className="h-5 w-5" />

@@ -20,7 +20,7 @@ const GoogleDriveUsers = ({ users }) => {
   if (!users || users.length === 0) {
     return (
       <GlassCard className="p-6 text-center">
-        <p className="text-gray-400">No drive data available</p>
+        <p className="text-mute">No drive data available</p>
       </GlassCard>
     );
   }
@@ -41,9 +41,9 @@ const GoogleDriveUsers = ({ users }) => {
       {/* User Details Modal */}
       {selectedUser && (
         <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-          <DialogContent className="max-w-4xl h-[90vh] bg-gray-900 text-gray-100 overflow-hidden">
+          <DialogContent className="max-w-4xl h-[90vh] bg-ink-900 text-paper-300 overflow-hidden">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-blue-400">
+              <DialogTitle className="text-2xl font-bold font-serif text-pf-google">
                 {selectedUser.email}'s Drive Files
               </DialogTitle>
             </DialogHeader>
@@ -57,9 +57,9 @@ const GoogleDriveUsers = ({ users }) => {
       {/* File Details Modal */}
       {selectedFile && (
         <Dialog open={!!selectedFile} onOpenChange={() => setSelectedFile(null)}>
-          <DialogContent className="max-w-2xl bg-gray-900 text-gray-100">
+          <DialogContent className="max-w-2xl bg-ink-900 text-paper-300">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-blue-400">
+              <DialogTitle className="text-xl font-bold font-serif text-pf-google">
                 File Details
               </DialogTitle>
             </DialogHeader>
@@ -76,22 +76,22 @@ const UserCard = ({ user, onSelect, onFileSelect }) => {
   const displayedFiles = showAllFiles ? user.driveFiles : user.driveFiles.slice(0, 3);
 
   return (
-    <GlassCard className="bg-gradient-to-br from-gray-900/50 to-blue-900/50">
-      <div 
-        className="flex items-center justify-between mb-4 cursor-pointer" 
+    <GlassCard className="bg-ink-820">
+      <div
+        className="flex items-center justify-between mb-4 cursor-pointer"
         onClick={onSelect}
       >
         <div className="flex items-center space-x-3">
           <Avatar className="w-10 h-10">
-            <AvatarFallback className="bg-blue-600 text-white">
+            <AvatarFallback className="bg-[#d99a32] text-[#fdf3ee]">
               {user.email.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <h3 className="text-lg font-semibold text-white truncate max-w-[180px]">
+          <h3 className="text-lg font-semibold font-mono text-paper-50 truncate max-w-[180px]">
             {user.email}
           </h3>
         </div>
-        <span className="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded-full">
+        <span className="text-xs font-mono bg-pf-google/20 text-pf-google px-2 py-1 rounded-full">
           {user.driveFiles.length} files
         </span>
       </div>
@@ -109,7 +109,7 @@ const UserCard = ({ user, onSelect, onFileSelect }) => {
       {user.driveFiles.length > 3 && (
         <button
           onClick={() => setShowAllFiles(!showAllFiles)}
-          className="text-blue-400 hover:text-blue-300 text-xs mt-3 flex items-center"
+          className="text-rust-300 hover:text-rust-300 text-xs mt-3 flex items-center"
         >
           {showAllFiles ? (
             <>
@@ -132,21 +132,21 @@ const FilePreview = ({ file, onSelect }) => {
   return (
     <GlassCard 
       onClick={onSelect}
-      className="bg-gray-800/50 hover:bg-gray-800/70 transition-colors duration-200 cursor-pointer p-3"
+      className="bg-ink-820/50 hover:bg-ink-820/70 transition-colors duration-200 cursor-pointer p-3"
     >
       <div className="flex items-center space-x-3">
-        <div className="p-2 rounded-full bg-blue-500/20">
+        <div className="p-2 rounded-full bg-pf-google/20">
           {getFileIcon(file.mimeType)}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-blue-400 truncate">
+          <h4 className="text-sm font-semibold text-pf-google truncate">
             {file.name}
           </h4>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs font-mono text-mute mt-1">
             {new Date(file.createdTime).toLocaleDateString()}
           </p>
         </div>
-        <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
+        <ChevronDown className="h-4 w-4 text-mute flex-shrink-0" />
       </div>
     </GlassCard>
   );
@@ -155,18 +155,18 @@ const FilePreview = ({ file, onSelect }) => {
 const UserDetails = ({ user, onFileSelect }) => {
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-br from-blue-900 to-gray-800 p-6 rounded-lg shadow-lg border border-blue-700/20">
+      <div className="bg-ink-820 p-6 rounded-lg shadow-lg border border-ink-700">
         <div className="flex items-center space-x-4 mb-6">
           <Avatar className="w-16 h-16">
-            <AvatarFallback className="bg-blue-500 text-white text-2xl">
+            <AvatarFallback className="bg-[#d99a32] text-[#fdf3ee] text-2xl">
               {user.email.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-xl font-bold text-white">{user.email}</h2>
+            <h2 className="text-xl font-bold font-mono text-paper-50">{user.email}</h2>
             <div className="flex items-center space-x-2 mt-1">
-              <User className="h-4 w-4 text-blue-400" />
-              <span className="text-blue-300 text-sm">Google Drive</span>
+              <User className="h-4 w-4 text-pf-google" />
+              <span className="text-pf-google text-sm">Google Drive</span>
             </div>
           </div>
         </div>
@@ -189,22 +189,22 @@ const FileCard = ({ file, onSelect }) => {
   return (
     <GlassCard 
       onClick={onSelect}
-      className="bg-gray-800/40 hover:bg-gray-800/60 transition-colors duration-200 cursor-pointer p-4"
+      className="bg-ink-820/40 hover:bg-ink-820/60 transition-colors duration-200 cursor-pointer p-4"
     >
       <div className="flex items-center space-x-3">
-        <div className="p-3 rounded-full bg-blue-500/20">
+        <div className="p-3 rounded-full bg-pf-google/20">
           {getFileIcon(file.mimeType)}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-base font-semibold text-blue-400 truncate">
+          <h4 className="text-base font-semibold text-pf-google truncate">
             {file.name}
           </h4>
-          <div className="text-gray-300 text-sm mt-2 space-y-1">
+          <div className="text-paper-300 text-sm mt-2 space-y-1">
             <p className="truncate"><strong>Type:</strong> {file.mimeType.split('/').pop()}</p>
             <p><strong>Size:</strong> {(file.size / 1024).toFixed(2)} KB</p>
           </div>
         </div>
-        <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0" />
+        <ChevronDown className="h-5 w-5 text-mute flex-shrink-0" />
       </div>
     </GlassCard>
   );
@@ -214,20 +214,20 @@ const FileDetails = ({ file }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-start space-x-4">
-        <div className="p-4 rounded-full bg-blue-500/20">
+        <div className="p-4 rounded-full bg-pf-google/20">
           {getFileIcon(file.mimeType)}
         </div>
         <div>
-          <h3 className="text-lg font-bold text-blue-400">
+          <h3 className="text-lg font-bold font-serif text-pf-google">
             {file.name}
           </h3>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm font-mono text-mute">
             {file.mimeType}
           </p>
         </div>
       </div>
-      
-      <div className="text-gray-300 text-sm space-y-2">
+
+      <div className="text-paper-300 text-sm space-y-2">
         <p><strong>Created:</strong> {new Date(file.createdTime).toLocaleString()}</p>
         <p><strong>Modified:</strong> {new Date(file.modifiedTime).toLocaleString()}</p>
         <p><strong>Size:</strong> {(file.size / 1024).toFixed(2)} KB</p>
@@ -241,7 +241,7 @@ const FileDetails = ({ file }) => {
           href={file.webViewLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+          className="inline-flex items-center space-x-2 px-4 py-2 bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] rounded-lg transition-colors duration-200"
         >
           <span>Open File</span>
           <ExternalLink className="w-4 h-4" />
@@ -251,7 +251,7 @@ const FileDetails = ({ file }) => {
             href={file.webContentLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200"
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-ink-780 hover:bg-ink-740 text-paper-50 rounded-lg transition-colors duration-200"
           >
             <span>Download</span>
             <FileText className="w-4 h-4" />

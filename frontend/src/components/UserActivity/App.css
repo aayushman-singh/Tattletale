@@ -8,7 +8,7 @@
   
   h1 {
     text-align: center;
-    color: #333;
+    color: #f1e9da;
   }
   
   .timeline {
@@ -17,8 +17,8 @@
   }
   
   .timeline-item {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background-color: #1a1611;
+    border: 1px solid #342d24;
     padding: 15px;
     margin-bottom: 15px;
     border-radius: 8px;
@@ -33,18 +33,18 @@
   .timeline-header h3 {
     margin: 0;
     font-size: 18px;
-    color: #2c3e50;
+    color: #f1e9da;
   }
   
   .timeline-header p {
     margin: 0;
     font-size: 14px;
-    color: #7f8c8d;
+    color: #998f7e;
   }
   
   .timeline-body p {
     font-size: 16px;
-    color: #34495e;
+    color: #c5bba8;
   }
   
   .timeline-body img {

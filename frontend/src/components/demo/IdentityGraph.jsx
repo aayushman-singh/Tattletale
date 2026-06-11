@@ -9,6 +9,18 @@ import React, { useState, useEffect } from "react";
 const CLUSTER_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#a855f7", "#ec4899", "#14b8a6"];
 const BAND_STROKE = { high: "#22c55e", medium: "#f59e0b", low: "#6b7280" };
 
+// Human-readable names for the engine's feature keys. Unknown keys fall back to
+// the raw key, so a new signal still renders before it gets a friendly name.
+const FEATURE_NAMES = {
+  handle: "handle similarity",
+  name: "display name",
+  bio: "bio overlap",
+  style: "writing style",
+  temporal: "posting hours",
+  sharedTerms: "shared vocabulary",
+  coPresence: "co-presence (place + time)",
+};
+
 const platformGlyph = (p) => (p ? p[0].toUpperCase() : "?");
 
 export default function IdentityGraph({ correlation }) {
@@ -167,9 +179,9 @@ export default function IdentityGraph({ correlation }) {
                 </div>
                 <div className="space-y-1.5">
                   {selectedEdge.features.map((f) => (
-                    <div key={f.feature} className="text-xs">
+                    <div key={f.feature} className="text-xs" title={f.label}>
                       <div className="flex justify-between text-gray-400">
-                        <span>{f.feature}</span>
+                        <span>{FEATURE_NAMES[f.feature] ?? f.feature}</span>
                         <span className="font-mono">{f.value.toFixed(2)}</span>
                       </div>
                       <div className="h-1.5 bg-gray-700 rounded">
@@ -185,7 +197,7 @@ export default function IdentityGraph({ correlation }) {
             ) : (
               <div className="bg-gray-800/40 border border-gray-700 rounded p-3 text-xs text-gray-400">
                 Click an edge in the graph to see the per-feature evidence (handle, name, writing
-                style, posting time, shared vocabulary) the engine used.
+                style, posting time, shared vocabulary, and place-and-time co-presence) the engine used.
               </div>
             )}
           </div>

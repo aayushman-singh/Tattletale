@@ -5,16 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Database, UserCheck, Clock } from "lucide-react";
 
 const ServiceCard = ({ icon: Icon, title, description, buttonText, buttonLink }) => (
-  <Card className="bg-gray-800 bg-opacity-70 backdrop-blur-sm border-gray-700 hover:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 flex flex-col justify-between p-4">
+  <Card className="bg-ink-820 backdrop-blur-sm border-ink-700 hover:border-rust-500/40 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 flex flex-col justify-between p-4">
     <CardHeader>
-      <CardTitle className="flex items-center text-white">
-        <Icon className="mr-2 h-6 w-6 text-blue-400" />
+      <CardTitle className="flex items-center font-serif text-paper-50">
+        <Icon className="mr-2 h-6 w-6 text-rust-300" />
         {title}
       </CardTitle>
     </CardHeader>
     <CardContent className="flex flex-col justify-between flex-grow">
-      <p className="text-gray-300 mb-6">{description}</p>
-      <Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white">
+      <p className="text-paper-300 mb-6">{description}</p>
+      <Button className="w-full bg-rust-500 hover:bg-rust-400 text-[#fdf3ee]">
         <Link to={buttonLink}>{buttonText}</Link>
       </Button>
     </CardContent>
@@ -23,16 +23,12 @@ const ServiceCard = ({ icon: Icon, title, description, buttonText, buttonLink })
 
 const ServicesMain = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center">
+    <div className="min-h-screen bg-ink-900 text-paper-50 flex items-center justify-center">
       <div className="relative pt-10 pb-20 px-4 sm:px-6 lg:px-8">
-        {/* Gradient Backgrounds */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-blue-800/20 via-transparent to-transparent" />
-
         <div className="relative z-10 max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-center mb-12">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-center mb-12">
             Choose Your{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
+            <span className="text-rust-400">
               Investigation Path
             </span>
           </h1>

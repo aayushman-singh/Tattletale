@@ -72,14 +72,14 @@ const Header = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-gray-900 bg-opacity-90 backdrop-blur-md border-b border-gray-800">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-ink-900/82 backdrop-blur-md border-b border-ink-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo and Title */}
           <div className="flex items-center space-x-2">
             <Link to="/" className="flex items-center space-x-2">
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600 hover:opacity-80 transition-opacity">
-                tattletale
+              <span className="text-xl font-bold font-serif text-paper-50 hover:opacity-80 transition-opacity">
+                tattle<span className="text-rust-400">tale</span>
               </span>
             </Link>
           </div>
@@ -90,61 +90,61 @@ const Header = () => {
               <>
                 <Link
                   to="profilePage"
-                  className="text-sm font-medium text-gray-100 hover:text-white transition-colors relative group cursor-pointer"
+                  className="text-sm font-medium text-paper-50 hover:text-paper-50 transition-colors relative group cursor-pointer"
                 >
                   {user.name}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-rust-500 transition-all duration-300 group-hover:w-full"></span>
                 </Link>
 
                 <span
                   onClick={() => handleNavigation("features")}
-                  className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group cursor-pointer"
+                  className="text-sm font-medium text-paper-300 hover:text-paper-50 transition-colors relative group cursor-pointer"
                 >
                   Features
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-rust-500 transition-all duration-300 group-hover:w-full"></span>
                 </span>
                 <span
                   onClick={() => handleNavigation("about")}
-                  className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group cursor-pointer"
+                  className="text-sm font-medium text-paper-300 hover:text-paper-50 transition-colors relative group cursor-pointer"
                 >
                   About
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-rust-500 transition-all duration-300 group-hover:w-full"></span>
                 </span>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <span className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group cursor-pointer">
+                    <span className="text-sm font-medium text-paper-300 hover:text-paper-50 transition-colors relative group cursor-pointer">
                       Services
-                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-rust-500 transition-all duration-300 group-hover:w-full"></span>
                     </span>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-gray-800 border border-gray-700">
+                  <DropdownMenuContent className="w-56 bg-ink-820 border border-ink-700">
                     <DropdownMenuItem
-                      className="text-gray-300 hover:text-white focus:text-white focus:bg-gray-700"
+                      className="text-paper-300 hover:text-paper-50 focus:text-paper-50 focus:bg-ink-740"
                       onClick={() => navigate("/services")}
                     >
-                      <Search className="mr-2 h-4 w-4" />
+                      <Search className="mr-2 h-4 w-4 text-rust-300" />
                       <span>Social Media Investigation</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-gray-300 hover:text-white focus:text-white focus:bg-gray-700"
+                      className="text-paper-300 hover:text-paper-50 focus:text-paper-50 focus:bg-ink-740"
                       onClick={() => navigate("/osint")}
                     >
-                      <Database className="mr-2 h-4 w-4" />
+                      <Database className="mr-2 h-4 w-4 text-rust-300" />
                       <span>OSINT Tools</span>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-gray-700" />
+                    <DropdownMenuSeparator className="bg-ink-700" />
                     <DropdownMenuItem
-                      className="text-gray-300 hover:text-white focus:text-white focus:bg-gray-700"
+                      className="text-paper-300 hover:text-paper-50 focus:text-paper-50 focus:bg-ink-740"
                       onClick={() => navigate("/pastData")}
                     >
-                      <Clock className="mr-2 h-4 w-4" />
+                      <Clock className="mr-2 h-4 w-4 text-rust-300" />
                       <span>Past Data</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-gray-300 hover:text-white focus:text-white focus:bg-gray-700"
+                      className="text-paper-300 hover:text-paper-50 focus:text-paper-50 focus:bg-ink-740"
                       onClick={() => navigate("/profileAnalysis")}
                     >
-                      <UserCheck className="mr-2 h-4 w-4" />
+                      <UserCheck className="mr-2 h-4 w-4 text-rust-300" />
                       <span>Profile Analysis</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -153,7 +153,7 @@ const Header = () => {
                 <Button
                   variant="ghost"
                   onClick={handleLogout}
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                  className="bg-rust-500 hover:bg-rust-400 text-[#fdf3ee]"
                 >
                   Logout
                 </Button>
@@ -162,12 +162,12 @@ const Header = () => {
               <>
                 <Button
                   variant="ghost"
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                  className="bg-rust-500 hover:bg-rust-400 text-[#fdf3ee]"
                   asChild
                 >
                   <Link to="/login">Login</Link>
                 </Button>
-                <Button variant="outline" className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white" asChild>
+                <Button variant="outline" className="bg-rust-500 hover:bg-rust-400 text-[#fdf3ee]" asChild>
                   <Link to="/register">Register</Link>
                 </Button>
               </>
@@ -178,7 +178,7 @@ const Header = () => {
           <div className="md:hidden">
             <button
               onClick={toggleMenu}
-              className="text-gray-300 hover:text-white focus:outline-none"
+              className="text-paper-300 hover:text-paper-50 focus:outline-none"
             >
               {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -187,25 +187,25 @@ const Header = () => {
 
         {/* Mobile Dropdown Menu */}
         {menuOpen && (
-          <div className="md:hidden mt-2 space-y-2 bg-gray-800 rounded-lg p-4">
+          <div className="md:hidden mt-2 space-y-2 bg-ink-820 rounded-lg p-4">
             <Link
               to="/services"
-              className="block text-sm text-gray-300 hover:text-white"
+              className="block text-sm text-paper-300 hover:text-paper-50"
             >
               Social Media Investigation
             </Link>
-            <Link to="/osint" className="block text-sm text-gray-300 hover:text-white">
+            <Link to="/osint" className="block text-sm text-paper-300 hover:text-paper-50">
               OSINT Tools
             </Link>
             <Link
               to="/pastData"
-              className="block text-sm text-gray-300 hover:text-white"
+              className="block text-sm text-paper-300 hover:text-paper-50"
             >
               Past Data
             </Link>
             <Link
               to="/profileAnalysis"
-              className="block text-sm text-gray-300 hover:text-white"
+              className="block text-sm text-paper-300 hover:text-paper-50"
             >
               Profile Analysis
             </Link>

@@ -5,14 +5,30 @@ export default {
   theme: {
   	extend: {
   		fontFamily: {
-  			montserrat: ["Montserrat", "sans-serif"]
+  			montserrat: ["Montserrat", "sans-serif"],
+  			sans: ["IBM Plex Sans", "system-ui", "sans-serif"],
+  			serif: ["Spectral", "Georgia", "serif"],
+  			mono: ["IBM Plex Mono", "ui-monospace", "monospace"]
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+  		boxShadow: {
+  			dossier: '0 2px 4px rgba(0,0,0,.35), 0 14px 36px -18px rgba(0,0,0,.75)'
+  		},
   		colors: {
+  			ink: { 900: '#0c0a08', 870: '#110e0b', 850: '#15110d', 820: '#1a1611', 780: '#211c16', 740: '#29231b', 700: '#342d24' },
+  			paper: { 50: '#f1e9da', 100: '#e6dccb', 300: '#c5bba8' },
+  			mute: '#998f7e',
+  			faint: '#6b6253',
+  			rust: { 300: '#e9866a', 400: '#d75e3d', 500: '#c0492e', 600: '#9c3a23', 700: '#7e2d1a' },
+  			brass: '#c7a35d',
+  			file: { DEFAULT: '#e7ddc7', soft: '#ddd0b4', line: '#c7b893', ink: '#2a241a' },
+  			signal: { ok: '#45a06a', warn: '#d99a32', err: '#d2483b', info: '#5a86c0' },
+  			cluster: { 0: '#c0492e', 1: '#d99a32', 2: '#45a06a', 3: '#9b7bc0', 4: '#cf6a96', 5: '#3f9aa0' },
+  			pf: { instagram: '#e1568b', facebook: '#4f7bd0', x: '#9aa6b2', telegram: '#4aa3e0', google: '#d99a32', whatsapp: '#45a06a', discord: '#8b7fe6', mastodon: '#8f74e0' },
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

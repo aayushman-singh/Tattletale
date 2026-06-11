@@ -9,7 +9,7 @@ const TelegramChatsDisplay = ({ apiData }) => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   if (!apiData || apiData.length === 0) {
-    return <p className="text-gray-400">No user data available.</p>;
+    return <p className="text-mute">No user data available.</p>;
   }
 
   return (
@@ -21,9 +21,9 @@ const TelegramChatsDisplay = ({ apiData }) => {
       </div>
       {selectedUser && (
         <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-          <DialogContent className="max-w-4xl h-[90vh] bg-gray-900 text-gray-100 overflow-hidden">
+          <DialogContent className="max-w-4xl h-[90vh] bg-ink-900 text-paper-300 overflow-hidden">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-blue-400">
+              <DialogTitle className="text-2xl font-bold font-serif text-pf-telegram">
                 {selectedUser.username}'s Telegram Chats
               </DialogTitle>
             </DialogHeader>
@@ -39,18 +39,18 @@ const TelegramChatsDisplay = ({ apiData }) => {
 
 const UserCard = ({ user, onSelect }) => {
   return (
-    <GlassCard onClick={onSelect} className="cursor-pointer bg-gray-800 text-gray-100">
+    <GlassCard onClick={onSelect} className="cursor-pointer bg-ink-820 text-paper-300">
       <div className="flex items-center mb-4">
         <Avatar className="w-12 h-12 mr-4">
           <AvatarImage src={`https://api.dicebear.com/6.x/initials/svg?seed=${user.username}`} alt={user.username} />
-          <AvatarFallback><User className="w-8 h-8 text-blue-400" /></AvatarFallback>
+          <AvatarFallback><User className="w-8 h-8 text-pf-telegram" /></AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="text-xl font-semibold text-gray-100">{user.username}</h3>
-          <p className="text-sm text-gray-400">Telegram User</p>
+          <h3 className="text-xl font-semibold font-serif text-paper-50">{user.username}</h3>
+          <p className="text-sm text-mute">Telegram User</p>
         </div>
       </div>
-      <div className="flex justify-between text-sm text-gray-400">
+      <div className="flex justify-between text-sm font-mono text-mute">
         <span>Chats: {user.chats?.length || 0}</span>
       </div>
     </GlassCard>
@@ -76,23 +76,23 @@ const TelegramChat = ({ chat }) => {
   const closeImageViewer = () => setSelectedImage(null);
 
   return (
-    <GlassCard className="bg-gradient-to-br from-blue-900 to-gray-800 text-gray-100">
+    <GlassCard className="bg-ink-820 text-paper-300">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <Avatar className="w-10 h-10">
             <AvatarImage src={`https://api.dicebear.com/6.x/initials/svg?seed=${chat.receiverUsername}`} alt={chat.receiverUsername} />
             <AvatarFallback>{chat.receiverUsername.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <h3 className="text-xl font-bold text-white">{chat.receiverUsername}</h3>
+          <h3 className="text-xl font-bold font-serif text-paper-50">{chat.receiverUsername}</h3>
         </div>
       </div>
 
       <div className="space-y-4">
         {chat.media_files && chat.media_files.length > 0 && (
-          <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm">
+          <div className="bg-ink-820/50 rounded-xl p-4 backdrop-blur-sm">
             <button
               onClick={toggleMedia}
-              className="flex items-center justify-between w-full text-blue-400 hover:text-blue-300 transition-all duration-200 group"
+              className="flex items-center justify-between w-full text-pf-telegram hover:text-pf-telegram transition-all duration-200 group"
               aria-expanded={isMediaExpanded}
             >
               <div className="flex items-center space-x-2">
@@ -116,7 +116,7 @@ const TelegramChat = ({ chat }) => {
               {chat.media_files.map((mediaFile, idx) => (
                 <div
                   key={idx}
-                  className="relative group rounded-lg overflow-hidden cursor-pointer bg-gray-700/50 aspect-square"
+                  className="relative group rounded-lg overflow-hidden cursor-pointer bg-ink-780/50 aspect-square"
                   onClick={() => openImageViewer(mediaFile)}
                 >
                   <img
@@ -126,7 +126,7 @@ const TelegramChat = ({ chat }) => {
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center p-3">
-                    <span className="text-white text-sm font-medium">View Full</span>
+                    <span className="text-paper-50 text-sm font-medium">View Full</span>
                   </div>
                 </div>
               ))}
@@ -137,7 +137,7 @@ const TelegramChat = ({ chat }) => {
         <div className="flex justify-between items-center">
           <a
             href={chat.logs}
-            className="inline-flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors duration-200 group"
+            className="inline-flex items-center space-x-2 text-pf-telegram hover:text-pf-telegram transition-colors duration-200 group"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -160,7 +160,7 @@ const TelegramChat = ({ chat }) => {
             />
             <button
               onClick={closeImageViewer}
-              className="absolute -top-2 -right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg"
+              className="absolute -top-2 -right-2 bg-rust-500 text-[#fdf3ee] p-2 rounded-full hover:bg-rust-400 transition-colors duration-200 shadow-lg"
               aria-label="Close image viewer"
             >
               <X className="h-5 w-5" />

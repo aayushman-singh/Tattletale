@@ -29,11 +29,11 @@ const ChatLogsViewer = ({ logsUrl }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-900 to-gray-800 p-6 rounded-lg shadow-lg mt-6 border border-blue-700/20">
+    <div className="bg-ink-820 p-6 rounded-lg shadow-lg mt-6 border border-ink-700/20">
       <div className="flex justify-between items-center">
         <button
           onClick={fetchLogs}
-          className="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200"
+          className="text-rust-300 hover:text-rust-300 font-medium transition-colors duration-200"
         >
           {isLogsVisible ? "Hide Logs" : "View Chat Logs"}
         </button>
@@ -41,18 +41,18 @@ const ChatLogsViewer = ({ logsUrl }) => {
           href={logsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-400 hover:text-blue-300 text-sm transition-colors duration-200"
+          className="text-rust-300 hover:text-rust-300 text-sm transition-colors duration-200"
         >
           Open Logs <ExternalLink className="h-4 w-4 inline-block ml-1" />
         </a>
       </div>
 
       {isLogsVisible && (
-        <div className="bg-gray-800/50 mt-4 p-4 rounded-lg max-h-64 overflow-auto">
+        <div className="bg-ink-820/50 mt-4 p-4 rounded-lg max-h-64 overflow-auto">
           {isLoading ? (
-            <p className="text-blue-300">Loading chat logs...</p>
+            <p className="text-rust-300">Loading chat logs...</p>
           ) : (
-            <pre className="text-gray-300 whitespace-pre-wrap">
+            <pre className="text-paper-300 whitespace-pre-wrap font-mono">
               {chatLogs}
             </pre>
           )}
@@ -65,14 +65,14 @@ const ChatLogsViewer = ({ logsUrl }) => {
 const GoogleInfo = ({ data }) => {
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-br from-blue-900 to-gray-800 p-6 rounded-lg shadow-lg border border-blue-700/20">
+      <div className="bg-ink-820 p-6 rounded-lg shadow-lg border border-pf-google/20">
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
-            <span className="text-white font-bold text-xl">
+          <div className="w-12 h-12 rounded-full bg-pf-google flex items-center justify-center">
+            <span className="text-[#fdf3ee] font-bold text-xl">
               {data.email.charAt(0).toUpperCase()}
             </span>
           </div>
-          <h3 className="text-white text-2xl font-bold">{data.email}</h3>
+          <h3 className="text-pf-google text-2xl font-bold font-mono">{data.email}</h3>
         </div>
         <ChatLogsViewer logsUrl={data.logs[0]} />
       </div>

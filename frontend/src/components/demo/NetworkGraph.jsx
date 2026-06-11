@@ -9,13 +9,13 @@ import { Play, Pause } from "lucide-react";
 // to watch the network form over the observed window.
 
 const LINK_COLOR = {
-  follow: "#3b82f6",
-  mutual: "#22c55e",
-  message: "#a855f7",
-  mention: "#f59e0b",
-  reply: "#14b8a6",
+  follow: "#5a86c0",
+  mutual: "#45a06a",
+  message: "#9b7bc0",
+  mention: "#d99a32",
+  reply: "#3f9aa0",
 };
-const CLUSTER_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#a855f7", "#ec4899"];
+const CLUSTER_COLORS = ["#c0492e", "#d99a32", "#45a06a", "#9b7bc0", "#cf6a96"];
 
 const fmtDate = (ms) =>
   new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -58,29 +58,29 @@ export default function NetworkGraph({ network }) {
   const activeNodeIds = new Set(activeLinks.flatMap((l) => [l.source, l.target]));
 
   return (
-    <div className="bg-gray-900/70 border border-gray-700 rounded-lg p-3">
+    <div className="bg-ink-900/70 border border-ink-700 rounded-lg p-3">
       <svg viewBox="0 0 1000 640" className="w-full h-auto" role="img" aria-label="Cross-platform interaction graph">
         {activeLinks.map((l, i) => {
           const a = byId[l.source];
           const b = byId[l.target];
           if (!a || !b) return null;
           return (
-            <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={LINK_COLOR[l.type] || "#6b7280"} strokeWidth="2" strokeOpacity="0.55" />
+            <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={LINK_COLOR[l.type] || "#6b6253"} strokeWidth="2" strokeOpacity="0.55" />
           );
         })}
         {network.nodes.map((n) => {
           const on = n.kind === "self" || activeNodeIds.has(n.id);
           const r = n.kind === "self" ? 22 : n.crossPlatform ? 13 : 9;
-          const fill = n.kind === "self" ? CLUSTER_COLORS[n.cluster % CLUSTER_COLORS.length] : n.crossPlatform ? "#f59e0b" : "#64748b";
+          const fill = n.kind === "self" ? CLUSTER_COLORS[n.cluster % CLUSTER_COLORS.length] : n.crossPlatform ? "#d99a32" : "#5c5346";
           return (
             <g key={n.id} opacity={on ? 1 : 0.18}>
-              <circle cx={n.x} cy={n.y} r={r} fill={fill} fillOpacity={n.kind === "self" ? 0.9 : 0.85} stroke="#0f172a" strokeWidth="2" />
+              <circle cx={n.x} cy={n.y} r={r} fill={fill} fillOpacity={n.kind === "self" ? 0.9 : 0.85} stroke="#0c0a08" strokeWidth="2" />
               {n.kind === "self" && (
-                <text x={n.x} y={n.y + 4} fill="#0b1220" fontSize="12" fontWeight="700" textAnchor="middle">
+                <text x={n.x} y={n.y + 4} fill="#0c0a08" fontSize="12" fontWeight="700" textAnchor="middle">
                   {n.platform[0].toUpperCase()}
                 </text>
               )}
-              <text x={n.x} y={n.y + r + 14} fill={n.kind === "self" ? "#e5e7eb" : "#9ca3af"} fontSize={n.kind === "self" ? 14 : 12} textAnchor="middle">
+              <text x={n.x} y={n.y + r + 14} fill={n.kind === "self" ? "#e6dccb" : "#998f7e"} fontSize={n.kind === "self" ? 14 : 12} textAnchor="middle">
                 {n.kind === "self" ? n.platform : `@${n.label}`}
               </text>
             </g>
@@ -92,7 +92,7 @@ export default function NetworkGraph({ network }) {
       <div className="flex items-center gap-3 px-1 pt-2">
         <button
           onClick={() => setPlaying((p) => !p)}
-          className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white"
+          className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-rust-500 hover:bg-rust-400 text-paper-50"
           aria-label={playing ? "Pause" : "Play timeline"}
         >
           {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -107,23 +107,23 @@ export default function NetworkGraph({ network }) {
             setPlaying(false);
             setT(Number(e.target.value));
           }}
-          className="flex-1 accent-blue-500"
+          className="flex-1 accent-rust-500"
           aria-label="Interaction timeline"
         />
-        <span className="shrink-0 text-xs text-gray-300 tabular-nums w-44 text-right">
+        <span className="shrink-0 text-xs text-paper-300 tabular-nums w-44 text-right font-mono">
           {fmtDate(t)} · {activeLinks.length}/{network.links.length} interactions
         </span>
       </div>
 
       {/* legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 px-1 pt-2 text-xs text-gray-400">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-1 pt-2 text-xs text-mute">
         {Object.entries(LINK_COLOR).map(([type, c]) => (
           <span key={type} className="inline-flex items-center gap-1">
             <span className="inline-block w-4 h-0.5" style={{ background: c }} /> {type}
           </span>
         ))}
         <span className="inline-flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full" style={{ background: "#f59e0b" }} /> contact on 2+ platforms
+          <span className="inline-block w-3 h-3 rounded-full" style={{ background: "#d99a32" }} /> contact on 2+ platforms
         </span>
       </div>
     </div>

@@ -18,16 +18,16 @@ const DriveFileCard = ({ file }) => {
   const closeViewer = () => setIsViewerOpen(false);
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-700/40 hover:border-blue-500/50 transition-all duration-300 ease-in-out">
+    <div className="bg-ink-820 p-4 rounded-lg shadow-lg border border-ink-700 hover:border-rust-500/40 transition-all duration-300 ease-in-out">
       <div className="flex items-center space-x-4">
-        <div className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
+        <div className="p-3 rounded-full bg-rust-500/10 text-rust-300">
           {getFileIcon(file.mimeType)}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-white text-lg font-semibold truncate">
+          <h4 className="text-paper-50 text-lg font-semibold truncate">
             {file.name}
           </h4>
-          <p className="text-blue-400 text-sm">
+          <p className="text-mute text-sm font-mono">
             {new Date(file.createdTime).toLocaleString()}
           </p>
         </div>
@@ -35,7 +35,7 @@ const DriveFileCard = ({ file }) => {
       <div className="mt-4 flex items-center justify-between">
         <button
           onClick={openViewer}
-          className="text-blue-400 hover:text-blue-300 transition-colors duration-200 text-sm font-medium flex items-center space-x-1"
+          className="text-rust-300 hover:text-rust-400 transition-colors duration-200 text-sm font-medium flex items-center space-x-1"
         >
           <FileText className="w-4 h-4" />
           <span>View Details</span>
@@ -44,7 +44,7 @@ const DriveFileCard = ({ file }) => {
           href={file.webViewLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-400 hover:text-blue-300 flex items-center space-x-1 transition-colors duration-200 text-sm font-medium"
+          className="text-rust-300 hover:text-rust-400 flex items-center space-x-1 transition-colors duration-200 text-sm font-medium"
         >
           <span>Open File</span>
           <ExternalLink className="w-4 h-4" />
@@ -57,31 +57,31 @@ const DriveFileCard = ({ file }) => {
           onClick={closeViewer}
         >
           <div
-            className="bg-gray-900 p-6 rounded-lg relative max-w-lg w-full text-white shadow-xl"
+            className="bg-ink-820 border border-ink-700 p-6 rounded-lg relative max-w-lg w-full text-paper-50 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={closeViewer}
-              className="absolute top-3 right-3 bg-blue-600 p-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg"
+              className="absolute top-3 right-3 bg-rust-500 p-2 rounded-full hover:bg-rust-400 transition-colors duration-200 shadow-lg"
               aria-label="Close viewer"
             >
-              <X className="h-5 w-5 text-white" />
+              <X className="h-5 w-5 text-[#fdf3ee]" />
             </button>
-            <h3 className="text-2xl font-bold mb-4">{file.name}</h3>
+            <h3 className="text-2xl font-bold font-serif mb-4">{file.name}</h3>
             <div className="space-y-2">
               <p className="text-sm flex items-center space-x-2">
-                <span className="font-semibold text-blue-400">Type:</span>
+                <span className="font-semibold text-rust-300">Type:</span>
                 <span className="flex items-center space-x-1">
                   {getFileIcon(file.mimeType)}
                   <span>{file.mimeType}</span>
                 </span>
               </p>
               <p className="text-sm flex items-center space-x-2">
-                <span className="font-semibold text-blue-400">Size:</span>
+                <span className="font-semibold text-rust-300">Size:</span>
                 <span>{(file.size / 1024).toFixed(2)} KB</span>
               </p>
               <p className="text-sm flex items-center space-x-2">
-                <span className="font-semibold text-blue-400">Created:</span>
+                <span className="font-semibold text-rust-300">Created:</span>
                 <span>{new Date(file.createdTime).toLocaleString()}</span>
               </p>
             </div>
@@ -90,7 +90,7 @@ const DriveFileCard = ({ file }) => {
                 href={file.webViewLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] rounded-lg transition-colors duration-200"
               >
                 <span>Open File</span>
                 <ExternalLink className="w-4 h-4" />
@@ -109,17 +109,17 @@ const GoogleDriveFiles = ({ user }) => {
   const toggleFiles = () => setIsExpanded(!isExpanded);
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 to-blue-900 p-6 rounded-xl shadow-lg border border-blue-700/30">
+    <div className="bg-ink-820 p-6 rounded-xl shadow-lg border border-ink-700">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <Avatar>
             <img src={`https://api.dicebear.com/6.x/initials/svg?seed=${user.email}`} alt={user.email} />
           </Avatar>
-          <h3 className="text-xl font-bold text-white">{user.email}</h3>
+          <h3 className="text-xl font-bold font-serif text-paper-50">{user.email}</h3>
         </div>
         <button
           onClick={toggleFiles}
-          className="text-blue-400 hover:text-blue-300 flex items-center space-x-2 transition-colors duration-200"
+          className="text-rust-300 hover:text-rust-400 flex items-center space-x-2 transition-colors duration-200"
         >
           <span>{isExpanded ? "Hide Files" : "Show Files"}</span>
           {isExpanded ? (
@@ -145,7 +145,7 @@ const GoogleDriveFiles = ({ user }) => {
 
 const GoogleDriveUsers = ({ users }) => {
   if (!users || !Array.isArray(users)) {
-    return <p className="text-white">No files available</p>;
+    return <p className="text-paper-50">No files available</p>;
   }
 
   return (

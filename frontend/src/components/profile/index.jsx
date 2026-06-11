@@ -127,27 +127,27 @@ const ProfilePage = () => {
   }
   
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-ink-900">
       <div className="text-center space-y-4">
-        <Skeleton className="h-12 w-12 rounded-full bg-gray-700 mx-auto" />
-        <Skeleton className="h-4 w-48 bg-gray-700 mx-auto" />
-        <Skeleton className="h-4 w-32 bg-gray-700 mx-auto" />
+        <Skeleton className="h-12 w-12 rounded-full bg-ink-780 mx-auto" />
+        <Skeleton className="h-4 w-48 bg-ink-780 mx-auto" />
+        <Skeleton className="h-4 w-32 bg-ink-780 mx-auto" />
       </div>
     </div>
   )
-  
+
   if (error) return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 p-6">
-      <Card className="max-w-md w-full bg-gray-800 text-white border-red-500">
+    <div className="flex min-h-screen items-center justify-center bg-ink-900 p-6">
+      <Card className="max-w-md w-full bg-ink-820 text-paper-50 border-signal-err">
         <CardHeader>
-          <CardTitle className="flex items-center text-red-500">
+          <CardTitle className="flex items-center font-serif text-signal-err">
             <AlertCircle className="mr-2" />
             Profile Error
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-300 mb-4">{error}</p>
-          <p className="text-sm text-gray-400">Please check your connection or try again later.</p>
+          <p className="text-paper-300 mb-4">{error}</p>
+          <p className="text-sm text-mute">Please check your connection or try again later.</p>
         </CardContent>
       </Card>
     </div>
@@ -160,55 +160,55 @@ const ProfilePage = () => {
   const displayedSearchHistory = sortedSearchHistory?.slice(0, searchHistoryLimit)
 
   return (
-    <div className="min-h-screen pt-20 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-20 bg-ink-900 text-paper-50 py-12 px-4 sm:px-6 lg:px-8">
       <Toaster richColors />
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Profile Header */}
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-ink-820 border-ink-700">
           <CardHeader className="pb-0">
             <div className="flex items-center space-x-4">
-              <Avatar className="h-20 w-20 border-2 border-blue-500">
+              <Avatar className="h-20 w-20 border-2 border-rust-500">
                 <AvatarImage src={`https://api.dicebear.com/6.x/initials/svg?seed=${user.name}`} alt={user.name} />
                 <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+                  <h1 className="text-3xl font-bold font-serif tracking-tight text-paper-50">
                     {user.name}
                   </h1>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-gray-300 bg-slate-500 hover:text-white hover:bg-gray-700"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-paper-300 bg-ink-820 border-ink-700 hover:text-paper-50 hover:bg-ink-740"
                     onClick={() => setIsEditing(true)}
                   >
                     <Edit className="mr-2 h-4 w-4" /> Edit Profile
                   </Button>
                 </div>
-                <p className="text-gray-400 mt-1">Joined on {new Date(user.createdAt).toLocaleDateString()}</p>
+                <p className="text-mute mt-1">Joined on {new Date(user.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-6 grid md:grid-cols-3 gap-6">
             <div className="flex items-center space-x-2">
-              <Mail className="text-blue-400" />
+              <Mail className="text-rust-300" />
               <div>
-                <p className="text-sm text-gray-400">Email Address</p>
-                <p className="font-medium text-white">{user.email}</p>
+                <p className="text-sm text-mute">Email Address</p>
+                <p className="font-medium text-paper-50">{user.email}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <User className="text-purple-400" />
+              <User className="text-[#b39bd6]" />
               <div>
-                <p className="text-sm text-gray-400">Account Type</p>
-                <p className="font-medium text-white">{user.isAdmin ? "Administrator" : "Standard User"}</p>
+                <p className="text-sm text-mute">Account Type</p>
+                <p className="font-medium text-paper-50">{user.isAdmin ? "Administrator" : "Standard User"}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <Calendar className="text-green-400" />
+              <Calendar className="text-signal-ok" />
               <div>
-                <p className="text-sm text-gray-400">Member Since</p>
-                <p className="font-medium text-white">{new Date(user.createdAt).toLocaleDateString()}</p>
+                <p className="text-sm text-mute">Member Since</p>
+                <p className="font-medium text-paper-50">{new Date(user.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
           </CardContent>
@@ -217,47 +217,47 @@ const ProfilePage = () => {
         {/* Edit Profile Modal */}
         {isEditing && (
           <Dialog open={isEditing} onOpenChange={setIsEditing}>
-            <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 shadow-2xl rounded-xl">
+            <DialogContent className="sm:max-w-[425px] bg-ink-820 border-ink-700 shadow-2xl rounded-xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500">
+                <DialogTitle className="text-2xl font-bold font-serif text-paper-50">
                   Edit Profile
                 </DialogTitle>
-                <p className="text-sm text-slate-400">Update your personal information</p>
+                <p className="text-sm text-mute">Update your personal information</p>
               </DialogHeader>
               <div className="grid gap-6 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right text-slate-300 font-medium">Name</Label>
-                  <Input 
-                    id="name" 
-                    value={editName} 
-                    onChange={(e) => setEditName(e.target.value)} 
-                    className="col-span-3 bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-teal-500 transition-all duration-300" 
+                  <Label htmlFor="name" className="text-right text-paper-300 font-medium">Name</Label>
+                  <Input
+                    id="name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="col-span-3 bg-ink-850 border-ink-700 text-paper-50 focus:ring-rust-500/40 focus:border-rust-500 transition-all duration-300"
                     placeholder="Enter your full name"
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right text-slate-300 font-medium">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    value={editEmail} 
-                    onChange={(e) => setEditEmail(e.target.value)} 
-                    className="col-span-3 bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-teal-500 transition-all duration-300" 
+                  <Label htmlFor="email" className="text-right text-paper-300 font-medium">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="col-span-3 bg-ink-850 border-ink-700 text-paper-50 focus:ring-rust-500/40 focus:border-rust-500 transition-all duration-300"
                     placeholder="Enter your email address"
                   />
                 </div>
               </div>
               <div className="flex justify-end space-x-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setIsEditing(false)}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700 bg-slate-600 border-slate-600 transition-all duration-300"
+                  className="text-paper-300 hover:text-paper-50 hover:bg-ink-740 bg-ink-820 border-ink-700 transition-all duration-300"
                 >
                   <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
-                <Button 
+                <Button
                   onClick={handleUpdateUser}
-                  className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white shadow-md hover:shadow-xl transition-all duration-300"
+                  className="bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] shadow-md hover:shadow-xl transition-all duration-300"
                 >
                   <Save className="mr-2 h-4 w-4" /> Save Changes
                 </Button>
@@ -267,17 +267,17 @@ const ProfilePage = () => {
         )}
 
        {/* Search History */}
-<Card className="bg-gray-800 border-gray-700">
+<Card className="bg-ink-820 border-ink-700">
   <CardHeader>
-    <CardTitle className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+    <CardTitle className="text-2xl font-bold font-serif tracking-tight text-paper-50">
       Search History
     </CardTitle>
   </CardHeader>
   <CardContent>
     <div className="flex items-center justify-between mb-4">
-      <p className="text-gray-400">Show recent searches:</p>
-      <Select 
-        value={searchHistoryLimit === Infinity ? "all" : searchHistoryLimit.toString()} 
+      <p className="text-mute">Show recent searches:</p>
+      <Select
+        value={searchHistoryLimit === Infinity ? "all" : searchHistoryLimit.toString()}
         onValueChange={(value) => {
           if (value === "all") {
             setSearchHistoryLimit(Infinity);
@@ -286,10 +286,10 @@ const ProfilePage = () => {
           }
         }}
       >
-        <SelectTrigger className="w-[120px] bg-gray-700 border-gray-600 text-white">
+        <SelectTrigger className="w-[120px] bg-ink-850 border-ink-700 text-paper-50">
           <SelectValue placeholder="Select" />
         </SelectTrigger>
-        <SelectContent className="bg-gray-800 text-white border-gray-700">
+        <SelectContent className="bg-ink-820 text-paper-50 border-ink-700">
           <SelectItem value="5">5</SelectItem>
           <SelectItem value="10">10</SelectItem>
           <SelectItem value="15">15</SelectItem>
@@ -301,23 +301,23 @@ const ProfilePage = () => {
     {displayedSearchHistory && displayedSearchHistory.length > 0 ? (
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-700">
+          <thead className="bg-ink-850">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Platform</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Username</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+              <th className="px-6 py-3 text-left text-xs font-mono font-semibold text-mute uppercase tracking-wider border-b border-ink-700">Platform</th>
+              <th className="px-6 py-3 text-left text-xs font-mono font-semibold text-mute uppercase tracking-wider border-b border-ink-700">Username</th>
+              <th className="px-6 py-3 text-left text-xs font-mono font-semibold text-mute uppercase tracking-wider border-b border-ink-700">Date</th>
             </tr>
           </thead>
-          <tbody className="bg-gray-800 divide-y divide-gray-700">
+          <tbody>
             {displayedSearchHistory.map((history, index) => (
-              <tr key={index} className="hover:bg-gray-700 transition-colors">
+              <tr key={index} className="border-b border-ink-700 hover:bg-ink-820 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <Badge variant="outline" className="bg-blue-900 text-blue-300 border-blue-500">
+                  <Badge variant="outline" className="bg-signal-info/10 text-signal-info border-signal-info/40 font-mono">
                     {history.platform}
                   </Badge>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{history.identifier}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-paper-100">{history.identifier}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-mute">
                   {new Date(history.timestamp).toLocaleString()}
                 </td>
               </tr>
@@ -327,11 +327,11 @@ const ProfilePage = () => {
       </div>
     ) : (
       <div className="text-center py-8">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
         </svg>
-        <p className="text-lg font-semibold text-gray-400">No search history available</p>
-        <p className="text-sm text-gray-500">Your recent searches will appear here</p>
+        <p className="text-lg font-semibold text-mute">No search history available</p>
+        <p className="text-sm text-faint">Your recent searches will appear here</p>
       </div>
     )}
   </CardContent>

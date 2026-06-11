@@ -9,7 +9,7 @@ const FacebookData = ({ facebookData }) => {
   const [selectedPost, setSelectedPost] = useState(null);
   const [selectedMessage, setSelectedMessage] = useState(null);
 
-  if (!facebookData) return <p className="text-gray-400">No data available.</p>;
+  if (!facebookData) return <p className="text-mute">No data available.</p>;
 
   // Extracting data from the provided structure
   const timelines = [
@@ -35,12 +35,12 @@ const FacebookData = ({ facebookData }) => {
   const closeMessageViewer = () => setSelectedMessage(null);
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl shadow-lg mt-6 border border-gray-700/20">
-      <h3 className="text-2xl font-bold text-blue-400 mb-4">Facebook Details</h3>
+    <div className="bg-ink-820 p-6 rounded-xl shadow-lg mt-6 border border-ink-700/20">
+      <h3 className="text-2xl font-bold text-pf-facebook mb-4 font-serif">Facebook Details</h3>
 
       {/* Username */}
-      <div className="text-lg font-semibold text-gray-300 mb-4">
-        Username: <span className="text-blue-300">{facebookData.username}</span>
+      <div className="text-lg font-semibold text-paper-300 mb-4">
+        Username: <span className="text-pf-facebook font-mono">{facebookData.username}</span>
       </div>
 
       {/* Profile Picture */}
@@ -105,7 +105,7 @@ const FacebookData = ({ facebookData }) => {
       {/* Friends List */}
       {friendsList.length > 0 && (
         <div className="mt-6">
-          <h4 className="text-lg font-bold text-pink-500 mb-2">Friends:</h4>
+          <h4 className="text-lg font-bold text-pf-facebook mb-2 font-serif">Friends:</h4>
           <ul className="space-y-4">
             {friendsList.map((friend, index) => (
               <li key={index} className="flex items-center space-x-4">
@@ -115,12 +115,12 @@ const FacebookData = ({ facebookData }) => {
                   className="w-12 h-12 rounded-full object-cover"
                 />
                 <div>
-                  <p className="text-blue-300 font-semibold">{friend.userName}</p>
+                  <p className="text-pf-facebook font-semibold font-mono">{friend.userName}</p>
                   <a
                     href={friend.profileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 underline"
+                    className="text-rust-300 hover:text-rust-300 underline"
                   >
                     View Profile
                   </a>
@@ -135,10 +135,10 @@ const FacebookData = ({ facebookData }) => {
 };
 
 const ExpandableSection = ({ title, data, isExpanded, toggleExpand, onItemClick }) => (
-  <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm mb-6">
+  <div className="bg-ink-820/50 rounded-xl p-4 backdrop-blur-sm mb-6">
     <button
       onClick={toggleExpand}
-      className="flex items-center justify-between w-full text-blue-400 hover:text-blue-300 transition-all duration-200 group"
+      className="flex items-center justify-between w-full text-pf-facebook hover:text-pf-facebook transition-all duration-200 group"
       aria-expanded={isExpanded}
     >
       <div className="flex items-center space-x-2">
@@ -156,7 +156,7 @@ const ExpandableSection = ({ title, data, isExpanded, toggleExpand, onItemClick 
       {data.map((item, index) => (
         <div
           key={index}
-          className="relative group bg-gray-700/50 rounded-lg cursor-pointer overflow-hidden aspect-video"
+          className="relative group bg-ink-780/50 rounded-lg cursor-pointer overflow-hidden aspect-video"
           onClick={() => onItemClick(item)}
         >
           <img
@@ -166,7 +166,7 @@ const ExpandableSection = ({ title, data, isExpanded, toggleExpand, onItemClick 
             loading="lazy"
           />
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-            <span className="text-white text-sm font-medium">View Full</span>
+            <span className="text-paper-50 text-sm font-medium">View Full</span>
           </div>
         </div>
       ))}
@@ -187,7 +187,7 @@ const ImageViewer = ({ image, onClose }) => (
       />
       <button
         onClick={onClose}
-        className="absolute -top-2 -right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg"
+        className="absolute -top-2 -right-2 bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] p-2 rounded-full transition-colors duration-200 shadow-lg"
         aria-label="Close viewer"
       >
         <X className="h-5 w-5" />

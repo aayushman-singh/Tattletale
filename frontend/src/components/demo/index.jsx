@@ -36,13 +36,13 @@ const PIPELINE_STEPS = [
 ];
 
 const confColor = {
-  high: "text-green-400 border-green-500/40 bg-green-500/10",
-  medium: "text-amber-400 border-amber-500/40 bg-amber-500/10",
-  low: "text-gray-400 border-gray-500/40 bg-gray-500/10",
+  high: "text-signal-ok border-signal-ok/40 bg-signal-ok/10",
+  medium: "text-signal-warn border-signal-warn/40 bg-signal-warn/10",
+  low: "text-mute border-ink-700 bg-ink-780",
 };
 
 const Mono = ({ children }) => (
-  <span className="font-mono break-all text-xs text-blue-300">{children}</span>
+  <span className="font-mono break-all text-xs text-rust-300">{children}</span>
 );
 
 const DemoCase = () => {
@@ -93,23 +93,23 @@ const DemoCase = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 pt-20 pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen bg-ink-900 pt-20 pb-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
         {/* Hero */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full border border-blue-500/40 bg-blue-500/10 text-blue-300 text-xs font-medium">
+          <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full border border-signal-warn/40 bg-signal-warn/10 text-[#e8c98a] text-xs font-medium font-mono">
             <ShieldCheck className="w-4 h-4" /> Replay mode · synthetic data · no logins
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold font-serif tracking-tight text-paper-50 mb-4">
             Run a{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
+            <span className="font-serif italic text-rust-300">
               demo case
             </span>
           </h1>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg text-paper-300 max-w-2xl mx-auto">
             The live scraper needs nine platform logins and a headed browser, so it can&apos;t run
             publicly. This replay reads a 100% synthetic fixture and produces the{" "}
-            <span className="text-white font-medium">real</span> pipeline output — a JSON report, a
+            <span className="text-paper-50 font-medium">real</span> pipeline output — a JSON report, a
             SHA-256 chain-of-custody manifest, and a downloadable PDF. No backend, no credentials, no
             network scrape.
           </p>
@@ -121,7 +121,7 @@ const DemoCase = () => {
             size="lg"
             onClick={runDemo}
             disabled={state === "running"}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8"
+            className="bg-rust-500 hover:bg-rust-400 text-paper-50 px-8"
           >
             {state === "running" ? (
               <>
@@ -158,20 +158,20 @@ const DemoCase = () => {
                   key={step.key}
                   className={`transition-all duration-300 ${
                     reached
-                      ? "bg-gray-800/70 border-blue-500/50"
-                      : "bg-gray-800/30 border-gray-700 opacity-50"
+                      ? "bg-ink-820/70 border-rust-500/50"
+                      : "bg-ink-820/30 border-ink-700 opacity-50"
                   }`}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-2">
                       {reached ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
+                        <CheckCircle2 className="w-5 h-5 text-signal-ok" />
                       ) : (
-                        <Icon className="w-5 h-5 text-gray-500" />
+                        <Icon className="w-5 h-5 text-faint" />
                       )}
-                      <span className="text-sm font-semibold text-white">{step.label}</span>
+                      <span className="text-sm font-semibold font-serif text-paper-50">{step.label}</span>
                     </div>
-                    <p className="text-xs text-gray-400">{step.blurb}</p>
+                    <p className="text-xs text-mute">{step.blurb}</p>
                   </CardContent>
                 </Card>
               );
@@ -183,25 +183,25 @@ const DemoCase = () => {
         {state === "done" && report && (
           <div className="space-y-8">
             {/* Synthetic notice */}
-            <Card className="bg-amber-900/20 border-amber-500/40">
+            <Card className="bg-signal-warn/10 border-signal-warn/40">
               <CardContent className="p-4 flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-400 mt-0.5" />
-                <p className="text-amber-200/90 text-sm">{report.notice}</p>
+                <AlertTriangle className="w-5 h-5 text-signal-warn mt-0.5" />
+                <p className="text-[#e8c98a] text-sm">{report.notice}</p>
               </CardContent>
             </Card>
 
             {/* Case header */}
-            <Card className="bg-gray-800/60 border-gray-700">
+            <Card className="bg-ink-820/60 border-ink-700">
               <CardContent className="p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-3">
                   <div>
-                    <h2 className="text-2xl font-bold text-white">
+                    <h2 className="text-2xl font-bold font-serif text-paper-50">
                       {report.target.displayName}{" "}
-                      <span className="text-gray-400 text-lg">@{report.handle}</span>
+                      <span className="text-mute text-lg font-mono">@{report.handle}</span>
                     </h2>
-                    <p className="text-gray-400 mt-1">{report.target.summary}</p>
+                    <p className="text-mute mt-1">{report.target.summary}</p>
                   </div>
-                  <div className="text-right text-xs text-gray-500">
+                  <div className="text-right text-xs text-faint">
                     <div>Generated</div>
                     <Mono>{report.generatedAt}</Mono>
                     <div className="mt-1">{report.platformCount} platforms</div>
@@ -211,7 +211,7 @@ const DemoCase = () => {
                   {report.target.tags.map((t) => (
                     <span
                       key={t}
-                      className="px-2 py-0.5 rounded text-xs border border-gray-600 text-gray-300"
+                      className="px-2 py-0.5 rounded text-xs border border-ink-700 text-paper-300"
                     >
                       {t}
                     </span>
@@ -222,22 +222,22 @@ const DemoCase = () => {
 
             {/* Intelligence brief */}
             {report.brief && (
-              <Card className="bg-blue-950/30 border-blue-500/40">
+              <Card className="bg-ink-820/60 border-rust-500/40">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-5 h-5 text-blue-300" />
-                    <h3 className="text-lg font-bold text-white">Intelligence brief</h3>
-                    <span className="text-[11px] px-2 py-0.5 rounded-full border border-blue-500/40 text-blue-300">
+                    <Sparkles className="w-5 h-5 text-rust-300" />
+                    <h3 className="text-lg font-bold font-serif text-paper-50">Intelligence brief</h3>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full border border-rust-500/40 text-rust-300">
                       {report.brief.generator}
                     </span>
                     {report.brief.validated && (
-                      <span className="text-[11px] px-2 py-0.5 rounded-full border border-green-500/40 text-green-300 inline-flex items-center gap-1">
+                      <span className="text-[11px] px-2 py-0.5 rounded-full border border-signal-ok/40 text-signal-ok inline-flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> fact-validated
                       </span>
                     )}
                   </div>
-                  <p className="text-gray-100 leading-relaxed">{report.brief.text}</p>
-                  <p className="text-gray-500 text-xs mt-3">
+                  <p className="text-paper-300 leading-relaxed">{report.brief.text}</p>
+                  <p className="text-faint text-xs mt-3">
                     The summarizer is shown only structured facts; every name and number in this
                     paragraph is checked against those facts before it ships — a hallucinated place
                     or statistic fails the build, it never reaches the report.
@@ -248,52 +248,52 @@ const DemoCase = () => {
 
             {/* Findings */}
             <div>
-              <h3 className="text-xl font-bold text-white mb-4">Per-platform findings</h3>
+              <h3 className="text-xl font-bold font-serif text-paper-50 mb-4">Per-platform findings</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 {report.findings.map((f) => (
-                  <Card key={`${f.platform}-${f.username}`} className="bg-gray-800/60 border-gray-700">
+                  <Card key={`${f.platform}-${f.username}`} className="bg-ink-820/60 border-ink-700">
                     <CardContent className="p-5">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-bold uppercase tracking-wide text-blue-400">
+                        <span className="text-sm font-bold uppercase tracking-wide text-rust-300">
                           {f.platform}
                         </span>
                         {f.verified && (
-                          <span className="text-xs text-green-400 border border-green-500/40 bg-green-500/10 px-2 py-0.5 rounded">
+                          <span className="text-xs text-signal-ok border border-signal-ok/40 bg-signal-ok/10 px-2 py-0.5 rounded">
                             verified
                           </span>
                         )}
                       </div>
-                      <div className="text-white font-medium">
+                      <div className="text-paper-50 font-medium">
                         {f.displayName}{" "}
                         <a
                           href={f.url}
-                          className="text-gray-400 text-sm hover:text-blue-300"
+                          className="text-mute text-sm hover:text-rust-300 font-mono"
                           target="_blank"
                           rel="noreferrer"
                         >
                           @{f.username}
                         </a>
                       </div>
-                      <p className="text-gray-400 text-sm mt-1">{f.bio}</p>
-                      <div className="flex gap-4 mt-3 text-sm text-gray-300">
+                      <p className="text-mute text-sm mt-1">{f.bio}</p>
+                      <div className="flex gap-4 mt-3 text-sm text-paper-300">
                         <span>
-                          <span className="text-white font-semibold">
+                          <span className="text-paper-50 font-semibold">
                             {f.metrics.followers.toLocaleString()}
                           </span>{" "}
                           followers
                         </span>
                         <span>
-                          <span className="text-white font-semibold">
+                          <span className="text-paper-50 font-semibold">
                             {f.metrics.posts.toLocaleString()}
                           </span>{" "}
                           posts
                         </span>
                       </div>
                       {f.samplePosts?.length > 0 && (
-                        <ul className="mt-3 space-y-1 border-t border-gray-700 pt-3">
+                        <ul className="mt-3 space-y-1 border-t border-ink-700 pt-3">
                           {f.samplePosts.map((p) => (
-                            <li key={p.id} className="text-xs text-gray-400">
-                              <span className="text-gray-500">
+                            <li key={p.id} className="text-xs text-mute">
+                              <span className="text-faint font-mono">
                                 {new Date(p.timestamp).toLocaleDateString()}
                               </span>{" "}
                               — {p.caption}
@@ -310,14 +310,14 @@ const DemoCase = () => {
             {/* Cross-identity correlation graph */}
             {correlation && (
               <div>
-                <h3 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
-                  <Share2 className="w-5 h-5 text-blue-400" /> Cross-identity correlation
+                <h3 className="text-xl font-bold font-serif text-paper-50 mb-1 flex items-center gap-2">
+                  <Share2 className="w-5 h-5 text-rust-300" /> Cross-identity correlation
                 </h3>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-mute text-sm mb-4">
                   Each account is scored against every other on handle, display name, writing-style
                   fingerprint, posting-time profile and shared vocabulary. Strong links collapse into
                   one identity; a same-named account with different behaviour is{" "}
-                  <span className="text-amber-300">flagged but kept separate</span> — avoiding false
+                  <span className="text-signal-warn">flagged but kept separate</span> — avoiding false
                   attribution.
                 </p>
                 <IdentityGraph correlation={correlation} />
@@ -327,10 +327,10 @@ const DemoCase = () => {
             {/* Cross-platform interaction network with a time scrubber */}
             {report.network?.nodes?.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
-                  <Network className="w-5 h-5 text-blue-400" /> Cross-platform network
+                <h3 className="text-xl font-bold font-serif text-paper-50 mb-1 flex items-center gap-2">
+                  <Network className="w-5 h-5 text-rust-300" /> Cross-platform network
                 </h3>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-mute text-sm mb-4">
                   Who the target interacts with across platforms, grouped by the resolved identity.
                   Larger amber nodes are contacts reached on more than one platform. Drag the scrubber
                   (or press play) to watch the network form over the {Math.round(
@@ -344,74 +344,74 @@ const DemoCase = () => {
 
             {/* Computed matches (textual summary derived from the engine) */}
             <div>
-              <h3 className="text-xl font-bold text-white mb-4">Computed identity matches</h3>
+              <h3 className="text-xl font-bold font-serif text-paper-50 mb-4">Computed identity matches</h3>
               <div className="space-y-2">
                 {report.crossPlatformMatches.map((m, i) => (
-                  <Card key={i} className="bg-gray-800/60 border-gray-700">
+                  <Card key={i} className="bg-ink-820/60 border-ink-700">
                     <CardContent className="p-4 flex flex-wrap items-center gap-3">
-                      <span className="font-mono text-blue-300">@{m.username}</span>
+                      <span className="font-mono text-rust-300">@{m.username}</span>
                       <span
                         className={`text-xs px-2 py-0.5 rounded border ${confColor[m.band]}`}
                       >
                         {m.band}
                       </span>
-                      <span className="text-gray-400 text-sm">{m.platforms.join(" · ")}</span>
-                      <span className="text-gray-500 text-xs basis-full">{m.evidence}</span>
+                      <span className="text-mute text-sm font-mono">{m.platforms.join(" · ")}</span>
+                      <span className="text-faint text-xs basis-full">{m.evidence}</span>
                     </CardContent>
                   </Card>
                 ))}
                 {report.crossPlatformMatches.length === 0 && (
-                  <p className="text-gray-500 text-sm">No accounts met the merge threshold.</p>
+                  <p className="text-faint text-sm">No accounts met the merge threshold.</p>
                 )}
               </div>
             </div>
 
             {/* Chain of custody */}
             <div>
-              <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-blue-400" /> Chain of custody
+              <h3 className="text-xl font-bold font-serif text-paper-50 mb-2 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-rust-300" /> Chain of custody
               </h3>
-              <p className="text-gray-400 text-sm mb-4">
+              <p className="text-mute text-sm mb-4">
                 Append-only SHA-256 hash chain. Each entry binds an artifact&apos;s content hash to
                 the previous entry — tampering with any artifact breaks the root hash.
               </p>
-              <Card className="bg-gray-900/70 border-gray-700">
+              <Card className="bg-ink-900/70 border-ink-700">
                 <CardContent className="p-5 space-y-4">
                   {custody?.map((e) => (
-                    <div key={e.seq} className="border-b border-gray-800 pb-3 last:border-0 last:pb-0">
-                      <div className="text-sm text-white font-medium">
+                    <div key={e.seq} className="border-b border-ink-700 pb-3 last:border-0 last:pb-0">
+                      <div className="text-sm text-paper-50 font-medium">
                         #{e.seq} {e.step} — {e.artifact}
                       </div>
                       <div className="mt-1 text-xs space-y-0.5">
                         <div>
-                          <span className="text-gray-500">sha256 </span>
+                          <span className="text-faint font-mono">sha256 </span>
                           <Mono>{e.sha256}</Mono>
                         </div>
                         <div>
-                          <span className="text-gray-500">prev&nbsp;&nbsp; </span>
+                          <span className="text-faint font-mono">prev&nbsp;&nbsp; </span>
                           <Mono>{e.prevHash}</Mono>
                         </div>
                         <div>
-                          <span className="text-gray-500">entry&nbsp; </span>
+                          <span className="text-faint font-mono">entry&nbsp; </span>
                           <Mono>{e.entryHash}</Mono>
                         </div>
                       </div>
                     </div>
                   ))}
-                  <div className="pt-2 border-t border-blue-500/30">
-                    <div className="text-xs text-gray-400 mb-1">ROOT HASH (integrity seal)</div>
-                    <div className="font-mono text-sm text-green-400 break-all">
+                  <div className="pt-2 border-t border-rust-500/30">
+                    <div className="text-xs text-mute mb-1">ROOT HASH (integrity seal)</div>
+                    <div className="font-mono text-sm text-signal-ok break-all">
                       {manifest?.rootHash}
                     </div>
                   </div>
                   {manifest?.seal && (
-                    <div className="pt-3 border-t border-gray-800">
-                      <div className="text-xs text-gray-400 mb-1 flex items-center gap-1.5">
-                        <KeyRound className="w-3.5 h-3.5 text-blue-400" />
+                    <div className="pt-3 border-t border-ink-700">
+                      <div className="text-xs text-mute mb-1 flex items-center gap-1.5 font-mono">
+                        <KeyRound className="w-3.5 h-3.5 text-rust-300" />
                         {manifest.seal.algorithm} SIGNATURE over the root hash
                       </div>
                       <Mono>{manifest.seal.signature}</Mono>
-                      <p className="text-gray-500 text-xs mt-2">{manifest.seal.note}</p>
+                      <p className="text-faint text-xs mt-2">{manifest.seal.note}</p>
                     </div>
                   )}
                 </CardContent>
@@ -420,35 +420,35 @@ const DemoCase = () => {
 
             {/* Downloads */}
             <div>
-              <h3 className="text-xl font-bold text-white mb-4">Download the real artifacts</h3>
+              <h3 className="text-xl font-bold font-serif text-paper-50 mb-4">Download the real artifacts</h3>
               <div className="flex flex-wrap gap-3">
                 <a href="/demo/report.pdf" download>
-                  <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white">
+                  <Button className="bg-rust-500 hover:bg-rust-400 text-paper-50">
                     <Download className="w-4 h-4 mr-2" /> report.pdf
                   </Button>
                 </a>
                 <a href="/demo/report.json" download>
-                  <Button variant="outline" className="border-gray-600 text-white bg-gray-800">
+                  <Button variant="outline" className="border-ink-700 text-paper-50 bg-ink-820">
                     <Download className="w-4 h-4 mr-2" /> report.json
                   </Button>
                 </a>
                 <a href="/demo/correlation.json" download>
-                  <Button variant="outline" className="border-gray-600 text-white bg-gray-800">
+                  <Button variant="outline" className="border-ink-700 text-paper-50 bg-ink-820">
                     <Download className="w-4 h-4 mr-2" /> correlation.json
                   </Button>
                 </a>
                 <a href="/demo/manifest.json" download>
-                  <Button variant="outline" className="border-gray-600 text-white bg-gray-800">
+                  <Button variant="outline" className="border-ink-700 text-paper-50 bg-ink-820">
                     <Download className="w-4 h-4 mr-2" /> manifest.json
                   </Button>
                 </a>
                 <a href="/demo/custody-log.json" download>
-                  <Button variant="outline" className="border-gray-600 text-white bg-gray-800">
+                  <Button variant="outline" className="border-ink-700 text-paper-50 bg-ink-820">
                     <Download className="w-4 h-4 mr-2" /> custody-log.json
                   </Button>
                 </a>
               </div>
-              <p className="text-gray-500 text-xs mt-3">
+              <p className="text-faint text-xs mt-3">
                 These files were produced by the actual replay engine
                 (scraper/src/replay) and committed to the repo. The PDF embeds the same
                 chain-of-custody hashes shown above.

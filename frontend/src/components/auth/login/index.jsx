@@ -45,12 +45,12 @@ const Login = () => {
   }
 
   return (
-    <div className="bg-gray-900 min-h-screen text-gray-100">
+    <div className="bg-ink-900 min-h-screen text-paper-50">
       <main className="w-full h-screen flex self-center place-content-center place-items-center">
-        <div className="w-96 bg-gray-800 text-gray-300 space-y-5 p-6 shadow-2xl border border-gray-700 rounded-xl">
+        <div className="w-96 bg-ink-820 text-paper-300 space-y-5 p-6 shadow-2xl border border-ink-700 rounded-xl">
           <div className="text-center">
             <div className="mt-2">
-              <h3 className="text-gray-100 text-xl font-semibold sm:text-2xl">
+              <h3 className="text-paper-50 text-xl font-serif font-semibold sm:text-2xl">
                 Welcome Back
               </h3>
             </div>
@@ -58,7 +58,7 @@ const Login = () => {
 
           <form onSubmit={handleLogin} className="space-y-5">
           <div>
-              <label htmlFor="email" className="text-sm text-gray-400 font-bold">Email</label>
+              <label htmlFor="email" className="text-sm text-mute font-bold font-mono">Email</label>
               <input
             id="email"
                 type="email"
@@ -67,12 +67,12 @@ const Login = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full mt-2 px-3 py-2 text-gray-300 bg-gray-700 outline-none border border-gray-600 focus:border-indigo-500 shadow-sm rounded-lg transition duration-300"
+                className="w-full mt-2 px-3 py-2 text-paper-50 bg-ink-850 outline-none border border-ink-700 focus:ring-rust-500/40 focus:border-rust-500 shadow-sm rounded-lg transition duration-300"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="text-sm text-gray-400 font-bold">
+              <label htmlFor="password" className="text-sm text-mute font-bold font-mono">
                 Password
               </label>
               <input
@@ -83,21 +83,21 @@ const Login = () => {
                 placeholder="example123"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full mt-2 px-3 py-2 text-gray-300 bg-gray-700 outline-none border border-gray-600 focus:border-indigo-500 shadow-sm rounded-lg transition duration-300"
+                className="w-full mt-2 px-3 py-2 text-paper-50 bg-ink-850 outline-none border border-ink-700 focus:ring-rust-500/40 focus:border-rust-500 shadow-sm rounded-lg transition duration-300"
               />
             </div>
 
             {errorMessage && (
-              <span className="text-red-400 font-bold">{errorMessage}</span>
+              <span className="text-signal-err font-bold">{errorMessage}</span>
             )}
 
             <button
               type="submit"
               disabled={isSigningIn || loading}
-              className={`w-full px-4 py-2 text-white font-medium rounded-lg ${
+              className={`w-full px-4 py-2 text-[#fdf3ee] font-medium rounded-lg ${
                 isSigningIn || loading
-                  ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-xl transition duration-300"
+                  ? "bg-ink-740 cursor-not-allowed"
+                  : "bg-rust-500 hover:bg-rust-400 hover:shadow-xl transition duration-300"
               }`}
             >
               {isSigningIn || loading ? "Signing In..." : "Sign In"}
@@ -108,26 +108,26 @@ const Login = () => {
             Don't have an account?{" "}
             <Link
               to="/register"
-              className="hover:underline font-bold text-indigo-400"
+              className="hover:underline font-bold text-rust-300"
             >
               Sign up
             </Link>
           </p>
 
           <div className="flex flex-row text-center w-full">
-            <div className="border-b-2 border-gray-600 mb-2.5 mr-2 w-full"></div>
-            <div className="text-sm font-bold w-fit text-gray-400">OR</div>
-            <div className="border-b-2 border-gray-600 mb-2.5 ml-2 w-full"></div>
+            <div className="border-b-2 border-ink-700 mb-2.5 mr-2 w-full"></div>
+            <div className="text-sm font-bold w-fit text-mute font-mono">OR</div>
+            <div className="border-b-2 border-ink-700 mb-2.5 ml-2 w-full"></div>
           </div>
 
           {/* Add Google Sign-in functionality if required */}
           <button
             disabled={isSigningIn || loading}
             onClick={() => console.log("Google Sign-in not implemented")}
-            className={`w-full flex items-center justify-center gap-x-3 py-2.5 border border-gray-700 rounded-lg text-sm font-medium ${
+            className={`w-full flex items-center justify-center gap-x-3 py-2.5 border border-ink-700 rounded-lg text-sm font-medium ${
               isSigningIn || loading
                 ? "cursor-not-allowed"
-                : "hover:bg-gray-700 transition duration-300 active:bg-gray-800"
+                : "hover:bg-ink-780 transition duration-300 active:bg-ink-820"
             }`}
           >
             <svg

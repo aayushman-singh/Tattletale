@@ -10,7 +10,7 @@ const ImageViewer = ({ image, onClose }) => (
       />
       <button
         onClick={onClose}
-        className="absolute -top-2 -right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg"
+        className="absolute -top-2 -right-2 bg-rust-500 text-[#fdf3ee] p-2 rounded-full hover:bg-rust-400 transition-colors duration-200 shadow-lg"
         aria-label="Close image viewer"
       >
         <X className="h-5 w-5" />

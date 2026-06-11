@@ -26,22 +26,22 @@ import {
 gsap.registerPlugin(ScrollTrigger)
 
 const FeatureCard = ({ icon: Icon, title, description }) => (
-  <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-sm border-gray-700 hover:border-gray-600 transition-all duration-300 group">
+  <Card className="bg-ink-820 backdrop-blur-sm border-ink-700 hover:border-rust-500/40 transition-all duration-300 group">
     <CardContent className="p-6">
-      <div className="mb-4 p-3 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/10 w-fit group-hover:scale-110 transition-transform duration-300">
-        <Icon className="w-6 h-6 text-blue-400" />
+      <div className="mb-4 p-3 rounded-lg bg-rust-500/10 w-fit group-hover:scale-110 transition-transform duration-300">
+        <Icon className="w-6 h-6 text-rust-300" />
       </div>
-      <h3 className="text-lg font-semibold mb-2 text-white">{title}</h3>
-      <p className="text-gray-400">{description}</p>
+      <h3 className="text-lg font-serif font-semibold mb-2 text-paper-50">{title}</h3>
+      <p className="text-mute">{description}</p>
     </CardContent>
   </Card>
 )
 
 const StatCard = ({ number, label }) => (
-  <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-sm border-gray-700">
+  <Card className="bg-ink-820 backdrop-blur-sm border-ink-700">
     <CardContent className="p-6 text-center">
-      <div className="text-3xl font-bold text-white mb-2">{number}</div>
-      <div className="text-gray-400 text-sm">{label}</div>
+      <div className="text-3xl font-bold text-paper-50 mb-2">{number}</div>
+      <div className="text-mute text-sm">{label}</div>
     </CardContent>
   </Card>
 )
@@ -81,39 +81,36 @@ const Home = () => {
   }, [])
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
-      {/* Gradient Backgrounds */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-blue-800/20 via-transparent to-transparent" />
+    <div className="relative min-h-screen bg-ink-900">
 
       <div className="relative pt-16">
         {/* Hero Section */}
         <section className="min-h-[90vh] flex items-center justify-center px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left hero-title">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-white">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold tracking-tight mb-6 text-paper-50">
                 Advanced analytics for{" "}
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
+                <span className="text-rust-400">
                   digital investigations
                 </span>
               </h1>
-              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto lg:mx-0">
+              <p className="text-xl text-paper-300 mb-8 max-w-2xl mx-auto lg:mx-0">
                 Streamline your social media investigations with powerful analytics and automated documentation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                  className="bg-rust-500 hover:bg-rust-400 text-[#fdf3ee]"
                 >
                   <Link to="/services">Start Investigation</Link>
                 </Button>
-                <Button size="lg" variant="outline" className="border-gray-600 text-white bg-gray-800">
+                <Button size="lg" variant="outline" className="border-ink-700 text-paper-50 bg-ink-820">
                   <Link to="/servicesMain">Explore Other Services</Link>
                 </Button>
               </div>
             </div>
             <div className="hidden lg:block relative">
-              <div className="hidden lg:block relative w-full aspect-square rounded-lg overflow-hidden border border-gray-700 bg-gray-800 bg-opacity-50 backdrop-blur-sm">
+              <div className="hidden lg:block relative w-full aspect-square rounded-lg overflow-hidden border border-ink-700 bg-ink-820 backdrop-blur-sm">
                 <img
                   src="/images/post/lp1.jpeg"
                   alt="Analytics Dashboard"
@@ -139,8 +136,8 @@ const Home = () => {
         <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 fade-in">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white">Cutting-edge features</h2>
-              <p className="text-xl text-gray-300">Powerful tools for advanced analytics and investigation</p>
+              <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 text-paper-50">Cutting-edge features</h2>
+              <p className="text-xl text-paper-300">Powerful tools for advanced analytics and investigation</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <FeatureCard
@@ -180,35 +177,35 @@ const Home = () => {
         {/* About Section */}
         <section
           id="about"
-          className="py-20 px-4 sm:px-6 lg:px-8 fade-in bg-gradient-to-b from-transparent to-gray-800"
+          className="py-20 px-4 sm:px-6 lg:px-8 fade-in bg-gradient-to-b from-transparent to-ink-820"
         >
           <div className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-white">Why choose our platform?</h2>
-                <p className="text-gray-300 mb-8">
+                <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-6 text-paper-50">Why choose our platform?</h2>
+                <p className="text-paper-300 mb-8">
                   Our platform combines advanced analytics with intuitive design to provide investigators with powerful
                   tools for digital forensics and social media analysis.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/10">
-                      <Shield className="w-6 h-6 text-blue-400" />
+                    <div className="p-2 rounded-lg bg-rust-500/10">
+                      <Shield className="w-6 h-6 text-rust-300" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold mb-2 text-white">Enterprise Security</h3>
-                      <p className="text-gray-400">
+                      <h3 className="text-lg font-serif font-semibold mb-2 text-paper-50">Enterprise Security</h3>
+                      <p className="text-mute">
                         Bank-grade security with advanced encryption and compliance features.
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/10">
-                      <Zap className="w-6 h-6 text-blue-400" />
+                    <div className="p-2 rounded-lg bg-rust-500/10">
+                      <Zap className="w-6 h-6 text-rust-300" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold mb-2 text-white">Lightning Fast</h3>
-                      <p className="text-gray-400">
+                      <h3 className="text-lg font-serif font-semibold mb-2 text-paper-50">Lightning Fast</h3>
+                      <p className="text-mute">
                         Process millions of data points in seconds with our optimized engine.
                       </p>
                     </div>
@@ -216,8 +213,8 @@ const Home = () => {
                 </div>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-lg transform rotate-3"></div>
-                <div className="relative rounded-lg overflow-hidden border border-gray-700">
+                <div className="absolute inset-0 bg-rust-500/10 rounded-lg transform rotate-3"></div>
+                <div className="relative rounded-lg overflow-hidden border border-ink-700">
                   <img src="/images/post/lp.jpeg" alt="Platform Features" className="w-full aspect-video object-cover" />
                 </div>
               </div>
@@ -282,21 +279,21 @@ const Home = () => {
         {/* CTA Section */}
         <section className="py-20 px-4 sm:px-6 lg:px-8 fade-in">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-white">
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-6 text-paper-50">
               Ready to start your investigation?
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
+              <span className="block text-rust-400">
                 Use our powerful investigation tool
               </span>
             </h2>
-            <p className="text-xl text-gray-300 mb-8">Begin your digital investigation with our advanced platform.</p>
+            <p className="text-xl text-paper-300 mb-8">Begin your digital investigation with our advanced platform.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                className="bg-rust-500 hover:bg-rust-400 text-[#fdf3ee]"
               >
                 <Link to="/services">Start Investigation</Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-gray-600 text-white bg-gray-800">
+              <Button size="lg" variant="outline" className="border-ink-700 text-paper-50 bg-ink-820">
                 <Link to="/servicesMain">Explore Other Services</Link>
               </Button>
             </div>

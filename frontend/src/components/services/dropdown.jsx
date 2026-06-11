@@ -32,10 +32,10 @@ const RenderDropdown = ({ platform, onSelect }) => {
   return (
     <div className="w-full mt-4">
       <Select value={selectedValue} onValueChange={handleSelectChange}>
-        <SelectTrigger className="w-full bg-gray-700 focus:ring-2 focus:ring-blue-400">
+        <SelectTrigger className="w-full bg-ink-780 border-ink-700 focus:ring-2 focus:ring-rust-500/40">
           <SelectValue placeholder="Select a value" />
         </SelectTrigger>
-        <SelectContent className="bg-gray-700 text-white">
+        <SelectContent className="bg-ink-780 text-paper-50 border-ink-700">
         <SelectItem value="custom">Custom</SelectItem>
           <SelectItem value="1">1</SelectItem>
           <SelectItem value="3">3</SelectItem>
@@ -56,7 +56,7 @@ const RenderDropdown = ({ platform, onSelect }) => {
           placeholder="Enter custom value"
           value={customValue}
           onChange={handleCustomValueChange}
-          className="mt-2 bg-gray-700 focus:ring-2 focus:ring-blue-400"
+          className="mt-2 bg-ink-780 border-ink-700 focus:ring-2 focus:ring-rust-500/40"
         />
       )}
     </div>

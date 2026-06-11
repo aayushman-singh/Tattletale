@@ -84,7 +84,7 @@ const ChatbotAvatar = () => {
     <div className="fixed bottom-4 right-4 z-[100]">
       <button
         onClick={toggleChatbot}
-        className="bg-blue-500 text-white rounded-full p-3 shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out transform hover:scale-110"
+        className="bg-rust-500 text-paper-50 rounded-full p-3 shadow-lg hover:bg-rust-400 transition-all duration-300 ease-in-out transform hover:scale-110"
         aria-label="Open Chatbot"
       >
         <MessageCircle size={24} />
@@ -94,14 +94,14 @@ const ChatbotAvatar = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-[100] transition-opacity duration-500 ease-in-out opacity-100">
-      <div className="bg-gray-900 text-white w-96 h-screen shadow-2xl border-l border-gray-700 p-4 flex flex-col rounded-lg backdrop-blur-sm transition-all duration-500 ease-in-out transform">
+      <div className="bg-ink-870 text-paper-50 w-96 h-screen shadow-2xl border-l border-ink-700 p-4 flex flex-col rounded-lg backdrop-blur-sm transition-all duration-500 ease-in-out transform">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold flex items-center text-blue-400">
+          <h2 className="text-lg font-bold font-serif flex items-center text-rust-300">
             <Bot className="mr-2" /> PDF Chatbot
           </h2>
           <button
             onClick={toggleChatbot}
-            className="text-gray-400 hover:text-white transition-colors duration-200"
+            className="text-mute hover:text-paper-50 transition-colors duration-200"
             aria-label="Close Chatbot"
           >
             <X size={24} />
@@ -110,11 +110,11 @@ const ChatbotAvatar = () => {
 
         {/* File Upload */}
         <div className="mb-2 px-2">
-          <label className="flex items-center space-x-2 bg-gray-800 p-2 rounded-lg cursor-pointer">
-            <FileInput className="w-5 h-5 text-gray-400" />
-            <span className="text-gray-300">Upload PDF:</span>
+          <label className="flex items-center space-x-2 bg-ink-820 border border-dashed border-ink-700 p-2 rounded-lg cursor-pointer">
+            <FileInput className="w-5 h-5 text-rust-300" />
+            <span className="text-paper-300">Upload PDF:</span>
             <input type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />
-            <Button asChild variant="ghost" className="text-gray-200 hover:bg-gray-700">
+            <Button asChild variant="ghost" className="text-paper-100 hover:bg-ink-780">
               <span>{selectedFile ? selectedFile.name : "Choose File"}</span>
             </Button>
           </label>
@@ -131,7 +131,7 @@ const ChatbotAvatar = () => {
                       <AvatarFallback><Bot /></AvatarFallback>
                     </Avatar>
                   )}
-                  <div className={`p-3 rounded-2xl max-w-xs ${message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-200"} shadow-md`}>
+                  <div className={`p-3 rounded-2xl max-w-xs ${message.sender === "user" ? "bg-rust-500 text-[#fdf3ee]" : "bg-ink-780 border border-ink-700 text-paper-100"} shadow-md`}>
                     {message.text}
                   </div>
                   {message.sender === "user" && (
@@ -154,11 +154,11 @@ const ChatbotAvatar = () => {
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="flex-grow bg-gray-800 text-gray-200 border-gray-700 focus:ring-blue-500 rounded-lg"
+            className="flex-grow bg-ink-780 text-paper-100 border-ink-700 focus:ring-rust-500/40 focus:border-rust-500 rounded-lg"
           />
           <Button
             onClick={sendMessage}
-            className={`bg-blue-600 hover:bg-blue-700 text-white ${loading || !fileUploaded ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`bg-rust-500 hover:bg-rust-400 text-[#fdf3ee] ${loading || !fileUploaded ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={loading || !fileUploaded}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

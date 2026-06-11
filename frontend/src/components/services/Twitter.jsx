@@ -8,10 +8,10 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-      <div className="bg-gray-900 p-6 rounded-lg shadow-lg max-w-lg w-full">
+      <div className="bg-ink-900 p-6 rounded-lg shadow-lg max-w-lg w-full">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-white">{title}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <h3 className="text-xl font-bold text-paper-50 font-serif">{title}</h3>
+          <button onClick={onClose} className="text-mute hover:text-paper-50">
             <X size={24} />
           </button>
         </div>
@@ -52,19 +52,19 @@ const TwitterTweet = ({ tweet }) => {
   };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-md border border-gray-700/50">
-      <h3 className="text-lg font-semibold text-blue-400 mb-2">
+    <div className="bg-ink-820 p-4 rounded-lg shadow-md border border-ink-700/50">
+      <h3 className="text-lg font-semibold text-pf-x mb-2 font-serif">
         <a
           href={tweet.url}
           target="_blank"
           rel="noopener noreferrer"
           className="hover:underline"
         >
-          Tweet ID: {tweet.id_str}
+          Tweet ID: <span className="font-mono">{tweet.id_str}</span>
         </a>
       </h3>
-      <p className="text-gray-300 mb-4">{translatedText || tweet.full_text}</p>
-      <div className="text-sm text-gray-400 space-y-1">
+      <p className="text-paper-300 mb-4">{translatedText || tweet.full_text}</p>
+      <div className="text-sm text-mute space-y-1">
         <div>
           <span className="font-semibold">Created At:</span> {tweet.created_at}
         </div>
@@ -82,14 +82,14 @@ const TwitterTweet = ({ tweet }) => {
         <button
           onClick={handleTranslate}
           disabled={isTranslating}
-          className="text-blue-400 hover:text-blue-300 transition-colors"
+          className="text-rust-300 hover:text-rust-300 transition-colors"
         >
           {isTranslating ? "Translating..." : "Translate"}
         </button>
         <select
           value={selectedLanguage}
           onChange={(e) => setSelectedLanguage(e.target.value)}
-          className="bg-gray-800 text-white text-sm rounded-lg p-2"
+          className="bg-ink-820 text-paper-50 text-sm rounded-lg p-2"
         >
           <option value="en">English</option>
           <option value="hi">Hindi</option>
@@ -109,9 +109,9 @@ const TwitterFollowers = ({ followers }) => {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="bg-gray-900 p-4 rounded-lg shadow-md border border-gray-700/50">
+    <div className="bg-ink-900 p-4 rounded-lg shadow-md border border-ink-700/50">
       <button
-        className="w-full flex justify-between items-center text-blue-400 hover:text-blue-300"
+        className="w-full flex justify-between items-center text-pf-x hover:text-pf-x"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span>Followers ({followers.length})</span>
@@ -122,20 +122,20 @@ const TwitterFollowers = ({ followers }) => {
           {followers.slice(0, 20).map((follower, index) => (
             <div
               key={index}
-              className="flex items-center space-x-3 bg-gray-800 p-2 rounded-lg"
+              className="flex items-center space-x-3 bg-ink-820 p-2 rounded-lg"
             >
               <img
                 src={follower.profilePic}
                 alt={follower.username}
                 className="w-10 h-10 rounded-full"
               />
-              <span className="text-gray-300">{follower.username}</span>
+              <span className="text-paper-300 font-mono">{follower.username}</span>
             </div>
           ))}
           {followers.length > 20 && (
             <button
               onClick={() => setShowModal(true)}
-              className="text-blue-400 hover:text-blue-300 mt-2"
+              className="text-pf-x hover:text-pf-x mt-2"
             >
               + {followers.length - 20} more
             </button>
@@ -150,14 +150,14 @@ const TwitterFollowers = ({ followers }) => {
         {followers.map((follower, index) => (
           <div
             key={index}
-            className="flex items-center space-x-3 bg-gray-800 p-2 rounded-lg"
+            className="flex items-center space-x-3 bg-ink-820 p-2 rounded-lg"
           >
             <img
               src={follower.profilePic}
               alt={follower.username}
               className="w-10 h-10 rounded-full"
             />
-            <span className="text-gray-300">{follower.username}</span>
+            <span className="text-paper-300 font-mono">{follower.username}</span>
           </div>
         ))}
       </Modal>
@@ -171,9 +171,9 @@ const TwitterFollowing = ({ following }) => {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="bg-gray-900 p-4 rounded-lg shadow-md border border-gray-700/50">
+    <div className="bg-ink-900 p-4 rounded-lg shadow-md border border-ink-700/50">
       <button
-        className="w-full flex justify-between items-center text-blue-400 hover:text-blue-300"
+        className="w-full flex justify-between items-center text-pf-x hover:text-pf-x"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span>Following ({following.length})</span>
@@ -184,20 +184,20 @@ const TwitterFollowing = ({ following }) => {
           {following.slice(0, 20).map((followed, index) => (
             <div
               key={index}
-              className="flex items-center space-x-3 bg-gray-800 p-2 rounded-lg"
+              className="flex items-center space-x-3 bg-ink-820 p-2 rounded-lg"
             >
               <img
                 src={followed.profilePic}
                 alt={followed.username}
                 className="w-10 h-10 rounded-full"
               />
-              <span className="text-gray-300">{followed.username}</span>
+              <span className="text-paper-300 font-mono">{followed.username}</span>
             </div>
           ))}
           {following.length > 20 && (
             <button
               onClick={() => setShowModal(true)}
-              className="text-blue-400 hover:text-blue-300 mt-2"
+              className="text-pf-x hover:text-pf-x mt-2"
             >
               + {following.length - 20} more
             </button>
@@ -212,14 +212,14 @@ const TwitterFollowing = ({ following }) => {
         {following.map((followed, index) => (
           <div
             key={index}
-            className="flex items-center space-x-3 bg-gray-800 p-2 rounded-lg"
+            className="flex items-center space-x-3 bg-ink-820 p-2 rounded-lg"
           >
             <img
               src={followed.profilePic}
               alt={followed.username}
               className="w-10 h-10 rounded-full"
             />
-            <span className="text-gray-300">{followed.username}</span>
+            <span className="text-paper-300 font-mono">{followed.username}</span>
           </div>
         ))}
       </Modal>
@@ -230,13 +230,13 @@ const TwitterFollowing = ({ following }) => {
 // TwitterTimeline Component
 const TwitterTimeline = ({ timeline }) => {
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-md border border-gray-700/50">
-      <h3 className="text-lg font-semibold text-blue-400 mb-2">Timeline</h3>
+    <div className="bg-ink-820 p-4 rounded-lg shadow-md border border-ink-700/50">
+      <h3 className="text-lg font-semibold text-pf-x mb-2 font-serif">Timeline</h3>
       <a
         href={timeline}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-400 hover:underline"
+        className="text-pf-x hover:underline"
       >
         View Timeline
       </a>
@@ -250,8 +250,8 @@ const TwitterDataDisplay = ({ data }) => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-br from-blue-900 to-gray-800 p-6 rounded-xl shadow-lg border border-blue-700/20">
-        <h2 className="text-2xl font-bold text-white mb-4">@{username}</h2>
+      <div className="bg-ink-820 p-6 rounded-xl shadow-lg border border-ink-700/20">
+        <h2 className="text-2xl font-bold text-paper-50 mb-4 font-mono">@{username}</h2>
         <TwitterTimeline timeline={timeline} />
       </div>
 

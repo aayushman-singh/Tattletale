@@ -1,11 +1,14 @@
-import { Log } from "crawlee";
 import { Page } from "playwright";
 import { uploadScreenshotToMongo } from "../mongoUtils";
 
+type TimelineLogger = {
+    info(message: string): void;
+    error(message: string): void;
+};
 
 export const captureTimelineScreenshots = async (
     page: Page,
-    log: Log,
+    log: TimelineLogger,
     username: string,
 ) => {
     log.info("Capturing timeline screenshots...");

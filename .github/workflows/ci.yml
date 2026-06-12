@@ -75,9 +75,8 @@ jobs:
     name: scraper-typecheck (non-blocking)
     runs-on: ubuntu-latest
     # Honest non-blocking: the legacy scraper routes have known pre-existing TS
-    # errors. This surfaces the typecheck status in the UI without faking green
-    # via `|| true`. Tighten to blocking as the routes are cleaned up.
-    continue-on-error: true
+    # errors. The typecheck step is allowed to fail and then emits an explicit
+    # warning, while the real scraper tests above remain blocking.
     defaults:
       run:
         working-directory: scraper
@@ -89,7 +88,19 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Type-check
+        id: typecheck
+        continue-on-error: true
         run: npm run typecheck
+      - name: Report non-blocking typecheck
+        if: steps.typecheck.outcome == 'failure'
+        run: |
+          {
+            echo "### Scraper typecheck is non-blocking"
+            echo ""
+            echo "\`npm run typecheck\` failed against known legacy scraper TypeScript errors."
+            echo "The blocking scraper gate is \`scraper (Node 22)\`, which runs the replay and config-helper tests."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning title=Non-blocking scraper typecheck::npm run typecheck failed against known legacy scraper errors; see the Type-check step logs."
 
   python:
     name: python (lint + compile)

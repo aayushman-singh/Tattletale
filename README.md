@@ -184,7 +184,7 @@ output/<case-id>/
 ## Stack
 
 **Backend** — Node.js · Python 3.10.15 · Express · MongoDB · Mongoose · bcrypt · JWT
-**Scraping** — TypeScript · Crawlee · Playwright · Telethon · Puppeteer
+**Scraping** — TypeScript · Playwright · Telethon · Puppeteer
 **Frontend** — React · Tailwind CSS
 **Mobile** — Flutter · Dart
 **OSINT** — Maigret
@@ -257,7 +257,7 @@ cd frontend && npm run dev
 ```
 Tattletale/
 ├── backend/                Node.js + Express API
-├── scraper/                TypeScript scrapers (Crawlee + Playwright)
+├── scraper/                TypeScript scrapers (Playwright + Puppeteer)
 │   └── src/Helpers/        Per-platform helpers (Telegram, WhatsApp, etc.)
 ├── frontend/               React + Tailwind dashboard
 ├── mobileApp/              Flutter Android/iOS client

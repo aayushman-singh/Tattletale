@@ -67,6 +67,36 @@ test("no posts => no false merge on name+handle alone (coverage gate)", () => {
     assert.equal(r.identities.length, 2, "no behavioural evidence => must not merge");
 });
 
+test("empty captions and timing alone do not turn a namesake into a merge", () => {
+    const posts = (tag: string) => [
+        { id: `${tag}1`, timestamp: "2024-11-02T20:00:00Z", caption: "", likes: 0, comments: 0 },
+        { id: `${tag}2`, timestamp: "2024-11-05T20:00:00Z", caption: "", likes: 0, comments: 0 },
+    ];
+    const accounts = [
+        acc({ platform: "instagram", username: "sam_rivera", displayName: "Sam Rivera", bio: "", posts: posts("ig") }),
+        acc({ platform: "x", username: "sam_rivera", displayName: "Sam Rivera", bio: "", posts: posts("x") }),
+    ];
+
+    const r = correlate(accounts);
+
+    assert.equal(r.identities.length, 2, "post count plus timing is not content-bearing behavioural evidence");
+});
+
+test("generic shared bio and timing do not turn a namesake into a merge", () => {
+    const posts = (tag: string) => [
+        { id: `${tag}1`, timestamp: "2024-11-02T20:00:00Z", caption: "", likes: 0, comments: 0 },
+        { id: `${tag}2`, timestamp: "2024-11-05T20:00:00Z", caption: "", likes: 0, comments: 0 },
+    ];
+    const accounts = [
+        acc({ platform: "instagram", username: "sam_rivera", displayName: "Sam Rivera", bio: "official profile", posts: posts("ig") }),
+        acc({ platform: "x", username: "sam_rivera", displayName: "Sam Rivera", bio: "official profile", posts: posts("x") }),
+    ];
+
+    const r = correlate(accounts);
+
+    assert.equal(r.identities.length, 2, "generic bio overlap plus timing is not enough to merge namesakes");
+});
+
 test("singleton identity has cohesion null, not 1", () => {
     const r = correlate([acc({ username: "solo", displayName: "Solo", posts: [] })]);
     assert.equal(r.identities.length, 1);
@@ -147,6 +177,23 @@ test("deterministic: same input => identical graph (incl. layout coords)", () =>
     const a = JSON.stringify(correlate(accounts));
     const b = JSON.stringify(correlate(accounts));
     assert.equal(a, b, "correlation output must be byte-identical across runs");
+});
+
+test("duplicate platform+username inputs fail loudly instead of inheriting input order", () => {
+    const first = acc({ platform: "x", username: "dupe", displayName: "First", posts: [
+        { id: "a", timestamp: "2024-11-02T08:00:00Z", caption: "first account words", likes: 1, comments: 0 } ] });
+    const second = acc({ platform: "x", username: "dupe", displayName: "Second", posts: [
+        { id: "b", timestamp: "2024-11-02T20:00:00Z", caption: "second account words", likes: 1, comments: 0 } ] });
+
+    assert.throws(() => correlate([first, second]), /Duplicate platform\/username/);
+});
+
+test("duplicate post ids inside an account fail loudly", () => {
+    const account = acc({ platform: "x", username: "ana", posts: [
+        { id: "dup", timestamp: "2024-11-02T08:00:00Z", caption: "first words here", likes: 1, comments: 0 },
+        { id: "dup", timestamp: "2024-11-03T08:00:00Z", caption: "second words here", likes: 1, comments: 0 } ] });
+
+    assert.throws(() => correlate([account]), /Duplicate post id/);
 });
 
 // ---------- 7th signal: temporal-geospatial co-presence ----------

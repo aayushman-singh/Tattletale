@@ -1,6 +1,6 @@
 # 🤖 Web Scraper
 
-The application uses `crawlee`to handle the heavy-lifting of scraping websites. You can visit the docs at [Crawlee Docs](https://crawlee.dev/). After `cloning` the repo, you need to run the following command from the terminal in root directory of the project to install the dependencies for the Web Scraper.
+After `cloning` the repo, run the following command from the terminal in the root directory of the project to install the dependencies for the Web Scraper.
 
 ```
 # installs all dependencies

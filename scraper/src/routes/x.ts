@@ -2,7 +2,6 @@ import "../../../config.js"; // load .env first (must precede any env read)
 import { clusterUri } from "../Helpers/mongoUri.js";
 import express from "express";
 import { scrapeX } from "../Helpers/X/Xtimeline"; // Adjust the path to your scraper file
-import { XTweets } from "../Helpers/X/XTweets";
 import cors from "cors";
 import { Request, Response } from "express";
 import TwitterUser from "../models/TwitterUser";
@@ -55,11 +54,6 @@ app.post("/x", async (req, res) => {
         }
 
         console.log("Profile scraping completed successfully.");
-
-        console.log("Starting tweets scraping...");
-        await XTweets(startUrls);
-
-        console.log("Tweets scraping completed successfully.");
         return res.status(200).send("Scraping completed successfully.");
     } catch (error) {
         console.error("Error during scraping:", error);

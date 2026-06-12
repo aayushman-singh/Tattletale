@@ -1,0 +1,1 @@
+No Critical/High/Medium findings.

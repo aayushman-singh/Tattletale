@@ -65,12 +65,50 @@ const MERGE_THRESHOLD = 0.55;
 // A merge must be backed by behavioural evidence on BOTH sides — handle+name
 // agreement alone (a namesake) can't auto-merge, no matter how high.
 const MIN_MERGE_COVERAGE = 2;
+const MIN_STYLE_TOKENS = 8;
+
+// ---- blocking (scalability) ----
+//
+// The naive engine scored every one of the n(n-1)/2 pairs with the FULL pipeline
+// — stylometry + tokenization + an O(posts²) co-presence scan — and, worse, it
+// re-extracted each account's per-account features (style vector, hour histogram,
+// token sets, geo stamps) once PER PAIR, making the real cost ~O(n²·posts). Two
+// changes reduce that:
+//
+//   1. Per-account features are extracted ONCE (see `accountFeatures`), so a pair
+//      score is now a handful of cheap vector ops instead of re-parsing posts.
+//      This is the same evidence expressed once per account instead of once per
+//      pair; the stricter evidence gates below are the intentional behaviour
+//      change in this patch.
+//
+//   2. Above BLOCKING_MIN_ACCOUNTS a candidate filter computes the exact six-signal
+//      behavioural score for each pair (vector ops plus set intersections over
+//      precomputed caption tokens), then runs the expensive O(posts²)
+//      co-presence scan / edge assembly only for pairs that can possibly merge.
+//      This deliberately keeps the cheap O(n²) behavioural pass: continuous
+//      signals like Jaro-Winkler and stylometry have no exact bucket boundary, so
+//      an LSH-only gate would drop evidence-backed merge candidates without a
+//      formal upper bound. The gain is therefore "no full scoring for implausible
+//      pairs", not "no pair consideration at all."
+//
+// Below the threshold every pair is still full-scored exhaustively. The stricter
+// evidence gates in this file apply at every size; the threshold only controls
+// whether implausible pairs can skip full scoring.
+const BLOCKING_MIN_ACCOUNTS = 64;
+
+// The candidate filter compares the (unrounded) behavioural baseScore, but the MERGE
+// decision compares the baseScore AFTER `round()` to 3 decimals. round(x) >= T is
+// equivalent to x >= T - 0.0005, so a pair whose true score rounds UP to the bar
+// must survive the filter. We keep this cushion (plus float-error slack) so the
+// filter can never drop a pair the rounded merge decision would have accepted —
+// the candidate guarantee holds at the rounding boundary, not just in the limit.
+const MERGE_CANDIDATE_FLOOR = MERGE_THRESHOLD - 0.001;
 
 const BAND = (score: number): "high" | "medium" | "low" =>
     score >= 0.62 ? "high" : score >= 0.4 ? "medium" : "low";
 
 const STOPWORDS = new Set(
-    "the a an and or of to in on for with is are was were be been it its i im my me you your we our they them this that these those at by from as so but not no just most all can will would".split(
+    "the a an and or of to in on for with is are was were be been it its i im my me you your we our they them this that these those at by from as so but not no just most all can will would official profile account user page hello world".split(
         " ",
     ),
 );
@@ -325,9 +363,7 @@ function coLocated(x: GeoStamp, y: GeoStamp): boolean {
 //      So two accounts that both spam N posts at the same instant/place still count
 //      as a single co-presence event, not N.
 // Saturates at COPRESENCE_SATURATION.
-function coPresence(a: GoldenPost[], b: GoldenPost[]): { value: number; occasions: number } | null {
-    const ga = geoStamps(a);
-    const gb = geoStamps(b);
+function coPresence(ga: GeoStamp[], gb: GeoStamp[]): { value: number; occasions: number } | null {
     if (ga.length < MIN_GEO_COVERAGE || gb.length < MIN_GEO_COVERAGE) return null;
 
     const candidates: Array<{ i: number; j: number; dt: number }> = [];
@@ -377,40 +413,119 @@ function buildDocFrequency(accounts: GoldenPlatform[]): Map<string, number> {
     return df;
 }
 
-// ---------- per-pair scoring ----------
+// ---------- per-account feature precompute ----------
+//
+// Everything about ONE account that a pair score needs, extracted exactly once.
+// The old engine re-derived all of this on every pair; lifting it here turns the
+// dominant O(n²·posts) cost into O(n·posts) precompute + cheap per-pair combines.
+// The loud-failure semantics are preserved: a malformed timestamp or geo throws
+// here (once per account) exactly as it used to throw inside scoring.
+interface AccountFeatures {
+    username: string;
+    displayName: string;
+    normHandle: string;
+    nameLower: string;
+    bioTokens: Set<string>;
+    captionTokens: Set<string>;
+    captionTokenCount: number;
+    style: StyleFeatures;
+    hist: number[];
+    geo: GeoStamp[];
+    postCount: number;
+}
 
-function scorePair(
-    a: GoldenPlatform,
-    b: GoldenPlatform,
+function canonicalPosts(posts: GoldenPost[], accountLabel: string): GoldenPost[] {
+    const seen = new Set<string>();
+    for (const post of posts) {
+        if (seen.has(post.id)) {
+            throw new Error(`Duplicate post id "${post.id}" in correlation input for ${accountLabel}.`);
+        }
+        seen.add(post.id);
+    }
+
+    return [...posts].sort((a, b) => {
+        const ta = parseInstant(a.timestamp, a.id);
+        const tb = parseInstant(b.timestamp, b.id);
+        return ta - tb || a.id.localeCompare(b.id);
+    });
+}
+
+function accountFeatures(acc: GoldenPlatform): AccountFeatures {
+    const posts = canonicalPosts(acc.posts, `${acc.platform}/${acc.username}`);
+    const captionTokens = tokenize(posts.map((p) => p.caption).join(" "));
+    return {
+        username: acc.username,
+        displayName: acc.displayName,
+        normHandle: normalizeHandle(acc.username),
+        nameLower: acc.displayName.toLowerCase(),
+        bioTokens: new Set(tokenize(acc.bio)),
+        captionTokens: new Set(captionTokens),
+        captionTokenCount: captionTokens.length,
+        style: styleFeatures(posts),
+        hist: hourHistogram(posts), // throws loudly on a bad timestamp
+        geo: geoStamps(posts), // throws loudly on malformed geo
+        postCount: posts.length,
+    };
+}
+
+// Shared distinctive terms between two accounts: present in both, and rare enough
+// across the corpus (document frequency under the cap) to be discriminating.
+function sharedDistinctiveTerms(
+    a: AccountFeatures,
+    b: AccountFeatures,
     df: Map<string, number>,
     nAccounts: number,
-): { score: number; baseScore: number; features: FeatureContribution[] } {
-    const handle = jaroWinkler(normalizeHandle(a.username), normalizeHandle(b.username));
-    const name = jaroWinkler(a.displayName.toLowerCase(), b.displayName.toLowerCase());
-    const bio = jaccard(new Set(tokenize(a.bio)), new Set(tokenize(b.bio)));
+): string[] {
+    const cap = Math.max(2, Math.floor(nAccounts * 0.05));
+    const shared: string[] = [];
+    for (const t of a.captionTokens) {
+        const frequency = df.get(t) || 0;
+        if (b.captionTokens.has(t) && frequency < nAccounts && frequency <= cap) shared.push(t);
+    }
+    return shared.sort();
+}
+
+// ---------- behavioural signal parts (shared by the filter and full scoring) ----------
+//
+// The six behavioural signals for a pair, each as [key, value, label]. EVERY input
+// here is a precomputed per-account feature, so this is a handful of cheap vector
+// ops and set intersections — no post re-parsing. Both the candidate filter and
+// the full pair score call this, so the filter's baseScore is byte-identical to
+// the score the merge decision later uses: there is no second, looser estimate
+// that could disagree at the bar.
+function behaviouralParts(
+    a: AccountFeatures,
+    b: AccountFeatures,
+    df: Map<string, number>,
+    nAccounts: number,
+): { parts: Array<[keyof typeof WEIGHTS, number, string]>; baseScore: number; mergeEvidence: boolean } {
+    const handle = jaroWinkler(a.normHandle, b.normHandle);
+    const name = jaroWinkler(a.nameLower, b.nameLower);
+    const bio = jaccard(a.bioTokens, b.bioTokens);
 
     // Coverage gate: behavioural signals (style, timing, vocabulary) require
     // actual posts. With no posts the style vectors are trivially identical, so
     // ungated they would false-merge two accounts on name+handle alone. We scale
     // every behavioural feature by how much evidence backs it (0 posts => 0,
     // 1 post => weak, >=2 => full), so thin evidence can't masquerade as strong.
-    const coverage = Math.min(a.posts.length, b.posts.length);
+    const coverage = Math.min(a.postCount, b.postCount);
     const covFactor = Math.min(1, coverage / 2);
+    const contentCoverage = Math.min(a.captionTokenCount, b.captionTokenCount);
+    const styleApplicable = contentCoverage >= MIN_STYLE_TOKENS;
 
-    const style = covFactor * styleSimilarity(styleFeatures(a.posts), styleFeatures(b.posts));
-    const temporal =
-        covFactor * Math.max(0, cosine(hourHistogram(a.posts), hourHistogram(b.posts)));
+    const style = styleApplicable ? covFactor * styleSimilarity(a.style, b.style) : 0;
+    const temporal = covFactor * Math.max(0, cosine(a.hist, b.hist));
 
     // shared distinctive terms: in both, and low-frequency across the corpus.
-    const ta = new Set(tokenize(a.posts.map((p) => p.caption).join(" ")));
-    const tb = new Set(tokenize(b.posts.map((p) => p.caption).join(" ")));
-    const shared: string[] = [];
-    for (const t of ta) {
-        if (tb.has(t) && (df.get(t) || 0) <= Math.max(2, Math.ceil(nAccounts / 2))) {
-            shared.push(t);
-        }
-    }
+    const shared = sharedDistinctiveTerms(a, b, df, nAccounts);
     const sharedTerms = covFactor * Math.min(1, shared.length / 3);
+    const bioEvidence = bio >= 0.5 && Math.min(a.bioTokens.size, b.bioTokens.size) >= 2;
+    const sharedEvidence = shared.length >= 2;
+    const styleEvidence = styleApplicable && style >= 0.75;
+    const temporalEvidence = coverage >= MIN_MERGE_COVERAGE && temporal >= 0.85;
+    const contentEvidence = sharedEvidence || styleEvidence;
+    const nonIdentifierSignals = [bioEvidence, sharedEvidence, styleEvidence, temporalEvidence].filter(Boolean).length;
+    const mergeEvidence = contentEvidence && nonIdentifierSignals >= 2;
 
     const parts: Array<[keyof typeof WEIGHTS, number, string]> = [
         ["handle", handle, `username similarity (${a.username} ↔ ${b.username})`],
@@ -426,18 +541,44 @@ function scorePair(
                 : "no shared distinctive terms",
         ],
     ];
-
-    // `baseScore` is the pure six-signal behavioural score (weights sum to 1.0).
-    // It is what drives MERGE decisions: co-presence may raise the displayed score
-    // and cohesion and flag a link, but it can NEVER manufacture a merge — geo
-    // never collapses two behaviourally-distinct people. See `correlate`.
     const baseScore = parts.reduce((s, [key, value]) => s + value * WEIGHTS[key], 0);
+    return { parts, baseScore, mergeEvidence };
+}
+
+// ---------- candidate filter (blocking) ----------
+//
+// Blocking computes the SAME behavioural baseScore the merge decision uses for
+// each pair, then only full-scores pairs above the merge floor. What survivors
+// additionally get (and the dropped pairs are spared) is the genuinely expensive
+// work: the O(posts²) co-presence geo scan, the feature breakdown objects, and
+// edge assembly. The bar is MERGE_CANDIDATE_FLOOR — the merge bar minus the
+// rounding cushion — so a pair whose score rounds UP to the bar still survives.
+//
+// Note this means BLOCKED mode (n > BLOCKING_MIN_ACCOUNTS) intentionally omits the
+// weak, advisory edges (displayed score in [EDGE_FLOOR, merge bar)) between pairs
+// no identity depends on. The small-input path still scores every pair and keeps
+// every weak edge under the current evidence rules; a forensic case at genuine
+// scale would not enumerate the full O(n²) weak-edge set anyway.
+
+// ---------- per-pair scoring ----------
+
+function scorePair(
+    a: AccountFeatures,
+    b: AccountFeatures,
+    df: Map<string, number>,
+    nAccounts: number,
+): { score: number; baseScore: number; mergeEvidence: boolean; features: FeatureContribution[] } {
+    // `baseScore` (computed in behaviouralParts) is the pure six-signal behavioural
+    // score (weights sum to 1.0). It is what drives MERGE decisions: co-presence may
+    // raise the displayed score and cohesion and flag a link, but it can NEVER
+    // manufacture a merge — geo never collapses two distinct people. See `correlate`.
+    const { parts, baseScore, mergeEvidence } = behaviouralParts(a, b, df, nAccounts);
 
     // Co-presence overlay. When applicable it claims W_COPRESENCE and the six
     // behavioural weights renormalize to (1 - W_COPRESENCE); when inapplicable
     // (no/insufficient geo metadata) baseScale = 1 and the displayed score is the
     // behavioural score — absence is true neutrality, not a zero that drags.
-    const cop = coPresence(a.posts, b.posts);
+    const cop = coPresence(a.geo, b.geo);
     const baseScale = cop !== null ? 1 - W_COPRESENCE : 1;
 
     let score = 0;
@@ -470,7 +611,7 @@ function scorePair(
     }
 
     features.sort((x, y) => y.contribution - x.contribution);
-    return { score: round(score), baseScore: round(baseScore), features };
+    return { score: round(score), baseScore: round(baseScore), mergeEvidence, features };
 }
 
 const round = (n: number): number => Math.round(n * 1000) / 1000;
@@ -525,20 +666,115 @@ function layout(
     });
 }
 
+// ---------- blocking: candidate-pair generation ----------
+
+// Deterministic candidate-pair set. It is intentionally exact, not LSH-only:
+// continuous signals can create merge-strength pairs with no shared exact token
+// or bucket, so the filter computes each pair's behavioural score and keeps only
+// pairs that clear the evidence-backed merge floor.
+function candidatePairs(features: AccountFeatures[], df: Map<string, number>): Array<[number, number]> {
+    const n = features.length;
+    const pairs: Array<[number, number]> = [];
+    for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+            const candidate = behaviouralParts(features[i], features[j], df, n);
+            if (candidate.mergeEvidence && candidate.baseScore >= MERGE_CANDIDATE_FLOOR) {
+                pairs.push([i, j]);
+            }
+        }
+    }
+    return pairs;
+}
+
+// Every i<j pair — the exhaustive set used below BLOCKING_MIN_ACCOUNTS and by the
+// benchmark's brute-force baseline.
+function allPairs(n: number): Array<[number, number]> {
+    const pairs: Array<[number, number]> = [];
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) pairs.push([i, j]);
+    return pairs;
+}
+
+function* allPairIterator(n: number): Iterable<[number, number]> {
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) yield [i, j];
+}
+
+function* candidatePairIterator(features: AccountFeatures[], df: Map<string, number>): Iterable<[number, number]> {
+    const n = features.length;
+    for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+            const candidate = behaviouralParts(features[i], features[j], df, n);
+            if (candidate.mergeEvidence && candidate.baseScore >= MERGE_CANDIDATE_FLOOR) {
+                yield [i, j];
+            }
+        }
+    }
+}
+
+function pairKey(a: number, b: number): string {
+    return a < b ? `${a}:${b}` : `${b}:${a}`;
+}
+
 // ---------- entry point ----------
 
-export function correlate(input: GoldenPlatform[]): CorrelationResult {
-    // Canonicalize account order so cluster ids, layout coordinates, edge order
-    // and therefore the root hash are independent of the order accounts were
-    // collected in — required for a reproducible forensic replay.
+// Canonical account order — cluster ids, layout coords, edge order and therefore
+// the root hash must be independent of collection order for a reproducible replay.
+function canonicalize(input: GoldenPlatform[]): GoldenPlatform[] {
     const keyOf = (p: GoldenPlatform): string => `${p.platform} ${p.username}`;
-    const accounts = [...input].sort((a, b) => {
+    const seen = new Set<string>();
+    for (const account of input) {
+        const key = keyOf(account);
+        if (seen.has(key)) {
+            throw new Error(`Duplicate platform/username in correlation input: "${key}".`);
+        }
+        seen.add(key);
+    }
+
+    return [...input].sort((a, b) => {
         const ka = keyOf(a);
         const kb = keyOf(b);
         return ka < kb ? -1 : ka > kb ? 1 : 0;
     });
+}
+
+// Inspection hook for tests/benchmarks: the (canonicalized-index) candidate pairs
+// the blocking stage would full-score, plus whether blocking was active for this
+// size. Lets tests assert known evidence-backed pairs survive blocking, and the
+// benchmark count scored pairs vs the O(n²) baseline — without re-deriving the
+// canonical order.
+export interface CorrelateOptions {
+    // Account count at/below which scoring is exhaustive (every pair). Above it,
+    // feature blocking generates candidates. Defaults to BLOCKING_MIN_ACCOUNTS;
+    // the benchmark passes Infinity to force the brute-force O(n²) baseline.
+    blockingMinAccounts?: number;
+}
+
+export function inspectCandidatePairs(
+    input: GoldenPlatform[],
+    opts: CorrelateOptions = {},
+): {
+    accounts: GoldenPlatform[];
+    pairs: Array<[number, number]>;
+    blocked: boolean;
+    behavioralPairsEvaluated: number;
+    fullScoredPairs: number;
+} {
+    const accounts = canonicalize(input);
+    const df = buildDocFrequency(accounts);
+    const features = accounts.map(accountFeatures);
+    const threshold = opts.blockingMinAccounts ?? BLOCKING_MIN_ACCOUNTS;
+    const blocked = accounts.length > threshold;
+    const pairs = blocked ? candidatePairs(features, df) : allPairs(accounts.length);
+    const behavioralPairsEvaluated = (accounts.length * (accounts.length - 1)) / 2;
+    return { accounts, pairs, blocked, behavioralPairsEvaluated, fullScoredPairs: pairs.length };
+}
+
+export function correlate(input: GoldenPlatform[], opts: CorrelateOptions = {}): CorrelationResult {
+    const accounts = canonicalize(input);
     const df = buildDocFrequency(accounts);
     const n = accounts.length;
+    // Per-account features, extracted once (was re-derived per pair). This is also
+    // where malformed timestamps/geo fail loudly, exactly as before.
+    const features = accounts.map(accountFeatures);
 
     const nodes: CorrelationNode[] = accounts.map((a, i) => ({
         index: i,
@@ -551,38 +787,46 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
         y: 0,
     }));
 
-    // Two full pairwise matrices. `scoreMatrix` is the DISPLAYED score (with the
-    // co-presence overlay) — it drives edge weight, banding and cohesion.
-    // `baseMatrix` is the pure six-signal BEHAVIOURAL score and is the ONLY thing
-    // that drives merges: co-presence can corroborate and flag a link, but it can
-    // never collapse two behaviourally-distinct identities.
-    const scoreMatrix: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
-    const baseMatrix: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
+    // Sparse pair maps. Only full-scored pairs are stored; any missing pair is
+    // known below the merge floor in blocked mode, so `baseOf` safely reads it as
+    // zero during complete-linkage checks.
+    const baseByPair = new Map<string, number>();
+    const mergeEvidenceByPair = new Set<string>();
     const edges: CorrelationEdge[] = [];
-    for (let i = 0; i < n; i++) {
-        for (let j = i + 1; j < n; j++) {
-            const { score, baseScore, features } = scorePair(accounts[i], accounts[j], df, n);
-            scoreMatrix[i][j] = score;
-            scoreMatrix[j][i] = score;
-            baseMatrix[i][j] = baseScore;
-            baseMatrix[j][i] = baseScore;
-            if (score < EDGE_FLOOR) continue;
-            edges.push({
-                source: i,
-                target: j,
-                score,
-                band: BAND(score),
-                features,
-                rationale: features
-                    .filter((f) => f.contribution > 0.02)
-                    .slice(0, 3)
-                    .map((f) => f.label)
-                    .join("; "),
-            });
-        }
+    // Candidate pairs: exhaustive for small inputs, feature-blocked above
+    // BLOCKING_MIN_ACCOUNTS. A
+    // non-candidate pair keeps its matrix default of 0 — no edge, and (since 0 <
+    // MERGE_THRESHOLD) no merge — exactly as if it had been scored and found
+    // unrelated. Blocking preserves evidence-backed merge candidates by
+    // construction; it intentionally does not preserve every weak advisory edge.
+    // See `candidatePairs`.
+    const pairs: Iterable<[number, number]> =
+        n > (opts.blockingMinAccounts ?? BLOCKING_MIN_ACCOUNTS)
+            ? candidatePairIterator(features, df)
+            : allPairIterator(n);
+    for (const [i, j] of pairs) {
+        const { score, baseScore, mergeEvidence, features: pairFeatures } = scorePair(features[i], features[j], df, n);
+        const key = pairKey(i, j);
+        baseByPair.set(key, baseScore);
+        if (mergeEvidence) mergeEvidenceByPair.add(key);
+        if (score < EDGE_FLOOR) continue;
+        edges.push({
+            source: i,
+            target: j,
+            score,
+            band: BAND(score),
+            features: pairFeatures,
+            rationale: pairFeatures
+                .filter((f) => f.contribution > 0.02)
+                .slice(0, 3)
+                .map((f) => f.label)
+                .join("; "),
+        });
     }
+    const baseOf = (a: number, b: number): number => (a === b ? 1 : baseByPair.get(pairKey(a, b)) ?? 0);
+    const hasMergeEvidence = (a: number, b: number): boolean => mergeEvidenceByPair.has(pairKey(a, b));
 
-    // Guarded agglomeration, decided purely on BEHAVIOURAL evidence (baseMatrix).
+    // Guarded agglomeration, decided purely on BEHAVIOURAL evidence (`baseOf`).
     // A pair only merges if its behavioural link >= MERGE_THRESHOLD AND merging
     // keeps the cluster internally consistent: every cross-pair between the two
     // groups must itself be behaviourally merge-strength (strict complete-linkage).
@@ -598,12 +842,13 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
     const mergeCandidates = edges
         .filter(
             (e) =>
-                baseMatrix[e.source][e.target] >= MERGE_THRESHOLD &&
+                hasMergeEvidence(e.source, e.target) &&
+                baseOf(e.source, e.target) >= MERGE_THRESHOLD &&
                 Math.min(coverageOf(e.source), coverageOf(e.target)) >= MIN_MERGE_COVERAGE,
         )
         .sort(
             (a, b) =>
-                baseMatrix[b.source][b.target] - baseMatrix[a.source][a.target] ||
+                baseOf(b.source, b.target) - baseOf(a.source, a.target) ||
                 a.source - b.source ||
                 a.target - b.target,
         );
@@ -615,7 +860,9 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
         const gb = membersOf(rb);
         // Strict complete-linkage on behavioural score: every cross-pair must
         // itself be behaviourally merge-strength.
-        const consistent = ga.every((x) => gb.every((y) => baseMatrix[x][y] >= MERGE_THRESHOLD));
+        const consistent = ga.every((x) =>
+            gb.every((y) => hasMergeEvidence(x, y) && baseOf(x, y) >= MERGE_THRESHOLD),
+        );
         if (consistent) uf.union(e.source, e.target);
     }
 
@@ -656,8 +903,8 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
         method:
             "Heuristic link score (NOT a calibrated probability): pairwise handle & display-name " +
             "Jaro-Winkler, bio Jaccard, bounded stylometric agreement, hour-of-day cosine, and " +
-            "shared low-frequency vocabulary — each behavioural signal coverage-gated by post " +
-            "count. A seventh signal, temporal-geospatial co-presence, is an applicability-gated " +
+            "shared low-frequency vocabulary — behavioural signals are gated by post and content " +
+            "coverage, and timing alone cannot merge identities. A seventh signal, temporal-geospatial co-presence, is an applicability-gated " +
             `overlay (weight ${W_COPRESENCE}): when both accounts carry geo+time metadata it rewards ` +
             `distinct posting occasions co-located within ${COPRESENCE_RADIUS_M} m and ` +
             `${COPRESENCE_WINDOW_MS / 60000} min and the six behavioural weights renormalize to ` +

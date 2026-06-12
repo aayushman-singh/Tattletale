@@ -38,7 +38,7 @@ SIH '24 winner — multi-platform OSINT scraper for investigators. Ingests a tar
 ### Stack
 - **Backend** (`backend/`): Node 22 + Express 4, Mongoose/MongoDB, bcryptjs, JWT. Anaemic — single `server.js`, one route file, one controller.
 - **Frontend** (`frontend/`): React 18 + Vite 5, Tailwind, Radix UI, Redux Toolkit, Firebase, Recharts/Chart.js, Framer Motion, Jest + Testing Library + MSW. Hardcoded Google OAuth `clientId` in `App.jsx:77`.
-- **Scraper** (`scraper/`): TypeScript + Crawlee + Playwright + Puppeteer-extra-stealth + AWS SDK; plus Python (Telethon, Flask/Maigret, Langchain+Gemini, reportlab/PyPDF, xhtml2pdf). Dockerfile uses `apify/actor-node-playwright-chrome:18`.
+- **Scraper** (`scraper/`): TypeScript + Playwright + Puppeteer-extra-stealth + AWS SDK; plus Python (Telethon, Flask/Maigret, Langchain+Gemini, reportlab/PyPDF, xhtml2pdf).
 - **mobileApp** (`mobileApp/`): Flutter 3.3+ client. Full android/ios/macos/windows/web scaffolds.
 - **mobileScraper** (`mobileScraper/`): Appium + WebdriverIO TS — drives real Android Instagram app via emulator-5554.
 - **docker/**: only `Dockerfile.frontend` (**empty — 0 bytes**).

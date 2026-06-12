@@ -10,7 +10,6 @@ What the code actually does today:
 
 - **Browser stealth.** Browser-driven scrapers use `puppeteer-extra` with `puppeteer-extra-plugin-stealth` (`FacebookScraper.ts`, `FacebookProfile.ts`, `X/Xtimeline.ts`) to mask the headless-automation tells (`navigator.webdriver`, plugin/codec gaps, etc.). Playwright scrapers run through `launchPersistentContext` so a real, warmed browser profile carries consistent fingerprints across runs.
 - **Retry with backoff.** Route handlers wrap each scrape phase in `async-retry` with `retries: 3` and an `onRetry` logging hook (clearly visible in `instagram.ts`; the same pattern repeats across `discord.ts`, `youtube.ts`, `whatsapp.ts`, `google.ts`). Transient failures (a slow selector, a flaky network hop) get up to three attempts before the phase fails loudly.
-- **Crawlee.** The scraper stack is built on Crawlee, which brings autoscaling and request-queue management (`scraper/src/Helpers/storage/request_queues/`); concurrency is bounded by the framework rather than firing requests unthrottled.
 - **Per-platform politeness.** Because each platform has its own scraper module and its own persistent context, pacing is tuned per platform rather than globally — a slow human-like cadence on Instagram, a different one on X.
 - **Maigret.** The OSINT sweep (`frontend/maigret/server.py`) is rate-limited at the tool level via `--timeout` and `--retries` flags; the hackathon config runs a reduced `--top-sites 20` sweep for speed, with Maigret's full 2,500-site capability available by dropping that cap.
 

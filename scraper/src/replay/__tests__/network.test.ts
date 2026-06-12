@@ -69,8 +69,14 @@ test("invalid interaction timestamp fails loudly", () => {
     assert.throws(() => buildNetworkGraph(bad, correlation), /Invalid interaction timestamp/);
 });
 
-test("no network => empty graph (not a crash)", () => {
-    const g = buildNetworkGraph(undefined, correlation);
-    assert.equal(g.nodes.length, 0);
-    assert.equal(g.contactCount, 0);
+test("timezone-less interaction timestamp fails loudly", () => {
+    const bad: GoldenNetwork = {
+        contacts: [{ id: "c1", handle: "sam", displayName: "Sam", platform: "x" }],
+        interactions: [{ from: "x", to: "c1", type: "follow", timestamp: "2024-10-05T20:00:00" }],
+    };
+    assert.throws(() => buildNetworkGraph(bad, correlation), /require ISO-8601 with a timezone/);
+});
+
+test("missing network evidence fails loudly", () => {
+    assert.throws(() => buildNetworkGraph(undefined, correlation), /missing network evidence/i);
 });

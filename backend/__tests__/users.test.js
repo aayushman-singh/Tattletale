@@ -157,6 +157,20 @@ describe('GET /api/users/ (protected: getUser)', () => {
     expect(res.body.name).toBe(validUser.name);
     expect(res.body.password).toBeUndefined();
   });
+
+  it('does not expose case-access grants in the user profile response', async () => {
+    const signupRes = await signup();
+    await User.findByIdAndUpdate(signupRes.body._id, {
+      caseAccess: [{ handle: 'ana_rivera_dev', scopes: ['intel-brief:read'] }],
+    });
+
+    const res = await request(app)
+      .get('/api/users/')
+      .set('Authorization', `Bearer ${signupRes.body.token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.caseAccess).toBeUndefined();
+  });
 });
 
 describe('password storage', () => {

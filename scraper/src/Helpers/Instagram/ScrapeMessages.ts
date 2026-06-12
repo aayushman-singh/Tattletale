@@ -1,4 +1,3 @@
-import { Log } from "crawlee";
 import path from "path";
 import { Page } from "playwright";
 import { uploadToS3, insertMessages } from "../mongoUtils";

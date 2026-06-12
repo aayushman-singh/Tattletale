@@ -15,19 +15,27 @@ const W = 1000;
 const H = 640;
 const CX = W / 2;
 const CY = H / 2;
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function parseInteractionInstant(timestamp: string, label: string): number {
+    if (!ISO_INSTANT.test(timestamp)) {
+        throw new Error(
+            `Invalid interaction timestamp "${timestamp}" (${label}): require ISO-8601 with a timezone (Z or ±hh:mm).`,
+        );
+    }
+    const t = Date.parse(timestamp);
+    if (Number.isNaN(t)) {
+        throw new Error(`Invalid interaction timestamp "${timestamp}" (${label}).`);
+    }
+    return t;
+}
 
 export function buildNetworkGraph(
     network: GoldenNetwork | undefined,
     correlation: CorrelationResult,
 ): NetworkGraph {
     if (!network) {
-        return {
-            nodes: [],
-            links: [],
-            timeRange: { startMs: 0, endMs: 0 },
-            contactCount: 0,
-            crossPlatformContacts: 0,
-        };
+        throw new Error("Replay fixture is missing network evidence; refusing to emit an empty network graph.");
     }
 
     // Map a target platform -> the identity cluster that platform's account is in.
@@ -47,10 +55,8 @@ export function buildNetworkGraph(
     // Links — canonical order (time, then endpoints) for determinism.
     const links: NetworkLink[] = [...network.interactions]
         .map((it) => {
-            const t = Date.parse(it.timestamp);
-            if (Number.isNaN(t)) {
-                throw new Error(`Invalid interaction timestamp "${it.timestamp}" (${it.from} -> ${it.to}).`);
-            }
+            const label = `${it.from} -> ${it.to}`;
+            const t = parseInteractionInstant(it.timestamp, label);
             const source = `self:${it.from}`;
             bump(source);
             bump(it.to);

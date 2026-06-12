@@ -1,0 +1,2248 @@
+diff --git a/backend/__tests__/replayArtifacts.test.js b/backend/__tests__/replayArtifacts.test.js
+new file mode 100644
+index 0000000..cfaafeb
+--- /dev/null
++++ b/backend/__tests__/replayArtifacts.test.js
+@@ -0,0 +1,498 @@
++/**
++ * Protected replay artifact API tests.
++ *
++ * These routes are the non-public, case-artifact surface for investigator
++ * workspaces. They intentionally do NOT replace the public /demo static replay:
++ * synthetic demo files may remain public, while real PII-bearing case artifacts
++ * must be served only through scoped backend routes.
++ */
++import request from 'supertest';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++
++import app from '../server.js';
++import { openValidatedReportFile, resolveReportPath } from '../controllers/replayArtifactControllers.js';
++import User from '../models/userModel.js';
++
++const validUser = {
++  name: 'Case Analyst',
++  email: 'analyst@example.com',
++  password: 'sup3rsecret',
++};
++
++const report = {
++  mode: 'replay',
++  synthetic: true,
++  notice: 'Synthetic fixture for route tests.',
++  handle: 'ana_rivera_dev',
++  generatedAt: '2026-06-11T10:00:00.000Z',
++  brief: {
++    text: 'Ana Rivera appears across four platforms with one high-cohesion developer identity.',
++    generator: 'extractive',
++    validated: true,
++    facts: {
++      handle: 'ana_rivera_dev',
++      displayName: 'Ana Rivera',
++      platformCount: 4,
++    },
++  },
++  network: {
++    nodes: [
++      {
++        id: 'contact:boris',
++        kind: 'contact',
++        label: 'Boris Petrov',
++        platform: 'telegram',
++        cluster: -1,
++        crossPlatform: true,
++        degree: 2,
++        x: 120,
++        y: 240,
++      },
++    ],
++    links: [
++      {
++        source: 'self:instagram',
++        target: 'contact:boris',
++        type: 'message',
++        timestamp: '2024-11-02T10:00:00Z',
++        t: 1730541600000,
++      },
++    ],
++    timeRange: { startMs: 1730541600000, endMs: 1730541600000 },
++    contactCount: 1,
++    crossPlatformContacts: 1,
++  },
++  findings: [
++    {
++      platform: 'instagram',
++      username: 'ana_rivera_dev',
++      samplePosts: [{ caption: 'raw finding must not leak through brief endpoint' }],
++    },
++  ],
++  correlation: {
++    nodes: [{ username: 'linked_handle_that_needs_its_own_scope' }],
++    edges: [],
++    identities: [],
++  },
++};
++
++let artifactDir;
++
++async function writeReport(handle, body = report) {
++  const dir = path.join(artifactDir, handle);
++  await fs.mkdir(dir, { recursive: true });
++  await fs.writeFile(path.join(dir, 'report.json'), JSON.stringify({ ...body, handle }), 'utf8');
++}
++
++async function signup(scopes = []) {
++  const res = await request(app).post('/api/users/signup').send(validUser);
++  await User.findByIdAndUpdate(res.body._id, { caseAccess: scopes });
++  return res.body.token;
++}
++
++beforeEach(async () => {
++  artifactDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tattletale-replay-artifacts-'));
++  process.env.REPLAY_ARTIFACT_DIR = artifactDir;
++  await writeReport('ana_rivera_dev');
++});
++
++afterEach(async () => {
++  delete process.env.REPLAY_ARTIFACT_DIR;
++  delete process.env.REPLAY_ALLOWED_ORIGINS;
++  await fs.rm(artifactDir, { recursive: true, force: true });
++});
++
++describe('protected replay artifact routes', () => {
++  it('requires a token before reading the intelligence brief', async () => {
++    const res = await request(app).get('/api/replay/ana_rivera_dev/intel-brief');
++
++    expect(res.status).toBe(401);
++    expect(res.text).toMatch(/no token/i);
++  });
++
++  it('rejects a malformed token before reading network graph PII', async () => {
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/network-graph')
++      .set('Authorization', 'Bearer not-a-real-token');
++
++    expect(res.status).toBe(401);
++    expect(res.text).toMatch(/token failed/i);
++  });
++
++  it('fails closed when the user has no case scope', async () => {
++    const token = await signup();
++
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/intel-brief')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(403);
++    expect(res.text).toMatch(/case scope/i);
++    expect(res.text).not.toContain(report.brief.text);
++  });
++
++  it('fails closed when the user has the right scope on a different subject', async () => {
++    const token = await signup([
++      { handle: 'other_subject', scopes: ['intel-brief:read', 'network-graph:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/network-graph')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(403);
++    expect(res.text).toMatch(/case scope/i);
++    expect(res.text).not.toContain('Boris Petrov');
++  });
++
++  it('returns only a minimized intelligence-brief projection for scoped users', async () => {
++    const token = await signup([
++      { handle: 'ana_rivera_dev', scopes: ['intel-brief:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/intel-brief')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(200);
++    expect(res.body).toEqual({
++      handle: 'ana_rivera_dev',
++      generatedAt: report.generatedAt,
++      synthetic: true,
++      notice: report.notice,
++      brief: {
++        text: report.brief.text,
++        generator: 'extractive',
++        validated: true,
++      },
++    });
++    expect(res.body.findings).toBeUndefined();
++    expect(res.body.correlation).toBeUndefined();
++    expect(res.body.brief.facts).toBeUndefined();
++  });
++
++  it('returns only the network graph projection for scoped users', async () => {
++    const token = await signup([
++      { handle: 'ana_rivera_dev', scopes: ['network-graph:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/network-graph')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(200);
++    expect(res.body).toEqual({
++      handle: 'ana_rivera_dev',
++      generatedAt: report.generatedAt,
++      network: report.network,
++    });
++    expect(res.body.findings).toBeUndefined();
++    expect(res.body.correlation).toBeUndefined();
++    expect(res.body.brief).toBeUndefined();
++  });
++
++  it('marks replay projections as non-cacheable', async () => {
++    const token = await signup([
++      { handle: 'ana_rivera_dev', scopes: ['intel-brief:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/intel-brief')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(200);
++    expect(res.headers['cache-control']).toMatch(/no-store/);
++    expect(res.headers.pragma).toBe('no-cache');
++    expect(res.headers['surrogate-control']).toBe('no-store');
++  });
++
++  it('marks early replay JSON parse failures as non-cacheable', async () => {
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/intel-brief')
++      .set('Content-Type', 'application/json')
++      .send('{"broken"');
++
++    expect(res.status).toBe(400);
++    expect(res.headers['cache-control']).toMatch(/no-store/);
++    expect(res.headers.pragma).toBe('no-cache');
++    expect(res.headers['surrogate-control']).toBe('no-store');
++    expect(res.text).not.toContain(report.brief.text);
++  });
++
++  it('fails closed when the artifact directory is not configured', async () => {
++    delete process.env.REPLAY_ARTIFACT_DIR;
++    const token = await signup([
++      { handle: 'ana_rivera_dev', scopes: ['intel-brief:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/intel-brief')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(503);
++    expect(res.text).toMatch(/internal server error/i);
++    expect(res.text).not.toContain(report.brief.text);
++  });
++
++  it('rejects artifact directories that resolve outside the artifact root', async () => {
++    const escapedHandle = 'escaped_subject';
++    const externalDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tattletale-external-artifact-'));
++
++    try {
++      await fs.writeFile(
++        path.join(externalDir, 'report.json'),
++        JSON.stringify({
++          ...report,
++          handle: escapedHandle,
++          brief: {
++            ...report.brief,
++            text: 'External artifact text must not be served.',
++          },
++        }),
++        'utf8',
++      );
++      await fs.symlink(
++        externalDir,
++        path.join(artifactDir, escapedHandle),
++        process.platform === 'win32' ? 'junction' : 'dir',
++      );
++      const token = await signup([
++        { handle: escapedHandle, scopes: ['intel-brief:read'] },
++      ]);
++
++      const res = await request(app)
++        .get(`/api/replay/${escapedHandle}/intel-brief`)
++        .set('Authorization', `Bearer ${token}`);
++
++      expect(res.status).toBe(400);
++      expect(res.text).toMatch(/escaped its root/i);
++      expect(res.text).not.toContain('External artifact text');
++    } finally {
++      await fs.rm(externalDir, { recursive: true, force: true });
++    }
++  });
++
++  it('rejects report files that resolve outside the artifact root', async () => {
++    const root = path.resolve('C:/artifact-root');
++    const handle = 'escaped_report';
++    const artifactDirPath = path.join(root, handle);
++    const requestedReport = path.join(artifactDirPath, 'report.json');
++    const outsideReport = path.resolve('C:/outside-artifacts/report.json');
++    const fakeFs = {
++      realpath: async (target) => {
++        if (target === root) return root;
++        if (target === artifactDirPath) return artifactDirPath;
++        if (target === requestedReport) return outsideReport;
++        throw Object.assign(new Error(`Unexpected realpath target: ${target}`), { code: 'ENOENT' });
++      },
++      lstat: async () => ({ isSymbolicLink: () => false }),
++      stat: async () => ({ isFile: () => true, size: 1024 }),
++    };
++
++    await expect(resolveReportPath(root, handle, fakeFs)).rejects.toMatchObject({
++      message: expect.stringMatching(/escaped its root/i),
++      statusCode: 400,
++    });
++  });
++
++  it('rejects report files that change between path validation and descriptor open', async () => {
++    const root = path.resolve('C:/artifact-root');
++    const handle = 'swapped_report';
++    const artifactDirPath = path.join(root, handle);
++    const requestedReport = path.join(artifactDirPath, 'report.json');
++    const validatedStat = { isFile: () => true, size: 1024, dev: 1, ino: 1 };
++    let closed = false;
++    const fakeFs = {
++      realpath: async (target) => {
++        if (target === root) return root;
++        if (target === artifactDirPath) return artifactDirPath;
++        if (target === requestedReport) return requestedReport;
++        throw Object.assign(new Error(`Unexpected realpath target: ${target}`), { code: 'ENOENT' });
++      },
++      lstat: async () => ({ isSymbolicLink: () => false }),
++      stat: async () => validatedStat,
++      open: async () => ({
++        stat: async () => ({ isFile: () => true, size: 1024, dev: 1, ino: 2 }),
++        close: async () => {
++          closed = true;
++        },
++      }),
++    };
++
++    await expect(openValidatedReportFile(root, handle, fakeFs)).rejects.toMatchObject({
++      message: expect.stringMatching(/changed during validation/i),
++      statusCode: 409,
++    });
++    expect(closed).toBe(true);
++  });
++
++  it('fails closed when the intelligence brief projection is malformed', async () => {
++    await writeReport('bad_brief', {
++      ...report,
++      brief: {
++        ...report.brief,
++        validated: false,
++      },
++    });
++    const token = await signup([
++      { handle: 'bad_brief', scopes: ['intel-brief:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/bad_brief/intel-brief')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(500);
++    expect(res.text).toMatch(/internal server error/i);
++    expect(res.text).not.toContain(report.brief.text);
++  });
++
++  it.each([
++    ['generatedAt', { generatedAt: { private: 'raw timestamp PII must not leak' } }],
++    ['synthetic', { synthetic: { private: 'raw synthetic flag PII must not leak' } }],
++    ['notice', { notice: { private: 'raw notice PII must not leak' } }],
++  ])('fails closed when the intelligence brief top-level %s field is malformed', async (_field, override) => {
++    await writeReport('bad_header', {
++      ...report,
++      ...override,
++    });
++    const token = await signup([
++      { handle: 'bad_header', scopes: ['intel-brief:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/bad_header/intel-brief')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(500);
++    expect(res.text).toMatch(/internal server error/i);
++    expect(res.text).not.toContain('raw');
++    expect(res.text).not.toContain('PII');
++  });
++
++  it('fails closed when the network graph top-level generatedAt field is malformed', async () => {
++    await writeReport('bad_network_header', {
++      ...report,
++      generatedAt: { private: 'raw network timestamp PII must not leak' },
++    });
++    const token = await signup([
++      { handle: 'bad_network_header', scopes: ['network-graph:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/bad_network_header/network-graph')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(500);
++    expect(res.text).toMatch(/internal server error/i);
++    expect(res.text).not.toContain('raw network');
++  });
++
++  it('fails closed when the network graph projection is malformed', async () => {
++    await writeReport('bad_network', {
++      ...report,
++      network: { nodes: report.network.nodes },
++    });
++    const token = await signup([
++      { handle: 'bad_network', scopes: ['network-graph:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/bad_network/network-graph')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(500);
++    expect(res.text).toMatch(/internal server error/i);
++    expect(res.text).not.toContain('Boris Petrov');
++  });
++
++  it('fails closed when the network graph contains unapproved nested fields', async () => {
++    await writeReport('leaky_network', {
++      ...report,
++      network: {
++        ...report.network,
++        rawMessages: [{ text: 'private message body must never be projected' }],
++      },
++    });
++    const token = await signup([
++      { handle: 'leaky_network', scopes: ['network-graph:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/leaky_network/network-graph')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(500);
++    expect(res.text).toMatch(/internal server error/i);
++    expect(res.text).not.toContain('private message');
++  });
++
++  it('rejects oversized replay artifacts before parsing them', async () => {
++    const hugeHandle = 'huge_artifact';
++    const dir = path.join(artifactDir, hugeHandle);
++    await fs.mkdir(dir, { recursive: true });
++    await fs.writeFile(path.join(dir, 'report.json'), `"${'x'.repeat(11 * 1024 * 1024)}"`, 'utf8');
++    const token = await signup([
++      { handle: hugeHandle, scopes: ['intel-brief:read'] },
++    ]);
++
++    const res = await request(app)
++      .get(`/api/replay/${hugeHandle}/intel-brief`)
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(413);
++    expect(res.text).toMatch(/maximum size/i);
++  });
++
++  it('fails closed for browser origins when replay CORS origins are not configured', async () => {
++    const token = await signup([
++      { handle: 'ana_rivera_dev', scopes: ['intel-brief:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/intel-brief')
++      .set('Origin', 'https://case-console.example')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(503);
++    expect(res.headers['access-control-allow-origin']).toBeUndefined();
++    expect(res.headers['cache-control']).toMatch(/no-store/);
++    expect(res.headers.pragma).toBe('no-cache');
++    expect(res.headers['surrogate-control']).toBe('no-store');
++    expect(res.text).not.toContain(report.brief.text);
++  });
++
++  it('allows a configured replay browser origin without wildcard CORS', async () => {
++    process.env.REPLAY_ALLOWED_ORIGINS = 'https://case-console.example';
++    const token = await signup([
++      { handle: 'ana_rivera_dev', scopes: ['intel-brief:read'] },
++    ]);
++
++    const res = await request(app)
++      .get('/api/replay/ana_rivera_dev/intel-brief')
++      .set('Origin', 'https://case-console.example')
++      .set('Authorization', `Bearer ${token}`);
++
++    expect(res.status).toBe(200);
++    expect(res.headers['access-control-allow-origin']).toBe('https://case-console.example');
++    expect(res.headers['access-control-allow-origin']).not.toBe('*');
++  });
++
++  it('marks replay CORS preflight responses as non-cacheable', async () => {
++    process.env.REPLAY_ALLOWED_ORIGINS = 'https://case-console.example';
++
++    const res = await request(app)
++      .options('/api/replay/ana_rivera_dev/intel-brief')
++      .set('Origin', 'https://case-console.example')
++      .set('Access-Control-Request-Method', 'GET')
++      .set('Access-Control-Request-Headers', 'authorization');
++
++    expect(res.status).toBe(204);
++    expect(res.headers['access-control-allow-origin']).toBe('https://case-console.example');
++    expect(res.headers['cache-control']).toMatch(/no-store/);
++    expect(res.headers.pragma).toBe('no-cache');
++    expect(res.headers['surrogate-control']).toBe('no-store');
++  });
++});
+diff --git a/backend/__tests__/users.test.js b/backend/__tests__/users.test.js
+index fbd5430..3c09ae9 100644
+--- a/backend/__tests__/users.test.js
++++ b/backend/__tests__/users.test.js
+@@ -157,6 +157,20 @@ describe('GET /api/users/ (protected: getUser)', () => {
+     expect(res.body.name).toBe(validUser.name);
+     expect(res.body.password).toBeUndefined();
+   });
++
++  it('does not expose case-access grants in the user profile response', async () => {
++    const signupRes = await signup();
++    await User.findByIdAndUpdate(signupRes.body._id, {
++      caseAccess: [{ handle: 'ana_rivera_dev', scopes: ['intel-brief:read'] }],
++    });
++
++    const res = await request(app)
++      .get('/api/users/')
++      .set('Authorization', `Bearer ${signupRes.body.token}`);
++
++    expect(res.status).toBe(200);
++    expect(res.body.caseAccess).toBeUndefined();
++  });
+ });
+
+ describe('password storage', () => {
+diff --git a/backend/controllers/replayArtifactControllers.js b/backend/controllers/replayArtifactControllers.js
+new file mode 100644
+index 0000000..ccb6565
+--- /dev/null
++++ b/backend/controllers/replayArtifactControllers.js
+@@ -0,0 +1,391 @@
++import asyncHandler from "express-async-handler";
++import fs from "node:fs/promises";
++import path from "node:path";
++
++const MAX_REPORT_BYTES = 10 * 1024 * 1024;
++const MAX_NOTICE_CHARS = 512;
++const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
++
++function artifactRoot(context = {}) {
++  const root = process.env.REPLAY_ARTIFACT_DIR;
++  if (!root) {
++    throw httpError("Replay artifact directory is not configured.", 503, { step: "load-artifact-root" });
++  }
++  context.configuredArtifactRoot = path.resolve(root);
++  return root;
++}
++
++function httpError(message, statusCode, details = {}) {
++  return Object.assign(new Error(message), { statusCode, ...details });
++}
++
++function assertObject(value, label) {
++  if (!value || typeof value !== "object" || Array.isArray(value)) {
++    throw httpError(`Replay artifact is missing ${label}.`, 500, { step: `validate-${label}` });
++  }
++}
++
++function assertString(value, label) {
++  if (typeof value !== "string" || value.length === 0) {
++    throw httpError(`Replay artifact has invalid ${label}.`, 500, { step: `validate-${label}` });
++  }
++}
++
++function assertArray(value, label) {
++  if (!Array.isArray(value)) {
++    throw httpError(`Replay artifact has invalid ${label}.`, 500, { step: `validate-${label}` });
++  }
++}
++
++function assertNumber(value, label) {
++  if (!Number.isFinite(value)) {
++    throw httpError(`Replay artifact has invalid ${label}.`, 500, { step: `validate-${label}` });
++  }
++}
++
++function assertBoolean(value, label) {
++  if (typeof value !== "boolean") {
++    throw httpError(`Replay artifact has invalid ${label}.`, 500, { step: `validate-${label}` });
++  }
++}
++
++function assertIsoInstant(value, label) {
++  assertString(value, label);
++  if (!ISO_INSTANT.test(value) || Number.isNaN(Date.parse(value))) {
++    throw httpError(`Replay artifact has invalid ${label}.`, 500, { step: `validate-${label}` });
++  }
++}
++
++function assertExactKeys(value, keys, label) {
++  assertObject(value, label);
++  const allowed = new Set(keys);
++  const unexpected = Object.keys(value).filter((key) => !allowed.has(key));
++  if (unexpected.length > 0) {
++    throw httpError(`Replay artifact has unexpected ${label} fields: ${unexpected.join(", ")}.`, 500, {
++      step: `validate-${label}`,
++    });
++  }
++}
++
++function isInside(parentPath, childPath) {
++  const relativePath = path.relative(parentPath, childPath);
++  return relativePath !== "" && !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
++}
++
++function missingArtifact(handle) {
++  return httpError(`Replay artifact for subject "${handle}" was not found.`, 404, { step: "load-report-path" });
++}
++
++function isMissingPath(error) {
++  return error?.code === "ENOENT" || error?.code === "ENOTDIR";
++}
++
++function sameFileIdentity(expected, actual) {
++  return (
++    Number.isFinite(expected?.dev) &&
++    Number.isFinite(expected?.ino) &&
++    Number.isFinite(actual?.dev) &&
++    Number.isFinite(actual?.ino) &&
++    expected.dev === actual.dev &&
++    expected.ino === actual.ino
++  );
++}
++
++function assertRegularReportStat(stat, handle) {
++  if (!stat.isFile()) {
++    throw httpError(`Replay artifact for subject "${handle}" is not a regular file.`, 500, {
++      step: "validate-report-stat",
++    });
++  }
++  if (stat.size > MAX_REPORT_BYTES) {
++    throw httpError("Replay artifact exceeds maximum size.", 413, { step: "validate-report-size" });
++  }
++}
++
++export async function resolveReportPath(root, handle, fsOps = fs, context = {}) {
++  const rootPath = path.resolve(root);
++  const requestedDir = path.resolve(rootPath, handle);
++  context.artifactRoot = rootPath;
++  context.requestedArtifactDir = requestedDir;
++
++  if (!isInside(rootPath, requestedDir)) {
++    throw httpError("Replay artifact path escaped its root.", 400, { step: "validate-requested-dir" });
++  }
++
++  let rootRealPath;
++  try {
++    rootRealPath = await fsOps.realpath(rootPath);
++  } catch (error) {
++    if (isMissingPath(error)) {
++      throw httpError("Replay artifact directory is not available.", 503, { step: "realpath-artifact-root" });
++    }
++    throw error;
++  }
++  context.artifactRootRealPath = rootRealPath;
++
++  let artifactRealDir;
++  try {
++    artifactRealDir = await fsOps.realpath(requestedDir);
++  } catch (error) {
++    if (isMissingPath(error)) {
++      throw missingArtifact(handle);
++    }
++    throw error;
++  }
++  context.artifactRealDir = artifactRealDir;
++
++  if (!isInside(rootRealPath, artifactRealDir)) {
++    throw httpError("Replay artifact path escaped its root.", 400, { step: "validate-artifact-dir-realpath" });
++  }
++
++  const reportPath = path.join(artifactRealDir, "report.json");
++  context.reportPath = reportPath;
++  let linkStat;
++  try {
++    linkStat = await fsOps.lstat(reportPath);
++  } catch (error) {
++    if (isMissingPath(error)) {
++      throw missingArtifact(handle);
++    }
++    throw error;
++  }
++  if (linkStat.isSymbolicLink()) {
++    throw httpError("Replay artifact path escaped its root.", 400, { step: "validate-report-lstat" });
++  }
++
++  let reportRealPath;
++  try {
++    reportRealPath = await fsOps.realpath(reportPath);
++  } catch (error) {
++    if (isMissingPath(error)) {
++      throw missingArtifact(handle);
++    }
++    throw error;
++  }
++  context.reportRealPath = reportRealPath;
++
++  if (!isInside(rootRealPath, reportRealPath)) {
++    throw httpError("Replay artifact path escaped its root.", 400, { step: "validate-report-realpath" });
++  }
++
++  const reportStat = await fsOps.stat(reportRealPath);
++  assertRegularReportStat(reportStat, handle);
++
++  return { reportRealPath, reportStat };
++}
++
++export async function openValidatedReportFile(root, handle, fsOps = fs, context = {}) {
++  const { reportRealPath, reportStat } = await resolveReportPath(root, handle, fsOps, context);
++  let file;
++  try {
++    file = await fsOps.open(reportRealPath, "r");
++  } catch (error) {
++    if (error?.code === "ENOENT") {
++      throw missingArtifact(handle);
++    }
++    throw error;
++  }
++
++  try {
++    const stat = await file.stat();
++    assertRegularReportStat(stat, handle);
++    if (!sameFileIdentity(reportStat, stat)) {
++      throw httpError("Replay artifact changed during validation.", 409, { step: "validate-opened-report" });
++    }
++    return file;
++  } catch (error) {
++    await file.close();
++    throw error;
++  }
++}
++
++async function readReportFile(file, handle) {
++  try {
++    const stat = await file.stat();
++    assertRegularReportStat(stat, handle);
++    return await file.readFile("utf8");
++  } finally {
++    await file.close();
++  }
++}
++
++async function loadReport(handle, context = {}) {
++  const root = artifactRoot(context);
++  const file = await openValidatedReportFile(root, handle, fs, context);
++  const raw = await readReportFile(file, handle);
++
++  let report;
++  try {
++    report = JSON.parse(raw);
++  } catch (error) {
++    throw httpError(`Replay artifact for subject "${handle}" is not valid JSON.`, 500, {
++      step: "parse-report-json",
++      causeMessage: error.message,
++      causeStack: error.stack,
++    });
++  }
++  if (report.handle !== handle) {
++    throw httpError(`Replay artifact subject mismatch for "${handle}".`, 409, { step: "validate-report-handle" });
++  }
++  return report;
++}
++
++function reportHeaderProjection(report, { includeSynthetic = false, includeNotice = false } = {}) {
++  assertString(report.handle, "handle");
++  assertIsoInstant(report.generatedAt, "generatedAt");
++
++  const header = {
++    handle: report.handle,
++    generatedAt: report.generatedAt,
++  };
++
++  if (includeSynthetic) {
++    assertBoolean(report.synthetic, "synthetic");
++    header.synthetic = report.synthetic;
++  }
++
++  if (includeNotice && report.notice !== undefined) {
++    assertString(report.notice, "notice");
++    if (report.notice.length > MAX_NOTICE_CHARS) {
++      throw httpError("Replay artifact has invalid notice.", 500, { step: "validate-notice" });
++    }
++    header.notice = report.notice;
++  }
++
++  return header;
++}
++
++function intelBriefProjection(report) {
++  const header = reportHeaderProjection(report, { includeSynthetic: true, includeNotice: true });
++  assertObject(report.brief, "brief");
++  assertString(report.brief.text, "brief.text");
++  assertString(report.brief.generator, "brief.generator");
++  if (report.brief.validated !== true) {
++    throw httpError("Replay artifact brief is not validated.", 500);
++  }
++
++  return {
++    ...header,
++    brief: {
++      text: report.brief.text,
++      generator: report.brief.generator,
++      validated: report.brief.validated,
++    },
++  };
++}
++
++function networkGraphProjection(report) {
++  const header = reportHeaderProjection(report);
++  assertExactKeys(report.network, ["nodes", "links", "timeRange", "contactCount", "crossPlatformContacts"], "network");
++  assertArray(report.network.nodes, "network.nodes");
++  assertArray(report.network.links, "network.links");
++  assertExactKeys(report.network.timeRange, ["startMs", "endMs"], "network.timeRange");
++  assertNumber(report.network.timeRange.startMs, "network.timeRange.startMs");
++  assertNumber(report.network.timeRange.endMs, "network.timeRange.endMs");
++  assertNumber(report.network.contactCount, "network.contactCount");
++  assertNumber(report.network.crossPlatformContacts, "network.crossPlatformContacts");
++
++  const nodes = report.network.nodes.map((node, index) => {
++    assertExactKeys(node, ["id", "kind", "label", "platform", "cluster", "crossPlatform", "degree", "x", "y"], `network.nodes[${index}]`);
++    assertString(node.id, `network.nodes[${index}].id`);
++    assertString(node.kind, `network.nodes[${index}].kind`);
++    if (!["self", "contact"].includes(node.kind)) {
++      throw httpError(`Replay artifact has invalid network.nodes[${index}].kind.`, 500);
++    }
++    assertString(node.label, `network.nodes[${index}].label`);
++    assertString(node.platform, `network.nodes[${index}].platform`);
++    assertNumber(node.cluster, `network.nodes[${index}].cluster`);
++    assertBoolean(node.crossPlatform, `network.nodes[${index}].crossPlatform`);
++    assertNumber(node.degree, `network.nodes[${index}].degree`);
++    assertNumber(node.x, `network.nodes[${index}].x`);
++    assertNumber(node.y, `network.nodes[${index}].y`);
++    return {
++      id: node.id,
++      kind: node.kind,
++      label: node.label,
++      platform: node.platform,
++      cluster: node.cluster,
++      crossPlatform: node.crossPlatform,
++      degree: node.degree,
++      x: node.x,
++      y: node.y,
++    };
++  });
++
++  const links = report.network.links.map((link, index) => {
++    assertExactKeys(link, ["source", "target", "type", "timestamp", "t"], `network.links[${index}]`);
++    assertString(link.source, `network.links[${index}].source`);
++    assertString(link.target, `network.links[${index}].target`);
++    assertString(link.type, `network.links[${index}].type`);
++    assertString(link.timestamp, `network.links[${index}].timestamp`);
++    assertNumber(link.t, `network.links[${index}].t`);
++    return {
++      source: link.source,
++      target: link.target,
++      type: link.type,
++      timestamp: link.timestamp,
++      t: link.t,
++    };
++  });
++
++  return {
++    handle: header.handle,
++    generatedAt: header.generatedAt,
++    network: {
++      nodes,
++      links,
++      timeRange: {
++        startMs: report.network.timeRange.startMs,
++        endMs: report.network.timeRange.endMs,
++      },
++      contactCount: report.network.contactCount,
++      crossPlatformContacts: report.network.crossPlatformContacts,
++    },
++  };
++}
++
++function requestLogContext(req, projection) {
++  return {
++    handle: req.caseHandle,
++    projection,
++    userId: req.user?._id?.toString(),
++    requiredScope: req.caseScope,
++    origin: req.get("origin"),
++    ip: req.ip,
++  };
++}
++
++function sendError(res, error, context) {
++  const status = error.statusCode || 500;
++  console.error("Replay artifact request failed.", {
++    ...context,
++    step: error.step,
++    status,
++    message: error.message,
++    causeMessage: error.causeMessage,
++    causeStack: error.causeStack,
++    stack: error.stack,
++  });
++  res.status(status);
++  throw error;
++}
++
++export const getIntelBrief = asyncHandler(async (req, res) => {
++  const artifactContext = {};
++  try {
++    const report = await loadReport(req.caseHandle, artifactContext);
++    res.json(intelBriefProjection(report));
++  } catch (error) {
++    sendError(res, error, { ...requestLogContext(req, "intel-brief"), ...artifactContext });
++  }
++});
++
++export const getNetworkGraph = asyncHandler(async (req, res) => {
++  const artifactContext = {};
++  try {
++    const report = await loadReport(req.caseHandle, artifactContext);
++    res.json(networkGraphProjection(report));
++  } catch (error) {
++    sendError(res, error, { ...requestLogContext(req, "network-graph"), ...artifactContext });
++  }
++});
+diff --git a/backend/controllers/userControllers.js b/backend/controllers/userControllers.js
+index ec52a48..77b89a8 100644
+--- a/backend/controllers/userControllers.js
++++ b/backend/controllers/userControllers.js
+@@ -78,7 +78,15 @@ const getUser = asyncHandler(async (req, res) => {
+       throw new Error("User not found");
+     }
+
+-    res.json(user);
++    res.json({
++      _id: user._id,
++      name: user.name,
++      email: user.email,
++      isAdmin: user.isAdmin,
++      searchHistory: user.searchHistory,
++      createdAt: user.createdAt,
++      updatedAt: user.updatedAt,
++    });
+   } catch (error) {
+     console.error(`Error fetching user: ${error.message}`);
+     res.status(500);
+@@ -118,4 +126,4 @@ const updateUser = asyncHandler(async (req, res) => {
+
+ });
+
+-export { User, asyncHandler, generateToken, authUser, registerUser, getUser, updateUser };
+\ No newline at end of file
++export { User, asyncHandler, generateToken, authUser, registerUser, getUser, updateUser };
+diff --git a/backend/middlewares/authMiddleware.js b/backend/middlewares/authMiddleware.js
+index 3f50aae..64a8959 100644
+--- a/backend/middlewares/authMiddleware.js
++++ b/backend/middlewares/authMiddleware.js
+@@ -15,29 +15,44 @@ export const protect = asyncHandler(async (req, res, next) => {
+     req.headers.authorization &&
+     req.headers.authorization.startsWith("Bearer")
+   ) {
++    token = req.headers.authorization.split(" ")[1];
++    let decoded;
+     try {
+-      token = req.headers.authorization.split(" ")[1];
+-
+-
+-      const decoded = jwt.verify(token, JWT_SECRET);
+-
+-
+-      req.user = await User.findById(decoded.id).select("-password");
+-      if (!req.user) {
+-        console.error("No user found in database for given ID");
+-        res.status(400);
+-        throw new Error("User not found");
+-      }
+-
+-
+-      next();
++      decoded = jwt.verify(token, JWT_SECRET);
+     } catch (error) {
+-      console.error(`Token validation error: ${error.message}`);
++      console.error("Token validation error.", {
++        method: req.method,
++        path: req.originalUrl,
++        origin: req.get("origin"),
++        ip: req.ip,
++        message: error.message,
++        stack: error.stack,
++      });
++      res.status(401);
++      throw new Error("Not authorized, token failed");
++    }
++
++    req.user = await User.findById(decoded.id).select("+caseAccess -password");
++    if (!req.user) {
++      console.error("No user found in database for token subject.", {
++        method: req.method,
++        path: req.originalUrl,
++        origin: req.get("origin"),
++        ip: req.ip,
++        tokenSubject: decoded.id,
++      });
+       res.status(401);
+       throw new Error("Not authorized, token failed");
+     }
++
++    next();
+   } else {
+-    console.error("No token provided in request headers");
++    console.error("No token provided in request headers.", {
++      method: req.method,
++      path: req.originalUrl,
++      origin: req.get("origin"),
++      ip: req.ip,
++    });
+     res.status(401);
+     throw new Error("Not authorized, no token provided");
+   }
+diff --git a/backend/middlewares/caseAccessMiddleware.js b/backend/middlewares/caseAccessMiddleware.js
+new file mode 100644
+index 0000000..3a7ef98
+--- /dev/null
++++ b/backend/middlewares/caseAccessMiddleware.js
+@@ -0,0 +1,40 @@
++import asyncHandler from "express-async-handler";
++
++const HANDLE_PATTERN = /^[A-Za-z0-9_-]+$/;
++
++export const requireCaseScope = (scope) => asyncHandler(async (req, res, next) => {
++  const { handle } = req.params;
++
++  if (!handle || !HANDLE_PATTERN.test(handle)) {
++    res.status(400);
++    throw new Error("Invalid case handle.");
++  }
++
++  const grants = Array.isArray(req.user?.caseAccess) ? req.user.caseAccess : [];
++  const hasScope = grants.some((grant) => (
++    grant.handle === handle &&
++    Array.isArray(grant.scopes) &&
++    grant.scopes.includes(scope)
++  ));
++
++  if (!hasScope) {
++    console.error("Missing required case scope.", {
++      method: req.method,
++      path: req.originalUrl,
++      origin: req.get("origin"),
++      ip: req.ip,
++      userId: req.user?._id?.toString(),
++      handle,
++      requiredScope: scope,
++      grantedScopesForHandle: grants
++        .filter((grant) => grant.handle === handle && Array.isArray(grant.scopes))
++        .flatMap((grant) => grant.scopes),
++    });
++    res.status(403);
++    throw new Error("Missing required case scope.");
++  }
++
++  req.caseHandle = handle;
++  req.caseScope = scope;
++  next();
++});
+diff --git a/backend/models/userModel.js b/backend/models/userModel.js
+index 48e6b68..e51ee31 100644
+--- a/backend/models/userModel.js
++++ b/backend/models/userModel.js
+@@ -9,11 +9,17 @@ const searchHistorySchema = new mongoose.Schema({
+     resultId: { type: mongoose.Schema.Types.ObjectId, ref: 'Result' }, // Reference to detailed result data
+ });
+
++const caseAccessSchema = new mongoose.Schema({
++    handle: { type: String, required: true },
++    scopes: { type: [String], default: [] },
++}, { _id: false });
++
+ const userSchema = new mongoose.Schema({
+     name: { type: String, required: true },
+     email: { type: String, required: true, unique: true },
+     password: { type: String, required: true },
+     isAdmin: { type: Boolean, default: false },
++    caseAccess: { type: [caseAccessSchema], default: [], select: false },
+     searchHistory: [searchHistorySchema],
+ }, {
+     timestamps: true,
+diff --git a/backend/routes/replayRoutes.js b/backend/routes/replayRoutes.js
+new file mode 100644
+index 0000000..27dd197
+--- /dev/null
++++ b/backend/routes/replayRoutes.js
+@@ -0,0 +1,24 @@
++import express from "express";
++
++import { getIntelBrief, getNetworkGraph } from "../controllers/replayArtifactControllers.js";
++import { protect } from "../middlewares/authMiddleware.js";
++import { requireCaseScope } from "../middlewares/caseAccessMiddleware.js";
++
++const router = express.Router();
++
++router.use((req, res, next) => {
++  res.set("Cache-Control", "no-store, private");
++  res.set("Pragma", "no-cache");
++  res.set("Surrogate-Control", "no-store");
++  next();
++});
++
++router
++  .route("/:handle/intel-brief")
++  .get(protect, requireCaseScope("intel-brief:read"), getIntelBrief);
++
++router
++  .route("/:handle/network-graph")
++  .get(protect, requireCaseScope("network-graph:read"), getNetworkGraph);
++
++export default router;
+diff --git a/backend/server.js b/backend/server.js
+index c5f984a..5f14a5a 100644
+--- a/backend/server.js
++++ b/backend/server.js
+@@ -2,11 +2,53 @@ import express from 'express';
+ import dotenv from 'dotenv';
+ import cors from 'cors';
+ import userRoutes from './routes/userRoutes.js';
++import replayRoutes from './routes/replayRoutes.js';
+ import connectDB from './config/db.js';
+
+ dotenv.config();
+
+ const app = express();
++const publicCors = cors();
++
++function configuredReplayOrigins() {
++  return (process.env.REPLAY_ALLOWED_ORIGINS || '')
++    .split(',')
++    .map((origin) => origin.trim())
++    .filter(Boolean);
++}
++
++function replayCorsOrigin(origin, callback) {
++  if (!origin) {
++    callback(null, false);
++    return;
++  }
++
++  const allowedOrigins = configuredReplayOrigins();
++  if (allowedOrigins.length === 0) {
++    callback(Object.assign(new Error('Replay CORS origins are not configured.'), { statusCode: 503 }));
++    return;
++  }
++
++  if (!allowedOrigins.includes(origin)) {
++    callback(Object.assign(new Error('Origin is not allowed for replay artifacts.'), { statusCode: 403 }));
++    return;
++  }
++
++  callback(null, origin);
++}
++
++const replayCors = cors({
++  origin: replayCorsOrigin,
++  methods: ['GET'],
++  allowedHeaders: ['Authorization', 'Content-Type'],
++});
++
++function setReplayNoStore(req, res, next) {
++  res.set('Cache-Control', 'no-store, private');
++  res.set('Pragma', 'no-cache');
++  res.set('Surrogate-Control', 'no-store');
++  next();
++}
+
+ // Connect to MongoDB (skip in test: tests provide their own in-memory connection)
+ if (process.env.NODE_ENV !== 'test') {
+@@ -14,7 +56,14 @@ if (process.env.NODE_ENV !== 'test') {
+ }
+
+ // Middleware
+-app.use(cors());
++app.use((req, res, next) => {
++  if (req.path.startsWith('/api/replay')) {
++    setReplayNoStore(req, res, next);
++    return;
++  }
++
++  publicCors(req, res, next);
++});
+ app.use(express.json());
+
+ // Public health check (used by Docker healthcheck / load balancers).
+@@ -22,6 +71,35 @@ app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
+
+ // Routes
+ app.use('/api/users', userRoutes);
++app.use('/api/replay', setReplayNoStore, replayCors, replayRoutes);
++
++app.use((err, req, res, next) => {
++  if (res.headersSent) {
++    next(err);
++    return;
++  }
++
++  if (req.path.startsWith('/api/replay')) {
++    res.set('Cache-Control', 'no-store, private');
++    res.set('Pragma', 'no-cache');
++    res.set('Surrogate-Control', 'no-store');
++  }
++
++  const status = err.statusCode || (res.statusCode && res.statusCode !== 200 ? res.statusCode : 500);
++  console.error('API request failed.', {
++    method: req.method,
++    path: req.originalUrl,
++    status,
++    message: err.message,
++    userId: req.user?._id?.toString(),
++    origin: req.get('origin'),
++    ip: req.ip,
++    stack: err.stack,
++  });
++  res.status(status).json({
++    message: status >= 500 ? 'Internal server error.' : err.message,
++  });
++});
+
+ // Start a listener everywhere EXCEPT Vercel's serverless runtime (which imports
+ // the default export) and tests (which drive `app` via supertest). Vercel sets
+diff --git a/scraper/src/replay/__tests__/correlation.blocking.test.ts b/scraper/src/replay/__tests__/correlation.blocking.test.ts
+new file mode 100644
+index 0000000..c3adacc
+--- /dev/null
++++ b/scraper/src/replay/__tests__/correlation.blocking.test.ts
+@@ -0,0 +1,187 @@
++// Run with: npx tsx --test src/replay/__tests__/correlation.blocking.test.ts
++//
++// Blocking (scalability) tests. The engine must stay forensically correct once
++// the O(n²) full-scoring is replaced by feature-blocked candidate generation
++// above BLOCKING_MIN_ACCOUNTS (=64):
++//   - EVIDENCE-BACKED RECALL: a true merge pair buried in a large set still merges.
++//   - NAMESAKE: a same-handle/name pair with different behaviour stays separate.
++//   - DETERMINISM: the same large input yields a byte-identical graph.
++//   - PRUNING: blocking full-scores far fewer than n(n-1)/2 pairs, while still
++//     making the cheap behavioural pass over every pair to avoid dropping
++//     evidence-backed merge candidates at a bucket boundary.
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { correlate, inspectCandidatePairs } from "../correlation.js";
++import type { GoldenPlatform, GoldenPost } from "../types.js";
++
++function acc(over: Partial<GoldenPlatform>): GoldenPlatform {
++    return {
++        platform: "x",
++        username: "user",
++        url: "https://x.com/user",
++        displayName: "User",
++        bio: "",
++        verified: false,
++        followers: 100,
++        following: 100,
++        postCount: 0,
++        posts: [],
++        ...over,
++    };
++}
++
++// A deterministic high-entropy alpha token for seed `s`. Consecutive seeds map to
++// dissimilar strings (few shared character n-grams), so distractors built from
++// these share essentially no blocking key with one another — modelling a diverse
++// real-world identity set rather than a templated one.
++function alpha(s: number): string {
++    let x = (s * 2654435761) % 0x7fffffff;
++    let out = "";
++    for (let i = 0; i < 9; i++) {
++        out += String.fromCharCode(97 + (x % 26));
++        x = Math.floor(x / 26) + (s + 1) * (i + 7) * 131;
++    }
++    return out;
++}
++
++// A distractor account `k`: a unique handle, name, bio and vocabulary so it
++// shares no blocking key with any other distractor and cannot merge with one.
++function distractor(k: number): GoldenPlatform {
++    const w = (n: number) => alpha(k * 17 + n);
++    const h1 = String(k % 24).padStart(2, "0");
++    const h2 = String((k * 7 + 3) % 24).padStart(2, "0");
++    const posts: GoldenPost[] = [
++        { id: `d${k}a`, timestamp: `2024-11-02T${h1}:00:00Z`, caption: `${w(1)} ${w(2)} ${w(3)} ${w(4)}`, likes: 1, comments: 0 },
++        { id: `d${k}b`, timestamp: `2024-11-03T${h2}:00:00Z`, caption: `${w(5)} ${w(6)} ${w(7)} ${w(8)}`, likes: 1, comments: 0 },
++    ];
++    return acc({
++        platform: `plat${k % 5}`,
++        username: `${alpha(k * 31 + 3)}_${alpha(k * 31 + 4)}`,
++        displayName: `${alpha(k * 31 + 5)} ${alpha(k * 31 + 6)}`,
++        bio: `${w(9)} ${w(10)} ${w(11)}`,
++        posts,
++    });
++}
++
++// A true cross-platform pair: same handle/name/style/vocabulary on two platforms,
++// strong enough to merge under the brute-force engine.
++const twinPosts = (tag: string): GoldenPost[] => [
++    { id: `${tag}1`, timestamp: "2024-11-02T20:00:00Z", caption: "shipping a tiny CLI tool tonight, missing await again", likes: 1, comments: 0 },
++    { id: `${tag}2`, timestamp: "2024-11-05T21:00:00Z", caption: "the compiler caught the bug, ship small ship often", likes: 1, comments: 0 },
++];
++
++function bigSetWithTruePair(nDistractors: number): GoldenPlatform[] {
++    const set: GoldenPlatform[] = [];
++    for (let k = 0; k < nDistractors; k++) set.push(distractor(k));
++    set.push(acc({ platform: "instagram", username: "ana_rivera_twin", displayName: "Ana Rivera Twin", bio: "tiny dev tools coffee", posts: twinPosts("ig") }));
++    set.push(acc({ platform: "x", username: "ana_rivera_twin", displayName: "Ana Rivera Twin", bio: "tiny dev tools coffee", posts: twinPosts("xx") }));
++    return set;
++}
++
++test("blocking activates above the size threshold and prunes the vast majority of full-scored pairs", () => {
++    const set = bigSetWithTruePair(200); // 202 accounts
++    const { pairs, blocked, behavioralPairsEvaluated, fullScoredPairs } = inspectCandidatePairs(set);
++    const n = set.length;
++    const exhaustive = (n * (n - 1)) / 2;
++    assert.equal(blocked, true, "202 accounts must trigger blocking");
++    assert.equal(behavioralPairsEvaluated, exhaustive, "blocking still evaluates every behavioural pair");
++    assert.equal(fullScoredPairs, pairs.length);
++    assert.ok(
++        fullScoredPairs < exhaustive * 0.1,
++        `blocking should full-score <10% of ${exhaustive} pairs (full-scored ${fullScoredPairs})`,
++    );
++});
++
++test("EVIDENCE-BACKED RECALL: a true merge-strength pair survives blocking and still merges", () => {
++    const set = bigSetWithTruePair(200);
++    const { accounts, pairs, blocked } = inspectCandidatePairs(set);
++    assert.equal(blocked, true);
++
++    // The two twins, located by their shared handle in the canonical order.
++    const idxs = accounts
++        .map((a, i) => ({ a, i }))
++        .filter((x) => x.a.username === "ana_rivera_twin")
++        .map((x) => x.i);
++    assert.equal(idxs.length, 2, "both twins present");
++    const [i, j] = [Math.min(...idxs), Math.max(...idxs)];
++
++    // The true pair must be in the candidate set (not blocking-pruned).
++    assert.ok(pairs.some(([a, b]) => a === i && b === j), "true pair must survive blocking");
++
++    // ...and the engine must actually resolve them into one identity.
++    const r = correlate(set);
++    const cluster = r.identities.find((c) => c.accountIndices.includes(i));
++    assert.ok(cluster?.accountIndices.includes(j), "true pair must merge into one identity under blocking");
++    assert.equal(cluster?.accountIndices.length, 2, "exactly the two twins merge, nothing dragged in");
++});
++
++test("EVIDENCE-BACKED RECALL: a continuous-similarity true pair with no exact blocking key survives", () => {
++    const set: GoldenPlatform[] = [];
++    for (let k = 0; k < 70; k++) set.push(distractor(k));
++    set.push(acc({ platform: "aa", username: "ab", displayName: "de", bio: "", posts: [
++        { id: "a1", timestamp: "2024-01-01T10:00:00Z", caption: "aaaa bbbb cccc dddd", likes: 1, comments: 0 },
++        { id: "a2", timestamp: "2024-01-02T10:00:00Z", caption: "eeee ffff gggg hhhh", likes: 1, comments: 0 },
++    ] }));
++    set.push(acc({ platform: "bb", username: "ac", displayName: "df", bio: "", posts: [
++        { id: "b1", timestamp: "2024-01-01T10:00:00Z", caption: "iii jj kkk llll", likes: 1, comments: 0 },
++        { id: "b2", timestamp: "2024-01-02T10:00:00Z", caption: "mmmm nnnn oooo pppp", likes: 1, comments: 0 },
++    ] }));
++
++    const exhaustive = correlate(set, { blockingMinAccounts: Infinity });
++    const { accounts, pairs, blocked } = inspectCandidatePairs(set);
++    assert.equal(blocked, true);
++
++    const idxs = accounts
++        .map((a, i) => ({ a, i }))
++        .filter((x) => x.a.username === "ab" || x.a.username === "ac")
++        .map((x) => x.i);
++    assert.equal(idxs.length, 2);
++    const [i, j] = [Math.min(...idxs), Math.max(...idxs)];
++
++    const exhaustiveCluster = exhaustive.identities.find((c) => c.accountIndices.includes(i));
++    assert.ok(exhaustiveCluster?.accountIndices.includes(j), "fixture must merge under exhaustive scoring");
++    assert.ok(pairs.some(([a, b]) => a === i && b === j), "blocking must not prune a continuous merge-strength pair");
++
++    const blockedResult = correlate(set);
++    const blockedCluster = blockedResult.identities.find((c) => c.accountIndices.includes(i));
++    assert.ok(blockedCluster?.accountIndices.includes(j), "blocked scoring must preserve the exhaustive merge");
++});
++
++test("NAMESAKE: same handle+name but different behaviour stays separate under blocking", () => {
++    const set: GoldenPlatform[] = [];
++    for (let k = 0; k < 200; k++) set.push(distractor(k));
++    // Same handle + name (a namesake trap), different behaviour: a dev vs a cook.
++    set.push(acc({ platform: "instagram", username: "sam_rivera", displayName: "Sam Rivera", bio: "rust compilers tooling", posts: [
++        { id: "dev1", timestamp: "2024-11-02T20:00:00Z", caption: "shipping a tiny CLI tool tonight, missing await again", likes: 1, comments: 0 },
++        { id: "dev2", timestamp: "2024-11-05T21:00:00Z", caption: "the compiler caught the bug, ship small ship often", likes: 1, comments: 0 } ] }));
++    set.push(acc({ platform: "facebook", username: "sam_rivera", displayName: "Sam Rivera", bio: "cocina recetas familia", posts: [
++        { id: "cook1", timestamp: "2024-11-02T12:00:00Z", caption: "hoy preparé una tortilla para la familia receta de la abuela", likes: 1, comments: 0 },
++        { id: "cook2", timestamp: "2024-11-05T13:00:00Z", caption: "el secreto del sofrito es la paciencia fuego lento", likes: 1, comments: 0 } ] }));
++
++    const r = correlate(set);
++    const { accounts } = inspectCandidatePairs(set);
++    const idxs = accounts.map((a, i) => ({ a, i })).filter((x) => x.a.username === "sam_rivera").map((x) => x.i);
++    const clustersOf = new Set(idxs.map((i) => r.identities.findIndex((c) => c.accountIndices.includes(i))));
++    assert.equal(clustersOf.size, 2, "the namesake pair must NOT be merged by blocking");
++});
++
++test("DETERMINISM: same large input => byte-identical correlation graph", () => {
++    const set = bigSetWithTruePair(200);
++    const a = JSON.stringify(correlate(set));
++    const b = JSON.stringify(correlate(set));
++    assert.equal(a, b, "blocked correlation must be reproducible byte-for-byte");
++});
++
++test("DETERMINISM: input order does not change the blocked result", () => {
++    const set = bigSetWithTruePair(120);
++    const reversed = [...set].reverse();
++    assert.equal(JSON.stringify(correlate(set)), JSON.stringify(correlate(reversed)), "blocked result must be order-independent");
++});
++
++test("at/below the threshold the engine is exhaustive (no blocking)", () => {
++    const small: GoldenPlatform[] = [];
++    for (let k = 0; k < 10; k++) small.push(distractor(k));
++    const { pairs, blocked } = inspectCandidatePairs(small);
++    assert.equal(blocked, false);
++    assert.equal(pairs.length, (10 * 9) / 2, "small inputs score every pair exhaustively");
++});
+diff --git a/scraper/src/replay/__tests__/correlation.test.ts b/scraper/src/replay/__tests__/correlation.test.ts
+index 2fc9e2b..50f6e22 100644
+--- a/scraper/src/replay/__tests__/correlation.test.ts
++++ b/scraper/src/replay/__tests__/correlation.test.ts
+@@ -67,6 +67,36 @@ test("no posts => no false merge on name+handle alone (coverage gate)", () => {
+     assert.equal(r.identities.length, 2, "no behavioural evidence => must not merge");
+ });
+
++test("empty captions and timing alone do not turn a namesake into a merge", () => {
++    const posts = (tag: string) => [
++        { id: `${tag}1`, timestamp: "2024-11-02T20:00:00Z", caption: "", likes: 0, comments: 0 },
++        { id: `${tag}2`, timestamp: "2024-11-05T20:00:00Z", caption: "", likes: 0, comments: 0 },
++    ];
++    const accounts = [
++        acc({ platform: "instagram", username: "sam_rivera", displayName: "Sam Rivera", bio: "", posts: posts("ig") }),
++        acc({ platform: "x", username: "sam_rivera", displayName: "Sam Rivera", bio: "", posts: posts("x") }),
++    ];
++
++    const r = correlate(accounts);
++
++    assert.equal(r.identities.length, 2, "post count plus timing is not content-bearing behavioural evidence");
++});
++
++test("generic shared bio and timing do not turn a namesake into a merge", () => {
++    const posts = (tag: string) => [
++        { id: `${tag}1`, timestamp: "2024-11-02T20:00:00Z", caption: "", likes: 0, comments: 0 },
++        { id: `${tag}2`, timestamp: "2024-11-05T20:00:00Z", caption: "", likes: 0, comments: 0 },
++    ];
++    const accounts = [
++        acc({ platform: "instagram", username: "sam_rivera", displayName: "Sam Rivera", bio: "official profile", posts: posts("ig") }),
++        acc({ platform: "x", username: "sam_rivera", displayName: "Sam Rivera", bio: "official profile", posts: posts("x") }),
++    ];
++
++    const r = correlate(accounts);
++
++    assert.equal(r.identities.length, 2, "generic bio overlap plus timing is not enough to merge namesakes");
++});
++
+ test("singleton identity has cohesion null, not 1", () => {
+     const r = correlate([acc({ username: "solo", displayName: "Solo", posts: [] })]);
+     assert.equal(r.identities.length, 1);
+@@ -149,6 +179,23 @@ test("deterministic: same input => identical graph (incl. layout coords)", () =>
+     assert.equal(a, b, "correlation output must be byte-identical across runs");
+ });
+
++test("duplicate platform+username inputs fail loudly instead of inheriting input order", () => {
++    const first = acc({ platform: "x", username: "dupe", displayName: "First", posts: [
++        { id: "a", timestamp: "2024-11-02T08:00:00Z", caption: "first account words", likes: 1, comments: 0 } ] });
++    const second = acc({ platform: "x", username: "dupe", displayName: "Second", posts: [
++        { id: "b", timestamp: "2024-11-02T20:00:00Z", caption: "second account words", likes: 1, comments: 0 } ] });
++
++    assert.throws(() => correlate([first, second]), /Duplicate platform\/username/);
++});
++
++test("duplicate post ids inside an account fail loudly", () => {
++    const account = acc({ platform: "x", username: "ana", posts: [
++        { id: "dup", timestamp: "2024-11-02T08:00:00Z", caption: "first words here", likes: 1, comments: 0 },
++        { id: "dup", timestamp: "2024-11-03T08:00:00Z", caption: "second words here", likes: 1, comments: 0 } ] });
++
++    assert.throws(() => correlate([account]), /Duplicate post id/);
++});
++
+ // ---------- 7th signal: temporal-geospatial co-presence ----------
+
+ // All capture-grade points declare a fine accuracy — a point that states no
+diff --git a/scraper/src/replay/__tests__/network.test.ts b/scraper/src/replay/__tests__/network.test.ts
+index 197c102..3bf6fca 100644
+--- a/scraper/src/replay/__tests__/network.test.ts
++++ b/scraper/src/replay/__tests__/network.test.ts
+@@ -69,8 +69,14 @@ test("invalid interaction timestamp fails loudly", () => {
+     assert.throws(() => buildNetworkGraph(bad, correlation), /Invalid interaction timestamp/);
+ });
+
+-test("no network => empty graph (not a crash)", () => {
+-    const g = buildNetworkGraph(undefined, correlation);
+-    assert.equal(g.nodes.length, 0);
+-    assert.equal(g.contactCount, 0);
++test("timezone-less interaction timestamp fails loudly", () => {
++    const bad: GoldenNetwork = {
++        contacts: [{ id: "c1", handle: "sam", displayName: "Sam", platform: "x" }],
++        interactions: [{ from: "x", to: "c1", type: "follow", timestamp: "2024-10-05T20:00:00" }],
++    };
++    assert.throws(() => buildNetworkGraph(bad, correlation), /require ISO-8601 with a timezone/);
++});
++
++test("missing network evidence fails loudly", () => {
++    assert.throws(() => buildNetworkGraph(undefined, correlation), /missing network evidence/i);
+ });
+diff --git a/scraper/src/replay/bench/correlationBench.ts b/scraper/src/replay/bench/correlationBench.ts
+new file mode 100644
+index 0000000..b4096e7
+--- /dev/null
++++ b/scraper/src/replay/bench/correlationBench.ts
+@@ -0,0 +1,179 @@
++// Correlation scalability benchmark — measures the blocking win.
++//
++// Run with: npx tsx src/replay/bench/correlationBench.ts [sizes...]
++//   e.g.    npx tsx src/replay/bench/correlationBench.ts 200 500 1000 2000
++//
++// For each size it builds a deterministic synthetic identity set (many unrelated
++// distractors plus a handful of planted true cross-platform pairs), then times
++// the engine BRUTE-FORCE (every pair full-scored, blockingMinAccounts=Infinity) vs
++// BLOCKED (default threshold). It prints the cheap behavioural pair evaluations,
++// the full-scored/co-presence pair count, and wall-time for both. It asserts that
++// every planted true pair survives under BOTH modes (a smoke recall check for the
++// known positives, not a claim that the whole synthetic universe has no incidental
++// high-scoring pairs).
++//
++// Pure synthetic data, no clock/network inside the engine — only the benchmark
++// harness reads the wall clock, which is fine: it measures, it does not feed the
++// engine. Determinism of the engine itself is covered by the test suite.
++
++import { correlate, inspectCandidatePairs } from "../correlation.js";
++import type { GoldenPlatform, GoldenPost } from "../types.js";
++
++function alpha(s: number): string {
++    let x = (s * 2654435761) % 0x7fffffff;
++    let out = "";
++    for (let i = 0; i < 9; i++) {
++        out += String.fromCharCode(97 + (x % 26));
++        x = Math.floor(x / 26) + (s + 1) * (i + 7) * 131;
++    }
++    return out;
++}
++
++function acc(over: Partial<GoldenPlatform>): GoldenPlatform {
++    return {
++        platform: "x", username: "user", url: "", displayName: "User", bio: "",
++        verified: false, followers: 100, following: 100, postCount: 0, posts: [], ...over,
++    };
++}
++
++// Each account carries fine-grained geo (capture-grade), so the engine's O(posts²)
++// co-presence scan is APPLICABLE on every full-scored pair — this is the cost
++// blocking defers for the pruned majority. Distractors sit at distinct fine
++// locations and varied hours; incidental high behavioural scores are allowed, and
++// the benchmark checks only the planted known-positive recall property.
++function distractor(k: number): GoldenPlatform {
++    const w = (n: number) => alpha(k * 17 + n);
++    const h1 = String(k % 24).padStart(2, "0");
++    const h2 = String((k * 7 + 3) % 24).padStart(2, "0");
++    const lat = -60 + ((k * 137.5) % 120);
++    const lon = -170 + ((k * 89.3) % 340);
++    const geo = { lat, lon, accuracyM: 20 };
++    const posts: GoldenPost[] = [
++        { id: `d${k}a`, timestamp: `2024-11-02T${h1}:00:00Z`, caption: `${w(1)} ${w(2)} ${w(3)} ${w(4)}`, likes: 1, comments: 0, geo },
++        { id: `d${k}b`, timestamp: `2024-11-03T${h2}:00:00Z`, caption: `${w(5)} ${w(6)} ${w(7)} ${w(8)}`, likes: 1, comments: 0, geo },
++    ];
++    return acc({
++        platform: `plat${k % 6}`,
++        username: `${alpha(k * 31 + 3)}_${alpha(k * 31 + 4)}`,
++        displayName: `${alpha(k * 31 + 5)} ${alpha(k * 31 + 6)}`,
++        bio: `${w(9)} ${w(10)} ${w(11)}`,
++        posts,
++    });
++}
++
++// A planted true pair p: same handle/name/style/vocab on two platforms, co-located
++// at the same fine spot at the same times (a genuine shared-operator signal).
++function truePair(p: number): GoldenPlatform[] {
++    const geo = { lat: 19.076, lon: 72.8777, accuracyM: 20 };
++    const near = { lat: 19.0768, lon: 72.8779, accuracyM: 20 };
++    const posts = (tag: string, g: { lat: number; lon: number; accuracyM: number }): GoldenPost[] => [
++        { id: `${tag}1`, timestamp: "2024-11-02T20:00:00Z", caption: "shipping a tiny CLI tool tonight, missing await again", likes: 1, comments: 0, geo: g },
++        { id: `${tag}2`, timestamp: "2024-11-05T21:00:00Z", caption: "the compiler caught the bug, ship small ship often", likes: 1, comments: 0, geo: g },
++    ];
++    const handle = `planted_twin_${p}`;
++    const name = `Planted Twin ${p}`;
++    return [
++        acc({ platform: "instagram", username: handle, displayName: name, bio: "tiny dev tools coffee", posts: posts(`a${p}`, geo) }),
++        acc({ platform: "x", username: handle, displayName: name, bio: "tiny dev tools coffee", posts: posts(`b${p}`, near) }),
++    ];
++}
++
++interface BenchSet {
++    accounts: GoldenPlatform[];
++    plantedHandles: string[];
++}
++
++function buildSet(n: number): BenchSet {
++    const plantedPairs = Math.max(1, Math.floor(n / 100));
++    const set: GoldenPlatform[] = [];
++    const plantedHandles: string[] = [];
++    for (let p = 0; p < plantedPairs; p++) {
++        set.push(...truePair(p));
++        plantedHandles.push(`planted_twin_${p}`);
++    }
++    for (let k = 0; set.length < n; k++) set.push(distractor(k));
++    return { accounts: set, plantedHandles };
++}
++
++function timeIt(fn: () => void, reps: number): number {
++    // one warm-up
++    fn();
++    const start = process.hrtime.bigint();
++    for (let i = 0; i < reps; i++) fn();
++    const end = process.hrtime.bigint();
++    return Number(end - start) / 1e6 / reps; // ms per run
++}
++
++function canonicalize(input: GoldenPlatform[]): GoldenPlatform[] {
++    return [...input].sort((a, b) => {
++        const ka = `${a.platform} ${a.username}`;
++        const kb = `${b.platform} ${b.username}`;
++        return ka < kb ? -1 : ka > kb ? 1 : 0;
++    });
++}
++
++function plantedRecovered(input: GoldenPlatform[], plantedHandles: string[], opts = {}): number {
++    const accounts = canonicalize(input);
++    const r = correlate(input, opts);
++    let recovered = 0;
++    for (const handle of plantedHandles) {
++        const idxs = accounts
++            .map((a, i) => ({ a, i }))
++            .filter((x) => x.a.username === handle)
++            .map((x) => x.i);
++        if (idxs.length !== 2) throw new Error(`Bad benchmark fixture: expected exactly two ${handle}.`);
++        const cluster = r.identities.find((c) => c.accountIndices.includes(idxs[0]));
++        if (cluster?.accountIndices.includes(idxs[1])) recovered++;
++    }
++    return recovered;
++}
++
++const sizes = (process.argv.slice(2).map(Number).filter((x) => x > 0));
++const SIZES = sizes.length ? sizes : [200, 500, 1000, 2000];
++
++console.log("Correlation blocking benchmark (diverse synthetic identity sets)\n");
++console.log(
++    "n".padStart(6),
++    "exhaustivePairs".padStart(16),
++    "behaviouralPairs".padStart(18),
++    "fullScoredPairs".padStart(16),
++    "fullPrune%".padStart(11),
++    "bruteMs".padStart(10),
++    "blockedMs".padStart(11),
++    "speedup".padStart(9),
++    "planted✓".padStart(10),
++);
++
++for (const n of SIZES) {
++    const { accounts: set, plantedHandles } = buildSet(n);
++    const exhaustive = (n * (n - 1)) / 2;
++    const inspection = inspectCandidatePairs(set);
++    const behavioralPairs = inspection.behavioralPairsEvaluated;
++    const fullScoredPairs = inspection.fullScoredPairs;
++    const reps = n <= 500 ? 5 : n <= 1000 ? 3 : 1;
++    const bruteMs = timeIt(() => correlate(set, { blockingMinAccounts: Infinity }), reps);
++    const blockedMs = timeIt(() => correlate(set), reps);
++
++    // Recall smoke check: every planted pair must survive in both modes.
++    const bruteRecovered = plantedRecovered(set, plantedHandles, { blockingMinAccounts: Infinity });
++    const blockedRecovered = plantedRecovered(set, plantedHandles);
++    const ok = bruteRecovered === plantedHandles.length && blockedRecovered === plantedHandles.length;
++
++    console.log(
++        String(n).padStart(6),
++        String(exhaustive).padStart(16),
++        String(behavioralPairs).padStart(18),
++        String(fullScoredPairs).padStart(16),
++        `${(100 * (1 - fullScoredPairs / exhaustive)).toFixed(2)}%`.padStart(11),
++        bruteMs.toFixed(1).padStart(10),
++        blockedMs.toFixed(1).padStart(11),
++        `${(bruteMs / blockedMs).toFixed(1)}x`.padStart(9),
++        `${ok ? "✓" : "✗"}${blockedRecovered}/${plantedHandles.length}`.padStart(10),
++    );
++    if (!ok) {
++        console.error(
++            `\nPLANTED RECALL MISMATCH at n=${n}: brute=${bruteRecovered}/${plantedHandles.length} blocked=${blockedRecovered}/${plantedHandles.length}`,
++        );
++        process.exit(1);
++    }
++}
+diff --git a/scraper/src/replay/correlation.ts b/scraper/src/replay/correlation.ts
+index 7e72549..9d41b18 100644
+--- a/scraper/src/replay/correlation.ts
++++ b/scraper/src/replay/correlation.ts
+@@ -65,12 +65,50 @@ const MERGE_THRESHOLD = 0.55;
+ // A merge must be backed by behavioural evidence on BOTH sides — handle+name
+ // agreement alone (a namesake) can't auto-merge, no matter how high.
+ const MIN_MERGE_COVERAGE = 2;
++const MIN_STYLE_TOKENS = 8;
++
++// ---- blocking (scalability) ----
++//
++// The naive engine scored every one of the n(n-1)/2 pairs with the FULL pipeline
++// — stylometry + tokenization + an O(posts²) co-presence scan — and, worse, it
++// re-extracted each account's per-account features (style vector, hour histogram,
++// token sets, geo stamps) once PER PAIR, making the real cost ~O(n²·posts). Two
++// changes reduce that:
++//
++//   1. Per-account features are extracted ONCE (see `accountFeatures`), so a pair
++//      score is now a handful of cheap vector ops instead of re-parsing posts.
++//      This is the same evidence expressed once per account instead of once per
++//      pair; the stricter evidence gates below are the intentional behaviour
++//      change in this patch.
++//
++//   2. Above BLOCKING_MIN_ACCOUNTS a candidate filter computes the exact six-signal
++//      behavioural score for each pair (vector ops plus set intersections over
++//      precomputed caption tokens), then runs the expensive O(posts²)
++//      co-presence scan / edge assembly only for pairs that can possibly merge.
++//      This deliberately keeps the cheap O(n²) behavioural pass: continuous
++//      signals like Jaro-Winkler and stylometry have no exact bucket boundary, so
++//      an LSH-only gate would drop evidence-backed merge candidates without a
++//      formal upper bound. The gain is therefore "no full scoring for implausible
++//      pairs", not "no pair consideration at all."
++//
++// Below the threshold every pair is still full-scored exhaustively. The stricter
++// evidence gates in this file apply at every size; the threshold only controls
++// whether implausible pairs can skip full scoring.
++const BLOCKING_MIN_ACCOUNTS = 64;
++
++// The candidate filter compares the (unrounded) behavioural baseScore, but the MERGE
++// decision compares the baseScore AFTER `round()` to 3 decimals. round(x) >= T is
++// equivalent to x >= T - 0.0005, so a pair whose true score rounds UP to the bar
++// must survive the filter. We keep this cushion (plus float-error slack) so the
++// filter can never drop a pair the rounded merge decision would have accepted —
++// the candidate guarantee holds at the rounding boundary, not just in the limit.
++const MERGE_CANDIDATE_FLOOR = MERGE_THRESHOLD - 0.001;
+
+ const BAND = (score: number): "high" | "medium" | "low" =>
+     score >= 0.62 ? "high" : score >= 0.4 ? "medium" : "low";
+
+ const STOPWORDS = new Set(
+-    "the a an and or of to in on for with is are was were be been it its i im my me you your we our they them this that these those at by from as so but not no just most all can will would".split(
++    "the a an and or of to in on for with is are was were be been it its i im my me you your we our they them this that these those at by from as so but not no just most all can will would official profile account user page hello world".split(
+         " ",
+     ),
+ );
+@@ -325,9 +363,7 @@ function coLocated(x: GeoStamp, y: GeoStamp): boolean {
+ //      So two accounts that both spam N posts at the same instant/place still count
+ //      as a single co-presence event, not N.
+ // Saturates at COPRESENCE_SATURATION.
+-function coPresence(a: GoldenPost[], b: GoldenPost[]): { value: number; occasions: number } | null {
+-    const ga = geoStamps(a);
+-    const gb = geoStamps(b);
++function coPresence(ga: GeoStamp[], gb: GeoStamp[]): { value: number; occasions: number } | null {
+     if (ga.length < MIN_GEO_COVERAGE || gb.length < MIN_GEO_COVERAGE) return null;
+
+     const candidates: Array<{ i: number; j: number; dt: number }> = [];
+@@ -377,40 +413,119 @@ function buildDocFrequency(accounts: GoldenPlatform[]): Map<string, number> {
+     return df;
+ }
+
+-// ---------- per-pair scoring ----------
++// ---------- per-account feature precompute ----------
++//
++// Everything about ONE account that a pair score needs, extracted exactly once.
++// The old engine re-derived all of this on every pair; lifting it here turns the
++// dominant O(n²·posts) cost into O(n·posts) precompute + cheap per-pair combines.
++// The loud-failure semantics are preserved: a malformed timestamp or geo throws
++// here (once per account) exactly as it used to throw inside scoring.
++interface AccountFeatures {
++    username: string;
++    displayName: string;
++    normHandle: string;
++    nameLower: string;
++    bioTokens: Set<string>;
++    captionTokens: Set<string>;
++    captionTokenCount: number;
++    style: StyleFeatures;
++    hist: number[];
++    geo: GeoStamp[];
++    postCount: number;
++}
+
+-function scorePair(
+-    a: GoldenPlatform,
+-    b: GoldenPlatform,
++function canonicalPosts(posts: GoldenPost[], accountLabel: string): GoldenPost[] {
++    const seen = new Set<string>();
++    for (const post of posts) {
++        if (seen.has(post.id)) {
++            throw new Error(`Duplicate post id "${post.id}" in correlation input for ${accountLabel}.`);
++        }
++        seen.add(post.id);
++    }
++
++    return [...posts].sort((a, b) => {
++        const ta = parseInstant(a.timestamp, a.id);
++        const tb = parseInstant(b.timestamp, b.id);
++        return ta - tb || a.id.localeCompare(b.id);
++    });
++}
++
++function accountFeatures(acc: GoldenPlatform): AccountFeatures {
++    const posts = canonicalPosts(acc.posts, `${acc.platform}/${acc.username}`);
++    const captionTokens = tokenize(posts.map((p) => p.caption).join(" "));
++    return {
++        username: acc.username,
++        displayName: acc.displayName,
++        normHandle: normalizeHandle(acc.username),
++        nameLower: acc.displayName.toLowerCase(),
++        bioTokens: new Set(tokenize(acc.bio)),
++        captionTokens: new Set(captionTokens),
++        captionTokenCount: captionTokens.length,
++        style: styleFeatures(posts),
++        hist: hourHistogram(posts), // throws loudly on a bad timestamp
++        geo: geoStamps(posts), // throws loudly on malformed geo
++        postCount: posts.length,
++    };
++}
++
++// Shared distinctive terms between two accounts: present in both, and rare enough
++// across the corpus (document frequency under the cap) to be discriminating.
++function sharedDistinctiveTerms(
++    a: AccountFeatures,
++    b: AccountFeatures,
+     df: Map<string, number>,
+     nAccounts: number,
+-): { score: number; baseScore: number; features: FeatureContribution[] } {
+-    const handle = jaroWinkler(normalizeHandle(a.username), normalizeHandle(b.username));
+-    const name = jaroWinkler(a.displayName.toLowerCase(), b.displayName.toLowerCase());
+-    const bio = jaccard(new Set(tokenize(a.bio)), new Set(tokenize(b.bio)));
++): string[] {
++    const cap = Math.max(2, Math.floor(nAccounts * 0.05));
++    const shared: string[] = [];
++    for (const t of a.captionTokens) {
++        const frequency = df.get(t) || 0;
++        if (b.captionTokens.has(t) && frequency < nAccounts && frequency <= cap) shared.push(t);
++    }
++    return shared.sort();
++}
++
++// ---------- behavioural signal parts (shared by the filter and full scoring) ----------
++//
++// The six behavioural signals for a pair, each as [key, value, label]. EVERY input
++// here is a precomputed per-account feature, so this is a handful of cheap vector
++// ops and set intersections — no post re-parsing. Both the candidate filter and
++// the full pair score call this, so the filter's baseScore is byte-identical to
++// the score the merge decision later uses: there is no second, looser estimate
++// that could disagree at the bar.
++function behaviouralParts(
++    a: AccountFeatures,
++    b: AccountFeatures,
++    df: Map<string, number>,
++    nAccounts: number,
++): { parts: Array<[keyof typeof WEIGHTS, number, string]>; baseScore: number; mergeEvidence: boolean } {
++    const handle = jaroWinkler(a.normHandle, b.normHandle);
++    const name = jaroWinkler(a.nameLower, b.nameLower);
++    const bio = jaccard(a.bioTokens, b.bioTokens);
+
+     // Coverage gate: behavioural signals (style, timing, vocabulary) require
+     // actual posts. With no posts the style vectors are trivially identical, so
+     // ungated they would false-merge two accounts on name+handle alone. We scale
+     // every behavioural feature by how much evidence backs it (0 posts => 0,
+     // 1 post => weak, >=2 => full), so thin evidence can't masquerade as strong.
+-    const coverage = Math.min(a.posts.length, b.posts.length);
++    const coverage = Math.min(a.postCount, b.postCount);
+     const covFactor = Math.min(1, coverage / 2);
++    const contentCoverage = Math.min(a.captionTokenCount, b.captionTokenCount);
++    const styleApplicable = contentCoverage >= MIN_STYLE_TOKENS;
+
+-    const style = covFactor * styleSimilarity(styleFeatures(a.posts), styleFeatures(b.posts));
+-    const temporal =
+-        covFactor * Math.max(0, cosine(hourHistogram(a.posts), hourHistogram(b.posts)));
++    const style = styleApplicable ? covFactor * styleSimilarity(a.style, b.style) : 0;
++    const temporal = covFactor * Math.max(0, cosine(a.hist, b.hist));
+
+     // shared distinctive terms: in both, and low-frequency across the corpus.
+-    const ta = new Set(tokenize(a.posts.map((p) => p.caption).join(" ")));
+-    const tb = new Set(tokenize(b.posts.map((p) => p.caption).join(" ")));
+-    const shared: string[] = [];
+-    for (const t of ta) {
+-        if (tb.has(t) && (df.get(t) || 0) <= Math.max(2, Math.ceil(nAccounts / 2))) {
+-            shared.push(t);
+-        }
+-    }
++    const shared = sharedDistinctiveTerms(a, b, df, nAccounts);
+     const sharedTerms = covFactor * Math.min(1, shared.length / 3);
++    const bioEvidence = bio >= 0.5 && Math.min(a.bioTokens.size, b.bioTokens.size) >= 2;
++    const sharedEvidence = shared.length >= 2;
++    const styleEvidence = styleApplicable && style >= 0.75;
++    const temporalEvidence = coverage >= MIN_MERGE_COVERAGE && temporal >= 0.85;
++    const contentEvidence = sharedEvidence || styleEvidence;
++    const nonIdentifierSignals = [bioEvidence, sharedEvidence, styleEvidence, temporalEvidence].filter(Boolean).length;
++    const mergeEvidence = contentEvidence && nonIdentifierSignals >= 2;
+
+     const parts: Array<[keyof typeof WEIGHTS, number, string]> = [
+         ["handle", handle, `username similarity (${a.username} ↔ ${b.username})`],
+@@ -426,18 +541,44 @@ function scorePair(
+                 : "no shared distinctive terms",
+         ],
+     ];
+-
+-    // `baseScore` is the pure six-signal behavioural score (weights sum to 1.0).
+-    // It is what drives MERGE decisions: co-presence may raise the displayed score
+-    // and cohesion and flag a link, but it can NEVER manufacture a merge — geo
+-    // never collapses two behaviourally-distinct people. See `correlate`.
+     const baseScore = parts.reduce((s, [key, value]) => s + value * WEIGHTS[key], 0);
++    return { parts, baseScore, mergeEvidence };
++}
++
++// ---------- candidate filter (blocking) ----------
++//
++// Blocking computes the SAME behavioural baseScore the merge decision uses for
++// each pair, then only full-scores pairs above the merge floor. What survivors
++// additionally get (and the dropped pairs are spared) is the genuinely expensive
++// work: the O(posts²) co-presence geo scan, the feature breakdown objects, and
++// edge assembly. The bar is MERGE_CANDIDATE_FLOOR — the merge bar minus the
++// rounding cushion — so a pair whose score rounds UP to the bar still survives.
++//
++// Note this means BLOCKED mode (n > BLOCKING_MIN_ACCOUNTS) intentionally omits the
++// weak, advisory edges (displayed score in [EDGE_FLOOR, merge bar)) between pairs
++// no identity depends on. The small-input path still scores every pair and keeps
++// every weak edge under the current evidence rules; a forensic case at genuine
++// scale would not enumerate the full O(n²) weak-edge set anyway.
++
++// ---------- per-pair scoring ----------
++
++function scorePair(
++    a: AccountFeatures,
++    b: AccountFeatures,
++    df: Map<string, number>,
++    nAccounts: number,
++): { score: number; baseScore: number; mergeEvidence: boolean; features: FeatureContribution[] } {
++    // `baseScore` (computed in behaviouralParts) is the pure six-signal behavioural
++    // score (weights sum to 1.0). It is what drives MERGE decisions: co-presence may
++    // raise the displayed score and cohesion and flag a link, but it can NEVER
++    // manufacture a merge — geo never collapses two distinct people. See `correlate`.
++    const { parts, baseScore, mergeEvidence } = behaviouralParts(a, b, df, nAccounts);
+
+     // Co-presence overlay. When applicable it claims W_COPRESENCE and the six
+     // behavioural weights renormalize to (1 - W_COPRESENCE); when inapplicable
+     // (no/insufficient geo metadata) baseScale = 1 and the displayed score is the
+     // behavioural score — absence is true neutrality, not a zero that drags.
+-    const cop = coPresence(a.posts, b.posts);
++    const cop = coPresence(a.geo, b.geo);
+     const baseScale = cop !== null ? 1 - W_COPRESENCE : 1;
+
+     let score = 0;
+@@ -470,7 +611,7 @@ function scorePair(
+     }
+
+     features.sort((x, y) => y.contribution - x.contribution);
+-    return { score: round(score), baseScore: round(baseScore), features };
++    return { score: round(score), baseScore: round(baseScore), mergeEvidence, features };
+ }
+
+ const round = (n: number): number => Math.round(n * 1000) / 1000;
+@@ -525,20 +666,115 @@ function layout(
+     });
+ }
+
++// ---------- blocking: candidate-pair generation ----------
++
++// Deterministic candidate-pair set. It is intentionally exact, not LSH-only:
++// continuous signals can create merge-strength pairs with no shared exact token
++// or bucket, so the filter computes each pair's behavioural score and keeps only
++// pairs that clear the evidence-backed merge floor.
++function candidatePairs(features: AccountFeatures[], df: Map<string, number>): Array<[number, number]> {
++    const n = features.length;
++    const pairs: Array<[number, number]> = [];
++    for (let i = 0; i < n; i++) {
++        for (let j = i + 1; j < n; j++) {
++            const candidate = behaviouralParts(features[i], features[j], df, n);
++            if (candidate.mergeEvidence && candidate.baseScore >= MERGE_CANDIDATE_FLOOR) {
++                pairs.push([i, j]);
++            }
++        }
++    }
++    return pairs;
++}
++
++// Every i<j pair — the exhaustive set used below BLOCKING_MIN_ACCOUNTS and by the
++// benchmark's brute-force baseline.
++function allPairs(n: number): Array<[number, number]> {
++    const pairs: Array<[number, number]> = [];
++    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) pairs.push([i, j]);
++    return pairs;
++}
++
++function* allPairIterator(n: number): Iterable<[number, number]> {
++    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) yield [i, j];
++}
++
++function* candidatePairIterator(features: AccountFeatures[], df: Map<string, number>): Iterable<[number, number]> {
++    const n = features.length;
++    for (let i = 0; i < n; i++) {
++        for (let j = i + 1; j < n; j++) {
++            const candidate = behaviouralParts(features[i], features[j], df, n);
++            if (candidate.mergeEvidence && candidate.baseScore >= MERGE_CANDIDATE_FLOOR) {
++                yield [i, j];
++            }
++        }
++    }
++}
++
++function pairKey(a: number, b: number): string {
++    return a < b ? `${a}:${b}` : `${b}:${a}`;
++}
++
+ // ---------- entry point ----------
+
+-export function correlate(input: GoldenPlatform[]): CorrelationResult {
+-    // Canonicalize account order so cluster ids, layout coordinates, edge order
+-    // and therefore the root hash are independent of the order accounts were
+-    // collected in — required for a reproducible forensic replay.
++// Canonical account order — cluster ids, layout coords, edge order and therefore
++// the root hash must be independent of collection order for a reproducible replay.
++function canonicalize(input: GoldenPlatform[]): GoldenPlatform[] {
+     const keyOf = (p: GoldenPlatform): string => `${p.platform} ${p.username}`;
+-    const accounts = [...input].sort((a, b) => {
++    const seen = new Set<string>();
++    for (const account of input) {
++        const key = keyOf(account);
++        if (seen.has(key)) {
++            throw new Error(`Duplicate platform/username in correlation input: "${key}".`);
++        }
++        seen.add(key);
++    }
++
++    return [...input].sort((a, b) => {
+         const ka = keyOf(a);
+         const kb = keyOf(b);
+         return ka < kb ? -1 : ka > kb ? 1 : 0;
+     });
++}
++
++// Inspection hook for tests/benchmarks: the (canonicalized-index) candidate pairs
++// the blocking stage would full-score, plus whether blocking was active for this
++// size. Lets tests assert known evidence-backed pairs survive blocking, and the
++// benchmark count scored pairs vs the O(n²) baseline — without re-deriving the
++// canonical order.
++export interface CorrelateOptions {
++    // Account count at/below which scoring is exhaustive (every pair). Above it,
++    // feature blocking generates candidates. Defaults to BLOCKING_MIN_ACCOUNTS;
++    // the benchmark passes Infinity to force the brute-force O(n²) baseline.
++    blockingMinAccounts?: number;
++}
++
++export function inspectCandidatePairs(
++    input: GoldenPlatform[],
++    opts: CorrelateOptions = {},
++): {
++    accounts: GoldenPlatform[];
++    pairs: Array<[number, number]>;
++    blocked: boolean;
++    behavioralPairsEvaluated: number;
++    fullScoredPairs: number;
++} {
++    const accounts = canonicalize(input);
++    const df = buildDocFrequency(accounts);
++    const features = accounts.map(accountFeatures);
++    const threshold = opts.blockingMinAccounts ?? BLOCKING_MIN_ACCOUNTS;
++    const blocked = accounts.length > threshold;
++    const pairs = blocked ? candidatePairs(features, df) : allPairs(accounts.length);
++    const behavioralPairsEvaluated = (accounts.length * (accounts.length - 1)) / 2;
++    return { accounts, pairs, blocked, behavioralPairsEvaluated, fullScoredPairs: pairs.length };
++}
++
++export function correlate(input: GoldenPlatform[], opts: CorrelateOptions = {}): CorrelationResult {
++    const accounts = canonicalize(input);
+     const df = buildDocFrequency(accounts);
+     const n = accounts.length;
++    // Per-account features, extracted once (was re-derived per pair). This is also
++    // where malformed timestamps/geo fail loudly, exactly as before.
++    const features = accounts.map(accountFeatures);
+
+     const nodes: CorrelationNode[] = accounts.map((a, i) => ({
+         index: i,
+@@ -551,38 +787,46 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
+         y: 0,
+     }));
+
+-    // Two full pairwise matrices. `scoreMatrix` is the DISPLAYED score (with the
+-    // co-presence overlay) — it drives edge weight, banding and cohesion.
+-    // `baseMatrix` is the pure six-signal BEHAVIOURAL score and is the ONLY thing
+-    // that drives merges: co-presence can corroborate and flag a link, but it can
+-    // never collapse two behaviourally-distinct identities.
+-    const scoreMatrix: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
+-    const baseMatrix: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
++    // Sparse pair maps. Only full-scored pairs are stored; any missing pair is
++    // known below the merge floor in blocked mode, so `baseOf` safely reads it as
++    // zero during complete-linkage checks.
++    const baseByPair = new Map<string, number>();
++    const mergeEvidenceByPair = new Set<string>();
+     const edges: CorrelationEdge[] = [];
+-    for (let i = 0; i < n; i++) {
+-        for (let j = i + 1; j < n; j++) {
+-            const { score, baseScore, features } = scorePair(accounts[i], accounts[j], df, n);
+-            scoreMatrix[i][j] = score;
+-            scoreMatrix[j][i] = score;
+-            baseMatrix[i][j] = baseScore;
+-            baseMatrix[j][i] = baseScore;
+-            if (score < EDGE_FLOOR) continue;
+-            edges.push({
+-                source: i,
+-                target: j,
+-                score,
+-                band: BAND(score),
+-                features,
+-                rationale: features
+-                    .filter((f) => f.contribution > 0.02)
+-                    .slice(0, 3)
+-                    .map((f) => f.label)
+-                    .join("; "),
+-            });
+-        }
++    // Candidate pairs: exhaustive for small inputs, feature-blocked above
++    // BLOCKING_MIN_ACCOUNTS. A
++    // non-candidate pair keeps its matrix default of 0 — no edge, and (since 0 <
++    // MERGE_THRESHOLD) no merge — exactly as if it had been scored and found
++    // unrelated. Blocking preserves evidence-backed merge candidates by
++    // construction; it intentionally does not preserve every weak advisory edge.
++    // See `candidatePairs`.
++    const pairs: Iterable<[number, number]> =
++        n > (opts.blockingMinAccounts ?? BLOCKING_MIN_ACCOUNTS)
++            ? candidatePairIterator(features, df)
++            : allPairIterator(n);
++    for (const [i, j] of pairs) {
++        const { score, baseScore, mergeEvidence, features: pairFeatures } = scorePair(features[i], features[j], df, n);
++        const key = pairKey(i, j);
++        baseByPair.set(key, baseScore);
++        if (mergeEvidence) mergeEvidenceByPair.add(key);
++        if (score < EDGE_FLOOR) continue;
++        edges.push({
++            source: i,
++            target: j,
++            score,
++            band: BAND(score),
++            features: pairFeatures,
++            rationale: pairFeatures
++                .filter((f) => f.contribution > 0.02)
++                .slice(0, 3)
++                .map((f) => f.label)
++                .join("; "),
++        });
+     }
++    const baseOf = (a: number, b: number): number => (a === b ? 1 : baseByPair.get(pairKey(a, b)) ?? 0);
++    const hasMergeEvidence = (a: number, b: number): boolean => mergeEvidenceByPair.has(pairKey(a, b));
+
+-    // Guarded agglomeration, decided purely on BEHAVIOURAL evidence (baseMatrix).
++    // Guarded agglomeration, decided purely on BEHAVIOURAL evidence (`baseOf`).
+     // A pair only merges if its behavioural link >= MERGE_THRESHOLD AND merging
+     // keeps the cluster internally consistent: every cross-pair between the two
+     // groups must itself be behaviourally merge-strength (strict complete-linkage).
+@@ -598,12 +842,13 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
+     const mergeCandidates = edges
+         .filter(
+             (e) =>
+-                baseMatrix[e.source][e.target] >= MERGE_THRESHOLD &&
++                hasMergeEvidence(e.source, e.target) &&
++                baseOf(e.source, e.target) >= MERGE_THRESHOLD &&
+                 Math.min(coverageOf(e.source), coverageOf(e.target)) >= MIN_MERGE_COVERAGE,
+         )
+         .sort(
+             (a, b) =>
+-                baseMatrix[b.source][b.target] - baseMatrix[a.source][a.target] ||
++                baseOf(b.source, b.target) - baseOf(a.source, a.target) ||
+                 a.source - b.source ||
+                 a.target - b.target,
+         );
+@@ -615,7 +860,9 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
+         const gb = membersOf(rb);
+         // Strict complete-linkage on behavioural score: every cross-pair must
+         // itself be behaviourally merge-strength.
+-        const consistent = ga.every((x) => gb.every((y) => baseMatrix[x][y] >= MERGE_THRESHOLD));
++        const consistent = ga.every((x) =>
++            gb.every((y) => hasMergeEvidence(x, y) && baseOf(x, y) >= MERGE_THRESHOLD),
++        );
+         if (consistent) uf.union(e.source, e.target);
+     }
+
+@@ -656,8 +903,8 @@ export function correlate(input: GoldenPlatform[]): CorrelationResult {
+         method:
+             "Heuristic link score (NOT a calibrated probability): pairwise handle & display-name " +
+             "Jaro-Winkler, bio Jaccard, bounded stylometric agreement, hour-of-day cosine, and " +
+-            "shared low-frequency vocabulary — each behavioural signal coverage-gated by post " +
+-            "count. A seventh signal, temporal-geospatial co-presence, is an applicability-gated " +
++            "shared low-frequency vocabulary — behavioural signals are gated by post and content " +
++            "coverage, and timing alone cannot merge identities. A seventh signal, temporal-geospatial co-presence, is an applicability-gated " +
+             `overlay (weight ${W_COPRESENCE}): when both accounts carry geo+time metadata it rewards ` +
+             `distinct posting occasions co-located within ${COPRESENCE_RADIUS_M} m and ` +
+             `${COPRESENCE_WINDOW_MS / 60000} min and the six behavioural weights renormalize to ` +
+diff --git a/scraper/src/replay/network.ts b/scraper/src/replay/network.ts
+index 73ed85b..65e1b4a 100644
+--- a/scraper/src/replay/network.ts
++++ b/scraper/src/replay/network.ts
+@@ -15,19 +15,27 @@ const W = 1000;
+ const H = 640;
+ const CX = W / 2;
+ const CY = H / 2;
++const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
++
++function parseInteractionInstant(timestamp: string, label: string): number {
++    if (!ISO_INSTANT.test(timestamp)) {
++        throw new Error(
++            `Invalid interaction timestamp "${timestamp}" (${label}): require ISO-8601 with a timezone (Z or ±hh:mm).`,
++        );
++    }
++    const t = Date.parse(timestamp);
++    if (Number.isNaN(t)) {
++        throw new Error(`Invalid interaction timestamp "${timestamp}" (${label}).`);
++    }
++    return t;
++}
+
+ export function buildNetworkGraph(
+     network: GoldenNetwork | undefined,
+     correlation: CorrelationResult,
+ ): NetworkGraph {
+     if (!network) {
+-        return {
+-            nodes: [],
+-            links: [],
+-            timeRange: { startMs: 0, endMs: 0 },
+-            contactCount: 0,
+-            crossPlatformContacts: 0,
+-        };
++        throw new Error("Replay fixture is missing network evidence; refusing to emit an empty network graph.");
+     }
+
+     // Map a target platform -> the identity cluster that platform's account is in.
+@@ -47,10 +55,8 @@ export function buildNetworkGraph(
+     // Links — canonical order (time, then endpoints) for determinism.
+     const links: NetworkLink[] = [...network.interactions]
+         .map((it) => {
+-            const t = Date.parse(it.timestamp);
+-            if (Number.isNaN(t)) {
+-                throw new Error(`Invalid interaction timestamp "${it.timestamp}" (${it.from} -> ${it.to}).`);
+-            }
++            const label = `${it.from} -> ${it.to}`;
++            const t = parseInteractionInstant(it.timestamp, label);
+             const source = `self:${it.from}`;
+             bump(source);
+             bump(it.to);

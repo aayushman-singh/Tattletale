@@ -78,7 +78,15 @@ const getUser = asyncHandler(async (req, res) => {
       throw new Error("User not found");
     }
 
-    res.json(user);
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      searchHistory: user.searchHistory,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
   } catch (error) {
     console.error(`Error fetching user: ${error.message}`);
     res.status(500);

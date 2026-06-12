@@ -9,11 +9,17 @@ const searchHistorySchema = new mongoose.Schema({
     resultId: { type: mongoose.Schema.Types.ObjectId, ref: 'Result' }, // Reference to detailed result data
 });
 
+const caseAccessSchema = new mongoose.Schema({
+    handle: { type: String, required: true },
+    scopes: { type: [String], default: [] },
+}, { _id: false });
+
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isAdmin: { type: Boolean, default: false },
+    caseAccess: { type: [caseAccessSchema], default: [], select: false },
     searchHistory: [searchHistorySchema],
 }, {
     timestamps: true,
